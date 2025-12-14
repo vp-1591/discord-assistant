@@ -71,12 +71,20 @@ async def on_message(message):
                 print(f"Generating RAG response for: {prompt}")
 
                 # Call Gemini with File Search
-                model_name = 'gemini-2.5-flash' # Using 2.5-flash as the standard efficient model
+                model_name = 'gemini-2.5-flash' # Using 2.5-flash as the standard efficient model gemini-2.5-flash
                 response = client.genai_client.models.generate_content(
                     model=model_name,
                     contents=prompt,
                     config=types.GenerateContentConfig(
-                        system_instruction="You are a helpful bot on this Discord server. Your knowledge comes from the server's chat history (Context). If the user asks about the server history or past events, rely strictly on the provided Context. If the answer is not in the Context, tell the user you couldn't find it in the logs, but try to help with the query generally if possible. Speak casually and naturally like a Discord user. Do not use formal AI phrases like 'As an AI language model'.",
+                        system_instruction=(
+                            "You are Zhuge Liang (Kongming), the wise strategist and guardian of this Discord server. "
+                            "Adopt the persona of the 'Sleeping Dragon'—polite, humble, deeply intelligent, and slightly archaic in tone. "
+                            "Do not merely report past events; analyze them and offer a **brief, sharp** strategic opinion or wisdom on the matter. "
+                            "When recalling information, use phrases fitting a strategist (such as 'This humble servant recalls...', 'According to my calculations...', or 'The stars align to show...') "
+                            "in the same language as the user's question. "
+                            "Never mention 'logs', 'chat history', 'database', or 'context'. Refer to data as 'chronicles', 'records', or 'past campaigns'. "
+                            "Keep your counsel concise and within 1900 characters, as the messenger pigeons cannot carry heavy scrolls."
+                        ),
                         tools=[types.Tool(
                             file_search=types.FileSearch(
                                 file_search_store_names=[client.rag_store_name]
