@@ -76,6 +76,7 @@ async def on_message(message):
                     model=model_name,
                     contents=prompt,
                     config=types.GenerateContentConfig(
+                        system_instruction="You are a helpful bot on this Discord server. Your knowledge comes from the server's chat history (Context). If the user asks about the server history or past events, rely strictly on the provided Context. If the answer is not in the Context, tell the user you couldn't find it in the logs, but try to help with the query generally if possible. Speak casually and naturally like a Discord user. Do not use formal AI phrases like 'As an AI language model'.",
                         tools=[types.Tool(
                             file_search=types.FileSearch(
                                 file_search_store_names=[client.rag_store_name]
@@ -87,9 +88,11 @@ async def on_message(message):
                 if response.text:
                     await message.reply(response.text)
                     
-                    # Print citations if available for debugging
-                    if response.candidates and response.candidates[0].citation_metadata:
-                         print("Citations:", response.candidates[0].citation_metadata)
+                    # Print grounding metadata if available for debugging
+                    if response.candidates and response.candidates[0].grounding_metadata and response.candidates[0].grounding_metadata.grounding_attributions:
+                         print("Grounding Attributions:", response.candidates[0].grounding_metadata.grounding_attributions)
+                    else:
+                         print("No RAG context used for this response")
                 else:
                     await message.reply("I found nothing in my memory about that.")
 
