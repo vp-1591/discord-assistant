@@ -89,10 +89,18 @@ async def on_message(message):
                     await message.reply(response.text)
                     
                     # Print grounding metadata if available for debugging
-                    if response.candidates and response.candidates[0].grounding_metadata and response.candidates[0].grounding_metadata.grounding_attributions:
-                         print("Grounding Attributions:", response.candidates[0].grounding_metadata.grounding_attributions)
-                    else:
-                         print("No RAG context used for this response")
+                    try:
+                        c = response.candidates[0]
+                        if c.grounding_metadata and c.grounding_metadata.grounding_chunks:
+                            print("\n--- Grounding Context ---")
+                            for chunk in c.grounding_metadata.grounding_chunks:
+                                if chunk.retrieved_context:
+                                     print(f"Source: {chunk.retrieved_context.title}")
+                            print("-------------------------")
+                        else:
+                             print("No RAG context used for this response.")
+                    except Exception as log_err:
+                        print(f"Logging Error: {log_err}")
                 else:
                     await message.reply("I found nothing in my memory about that.")
 
