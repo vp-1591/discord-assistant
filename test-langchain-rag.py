@@ -4,27 +4,9 @@ from langchain.chat_models import init_chat_model
 from langchain.tools import tool
 import create_store_rag
 from datetime import datetime
+from langchain.agents.middleware import dynamic_prompt, ModelRequest
 
-@tool
-def retrieve_context(search_query: str):
-    """
-    Search the chat logs/chronicles of the server.
-    Input should be a specific search phrase or topic.
-    If you are looking for a specific person, include their name in the search_query.
-    """
-    print(f"\n   ⚙️ [TOOL ACTIVE] Searching for: '{search_query}'")
-    
-    # We rely on semantic search to find the user mentions naturally
-    results = create_store_rag.vector_store.similarity_search(
-        search_query, 
-        k=5
-    )
-    
-    # Format results for the LLM
-    serialized = "\n".join(
-        [doc.page_content for doc in results]
-    )
-    return serialized
+vector_store = create_store_rag.vector_store
 
 model = init_chat_model(
     "mistral:latest",
@@ -36,39 +18,32 @@ time = datetime.now()
 
 formatted_time = f"{time.day} {time:%B %Y; %H:%M}"
 
-agent = create_agent(
-   model=model,
-   tools=[retrieve_context],
-   system_prompt=f'''
-   You are a specialized Retrieval Agent
-   ''',
-)
+@dynamic_prompt
+def prompt_with_context(request: ModelRequest) -> str:
+    """Inject context into state messages."""
+    last_query = request.state["messages"][-1].text
+    retrieved_docs = vector_store.similarity_search(last_query, k=5) 
+    #TODO fix usernames in data collecting pipeline
+    #and remove message length filter(we are grouping messages anyway)
+    #and (probably) should ignore messages from bots
+    
+    docs_content = "\n\n".join(doc.page_content for doc in retrieved_docs)
 
-response = agent.invoke(
-   {"messages": [{"role": "user", "content": "Кто такой Barmacar?"}]}
-)
+    print("\n<----------------->\n".join(doc.page_content for doc in retrieved_docs))
+    system_message = (
+        "You are a helpful assistant. Use the following context in your response:"
+        "Time: " + formatted_time + "\n"
+        f"\n\n{docs_content}"
+    )
 
-for msg in response["messages"]:
-    # 1. Check if the AI decided to call a tool
-    if msg.type == "ai" and msg.tool_calls:
-        for tool_call in msg.tool_calls:
-            print(f"\n➡️  AI Decided to Call Tool: '{tool_call['name']}'")
-            print(f"    Parameters: {tool_call['args']}")
-            # This answers: "what parameters does it receive?"
+    return system_message
 
-    # 2. Check the actual results from the tool
-    elif msg.type == "tool":
-        print(f"\n⬅️  Tool Returned Context:")
-        # The 'content' is the string the LLM sees
-        # We slice it to avoid flooding the console if it's huge
-        preview = msg.content[:500].replace('\n', ' ') + "..."
-        print(f"    Preview: {preview}")
-        
-        # If you want to see the raw documents (the artifact):
-        if hasattr(msg, "artifact") and msg.artifact:
-             print(f"    Raw Docs Retrieved: {len(msg.artifact)}")
-             # print(msg.artifact) # Uncomment to see full raw objects
 
-# --- FINAL RESPONSE ---
-print("\n--- Final Answer ---")
-print(response["messages"][-1].content)
+agent = create_agent(model, tools=[], middleware=[prompt_with_context])
+
+query = "Кто такой Barmacar?"
+for step in agent.stream(
+    {"messages": [{"role": "user", "content": query}]},
+    stream_mode="values",
+):
+    step["messages"][-1].pretty_print()
