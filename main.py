@@ -1,9 +1,9 @@
 import discord
 import os
 from dotenv import load_dotenv
-from export_messages import export_messages_for_rag
 from google import genai
 from google.genai import types
+from export_chat import export_chat_to_json
 
 load_dotenv()
 
@@ -24,30 +24,7 @@ async def on_ready():
     await client.wait_until_ready()
     print("Connected")
     
-    # Initialize Gemini Client
-    api_key = os.getenv("GEMINI_API_KEY")
-    if api_key:
-        try:
-            client.genai_client = genai.Client(api_key=api_key)
-            print("Gemini Client Initialized.")
-            
-            # Find the RAG Store
-            print(f"Searching for Knowledge Base: '{STORE_DISPLAY_NAME}'...")
-            existing_stores = list(client.genai_client.file_search_stores.list())
-            for store in existing_stores:
-                if store.display_name == STORE_DISPLAY_NAME:
-                    client.rag_store_name = store.name
-                    break
-            
-            if client.rag_store_name:
-                print(f"RAG Store Found: {client.rag_store_name}")
-            else:
-                print(f"ERROR: RAG Store '{STORE_DISPLAY_NAME}' not found.")
-                
-        except Exception as e:
-            print(f"Failed to initialize Gemini: {e}")
-    else:
-        print("ERROR: GEMINI_API_KEY not found in env.")
+    
 
 @client.event
 async def on_message(message):
@@ -55,65 +32,9 @@ async def on_message(message):
     channel = message.channel
     if channel.id == 863784357663211540: return 
 
-    # Check if bot is mentioned
-    if client.user.mentioned_in(message):
-        if not client.genai_client or not client.rag_store_name:
-            await message.reply("My memory is not connected right now.")
-            return
+    if message.content.startswith("!export"):
+        await export_chat_to_json(channel)
+        return
 
-        async with message.channel.typing():
-            try:
-                # Clean prompt
-                prompt = message.content.replace(f'<@{client.user.id}>', '').strip()
-                if not prompt:
-                    prompt = "Hello" 
-
-                print(f"Generating RAG response for: {prompt}")
-
-                # Call Gemini with File Search
-                model_name = 'gemini-2.5-flash' # Using 2.5-flash as the standard efficient model gemini-2.5-flash
-                response = client.genai_client.models.generate_content(
-                    model=model_name,
-                    contents=prompt,
-                    config=types.GenerateContentConfig(
-                        system_instruction=(
-                            "You are Zhuge Liang (Kongming), the wise strategist and guardian of this Discord server. "
-                            "Adopt the persona of the 'Sleeping Dragon'—polite, humble, deeply intelligent, and slightly archaic in tone. "
-                            "Do not merely report past events; analyze them and offer a **brief, sharp** strategic opinion or wisdom on the matter. "
-                            "When recalling information, use phrases fitting a strategist (such as 'This humble servant recalls...', 'According to my calculations...', or 'The stars align to show...') "
-                            "in the same language as the user's question. "
-                            "Never mention 'logs', 'chat history', 'database', or 'context'. Refer to data as 'chronicles', 'records', or 'past campaigns'. "
-                            "Keep your counsel concise and within 1900 characters, as the messenger pigeons cannot carry heavy scrolls."
-                        ),
-                        tools=[types.Tool(
-                            file_search=types.FileSearch(
-                                file_search_store_names=[client.rag_store_name]
-                            )
-                        )]
-                    )
-                )
-                
-                if response.text:
-                    await message.reply(response.text)
-                    
-                    # Print grounding metadata if available for debugging
-                    try:
-                        c = response.candidates[0]
-                        if c.grounding_metadata and c.grounding_metadata.grounding_chunks:
-                            print("\n--- Grounding Context ---")
-                            for chunk in c.grounding_metadata.grounding_chunks:
-                                if chunk.retrieved_context:
-                                     print(f"Source: {chunk.retrieved_context.title}")
-                            print("-------------------------")
-                        else:
-                             print("No RAG context used for this response.")
-                    except Exception as log_err:
-                        print(f"Logging Error: {log_err}")
-                else:
-                    await message.reply("I found nothing in my memory about that.")
-
-            except Exception as e:
-                print(f"Generation Error: {e}")
-                await message.reply("I'm having trouble accessing my memory right now.")
 
 client.run(os.getenv('TOKEN'))
