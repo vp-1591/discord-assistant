@@ -6,6 +6,14 @@ import json
 OUTPUT_PREFIX = "discord_chat_part"
 LINES_PER_FILE = 10000
 
+def resolve_mentions(message):
+    content = message.content
+    for user in message.mentions:
+        content = content.replace(f'<@{user.id}>', user.display_name).replace(f'<@!{user.id}>', user.display_name)
+    for role in message.role_mentions:
+        content = content.replace(f'<@&{role.id}>', role.name)
+    return content
+
 async def export_chat_to_txt(channel):
     """
     Fetches message history from a Discord channel and exports it directly to chunked .txt files.
@@ -31,11 +39,11 @@ async def export_chat_to_txt(channel):
         # Using oldest_first=True ensures the chat log reads chronologically (Oldest -> Newest)
         # This is generally better for RAG context flow.
         async for message in channel.history(limit=None, oldest_first=True):
-            # Skip messages without content (e.g., just embeds/attachments) and noise
-            if not message.content or len(message.content) < 10:
+            # Skip messages from bots or without content
+            if message.author.bot or not message.content:
                 continue
             
-            text = message.content.strip()
+            text = resolve_mentions(message).strip()
             # Double check for empty text after stripping
             if not text:
                 continue
@@ -102,8 +110,8 @@ async def export_chat_to_json(channel):
     try:
         # Using oldest_first=True ensures chronological order
         async for message in channel.history(limit=None, oldest_first=True):
-            # Skip messages without content
-            if not message.content or len(message.content) < 10:
+            # Skip messages from bots or without content
+            if message.author.bot or not message.content:
                 continue
             
             # Extract fields and format timestamp
@@ -113,7 +121,9 @@ async def export_chat_to_json(channel):
                 "timestamp": timestamp,
                 "channel": channel.name,
                 "user": message.author.display_name,
-                "message": message.content
+                "mentions": [m.display_name for m in message.mentions],
+                "roles": [r.name for r in message.role_mentions],
+                "message": resolve_mentions(message)
             })
             
             if len(messages_data) % 2000 == 0:

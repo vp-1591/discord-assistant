@@ -50,6 +50,8 @@ def load_and_group_logs(directory: str) -> List[Document]:
         # This solves the issue of the LLM not knowing who said what.
         content_lines = []
         unique_users = set()
+        unique_mentions = set()
+        unique_roles = set()
         
         for m in messages:
             short_time = m.get("timestamp", "")[11:16] # Extract "18:26"
@@ -62,6 +64,8 @@ def load_and_group_logs(directory: str) -> List[Document]:
             
             # Collect user for the Vector Store metadata
             unique_users.add(user)
+            unique_mentions.update(m.get("mentions", []))
+            unique_roles.update(m.get("roles", []))
 
         full_page_content = "\n".join(content_lines)
         
@@ -73,7 +77,9 @@ def load_and_group_logs(directory: str) -> List[Document]:
             "source": f"logs_{channel}_{date_str}",
             "channel": channel,
             "date": date_str,
-            "users": ", ".join(unique_users), # "August, Barmacar"
+            "users": list(unique_users), 
+            "mentions": list(unique_mentions),
+            "roles": list(unique_roles),
             "message_count": len(messages)
         }
         
@@ -93,8 +99,8 @@ print(f"Created {len(docs)} daily summaries.")
 # We still need to split, but now we split a coherent conversation block 
 # rather than tiny isolated sentences.
 text_splitter = RecursiveCharacterTextSplitter(
-    chunk_size=2000,  # Larger chunks to keep conversation flow
-    chunk_overlap=200,
+    chunk_size=1200,  # Larger chunks to keep conversation flow
+    chunk_overlap=100,
     separators=["\n"] # Split cleanly at line breaks (messages)
 )
 
@@ -114,4 +120,5 @@ print(f"Final chunks for vector store: {len(final_splits)}")
 #Load documents into vector store
 document_ids = create_store_rag.vector_store.add_documents(documents=final_splits)
 
+print("Finished loading documents into vector store")
 print(document_ids[:3])

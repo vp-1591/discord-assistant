@@ -23,9 +23,6 @@ def prompt_with_context(request: ModelRequest) -> str:
     """Inject context into state messages."""
     last_query = request.state["messages"][-1].text
     retrieved_docs = vector_store.similarity_search(last_query, k=5) 
-    #TODO fix usernames in data collecting pipeline
-    #and remove message length filter(we are grouping messages anyway)
-    #and (probably) should ignore messages from bots
     
     docs_content = "\n\n".join(doc.page_content for doc in retrieved_docs)
 
