@@ -77,9 +77,9 @@ def load_and_group_logs(directory: str) -> List[Document]:
             "source": f"logs_{channel}_{date_str}",
             "channel": channel,
             "date": date_str,
-            "users": list(unique_users), 
-            "mentions": list(unique_mentions),
-            "roles": list(unique_roles),
+            "users": ", ".join(unique_users), 
+            "mentions": ", ".join(unique_mentions),
+            "roles": ", ".join(unique_roles),
             "message_count": len(messages)
         }
         
@@ -117,8 +117,18 @@ print(f"Final chunks for vector store: {len(final_splits)}")
 #   ... (2000 chars of chat) ...
 # Metadata: {'date': '2025-12-09', 'users': 'August, Barmacar', ...}
 
-#Load documents into vector store
-document_ids = create_store_rag.vector_store.add_documents(documents=final_splits)
+# Load documents into vector store in batches
+batch_size = 100
+total_splits = len(final_splits)
+all_ids = []
+print(f"Loading {total_splits} chunks into store in batches of {batch_size}...")
+
+for i in range(0, total_splits, batch_size):
+    batch = final_splits[i : i + batch_size]
+    ids = create_store_rag.vector_store.add_documents(documents=batch)
+    all_ids.extend(ids)
+    print(f"Loaded batch {i//batch_size + 1}/{ (total_splits-1)//batch_size + 1 } ({(i + len(batch))} / {total_splits})")
 
 print("Finished loading documents into vector store")
-print(document_ids[:3])
+if all_ids:
+    print(f"First 3 created IDs: {all_ids[:3]}")
