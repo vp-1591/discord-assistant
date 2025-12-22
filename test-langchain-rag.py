@@ -47,14 +47,15 @@ def prompt_with_context(request: ModelRequest) -> str:
     """Inject context into state messages."""
     last_query = request.state["messages"][-1].text
     retrieved_docs = vector_store.similarity_search(last_query, k=20) 
-    
-    docs_content = f"\n{'-' * 10}\n".join(
+    print(
+        f"\n{'-' * 100}\n".join(
             [
                 f"Document {i + 1}:\n\n{d.page_content}\nMetadata: {d.metadata}"
                 for i, d in enumerate(retrieved_docs)
             ]
         )
-    #docs_content = "\n\n".join(f"Date: {doc.metadata.get('date')}, Channel: {doc.metadata.get('channel')}\n{doc.page_content}" for doc in retrieved_docs)
+    )
+    docs_content = "\n\n".join(f"Date: {doc.metadata.get('date')}, Channel: {doc.metadata.get('channel')}\n{doc.page_content}" for doc in retrieved_docs)
 
     system_message = f"""
 You are an intelligent Chat Log Analyst.

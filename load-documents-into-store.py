@@ -2,17 +2,15 @@ import json
 import os
 from collections import defaultdict
 from typing import List
-from datetime import datetime
+
+import re
 
 # LangChain Imports
 from langchain_core.documents import Document
-from langchain_text_splitters import RecursiveCharacterTextSplitter
 import create_store_rag
 
 def load_and_group_logs(directory: str) -> List[Document]:
-    grouped_docs = []
-    
-    # 1. Read all messages into a single list first
+    print(f"Reading logs from {directory}...")
     all_messages = []
     if not os.path.exists(directory):
         return []
@@ -21,114 +19,140 @@ def load_and_group_logs(directory: str) -> List[Document]:
         if filename.endswith(".json"):
             path = os.path.join(directory, filename)
             with open(path, "r", encoding="utf-8") as f:
-                data = json.load(f)
-                if isinstance(data, list):
-                    all_messages.extend(data)
+                try:
+                    data = json.load(f)
+                    if isinstance(data, list):
+                        all_messages.extend(data)
+                except Exception as e:
+                    print(f"Error reading {filename}: {e}")
 
-    # 2. Group by Date and Channel
-    # key = (channel_name, date_string)
-    # value = list of message objects
+    print(f"Found {len(all_messages)} total messages. Grouping by date...")
+
+    # Group by Date and Channel
     grouped_data = defaultdict(list)
-
     for msg in all_messages:
-        # Assuming timestamp format "2025-12-09T18:26:17..."
-        # We slice [:10] to get "2025-12-09"
+        text = str(msg.get("message", ""))
+        
+        # --- NOISE FILTERING ---
+        if len(text.strip()) < 2: continue
+        
+        # Skip repetitive spam (4 or more times in a row)
+        words = text.split()
+        if len(words) >= 4:
+            is_spam = False
+            consecutive_count = 1
+            for i in range(1, len(words)):
+                if words[i] == words[i-1]:
+                    consecutive_count += 1
+                    if consecutive_count >= 4:
+                        is_spam = True
+                        break
+                else:
+                    consecutive_count = 1
+            if is_spam: continue
+
+        # Skip random alphanumeric codes/invites
+        if re.match(r'^[a-zA-Z0-9]{3}-[a-zA-Z0-9]{4}$', text.strip()): continue
+        if "68M-L0xY" in text: continue
+
+        # Skip messages that are ONLY a link (e.g. tenor.com, https://...)
+        if re.match(r'^https?://[^\s]+$', text.strip()): continue
+        if "tenor.com" in text and len(text.split()) == 1: continue
+
         ts = msg.get("timestamp", "")
         date_str = ts[:10] 
         channel = msg.get("channel", "unknown")
-        
         key = (channel, date_str)
         grouped_data[key].append(msg)
 
-    # 3. Convert Groups into Documents
+    final_splits = []
+    CHUNK_SIZE_LIMIT = 700 # Smaller chunks = Higher semantic weight for keywords
+    
     for (channel, date_str), messages in grouped_data.items():
-        # Sort messages by time to ensure chronological order in the text
         messages.sort(key=lambda x: x.get("timestamp", ""))
         
-        # A. CONSTRUCT PAGE CONTENT (The "Baking" Step)
-        # We build one giant string for the whole day.
-        # This solves the issue of the LLM not knowing who said what.
-        content_lines = []
-        unique_users = set()
-        unique_mentions = set()
-        unique_roles = set()
-        
+        # Header for every chunk in this group
+        header = f"=== CHANNEL: #{channel} | DATE: {date_str} ===\n"
+        current_chunk_lines = []
+        current_length = len(header)
+
         for m in messages:
-            short_time = m.get("timestamp", "")[11:16] # Extract "18:26"
+            short_time = m.get("timestamp", "")[11:16]
             user = m.get("user", "Unknown")
-            text = m.get("message", "")
+            # Keep message content on one line
+            text = str(m.get("message", "")).strip().replace("\n", " ")
             
-            # This line preserves the "metadata" for the LLM's eyes
-            line = f"[{short_time}] <{user}>: {text}"
-            content_lines.append(line)
+            # Format: [Time] <User>: Message
+            msg_line = f"[{short_time}] <{user}>: {text}"
+            msg_len = len(msg_line) + 1 # +1 for newline character
             
-            # Collect user for the Vector Store metadata
-            unique_users.add(user)
-            unique_mentions.update(m.get("mentions", []))
-            unique_roles.update(m.get("roles", []))
+            # If addition would exceed limit, flush current chunk
+            if current_length + msg_len > CHUNK_SIZE_LIMIT and current_chunk_lines:
+                content = header + "\n".join(current_chunk_lines)
+                final_splits.append(Document(
+                    page_content=content,
+                    metadata={"channel": channel, "date": date_str}
+                ))
+                current_chunk_lines = []
+                current_length = len(header)
 
-        full_page_content = "\n".join(content_lines)
-        
-        # B. CONSTRUCT METADATA (The "Filtering" Step)
-        # We store the list of all users present in this conversation
-        # Note: ChromaDB handles list-based metadata, but some vector stores might need strings.
-        # It's safer to join them as a string for broad compatibility.
-        doc_metadata = {
-            "source": f"logs_{channel}_{date_str}",
-            "channel": channel,
-            "date": date_str,
-            "users": ", ".join(unique_users), 
-            "mentions": ", ".join(unique_mentions),
-            "roles": ", ".join(unique_roles),
-            "message_count": len(messages)
-        }
-        
-        doc = Document(page_content=full_page_content, metadata=doc_metadata)
-        grouped_docs.append(doc)
-        
-    return grouped_docs
+            # Handle messages that are individually longer than the limit
+            if msg_len > CHUNK_SIZE_LIMIT:
+                # Flush existing if any
+                if current_chunk_lines:
+                    content = header + "\n".join(current_chunk_lines)
+                    final_splits.append(Document(page_content=content, metadata={"channel": channel, "date": date_str}))
+                    current_chunk_lines = []
+                    current_length = len(header)
+                
+                # Split large message with repeated context
+                prefix = f"=== CHANNEL: #{channel} | DATE: {date_str} ===\n[{short_time}] <{user}>: "
+                available = CHUNK_SIZE_LIMIT - len(prefix) - 10
+                parts = [text[i:i+available] for i in range(0, len(text), available)]
+                for p in parts:
+                    final_splits.append(Document(
+                        page_content=prefix + p + " (part)",
+                        metadata={"channel": channel, "date": date_str, "user": user}
+                    ))
+                continue
 
-# --- USAGE ---
+            current_chunk_lines.append(msg_line)
+            current_length += msg_len
 
-# 1. Load grouped documents
-docs = load_and_group_logs("./messages_json")
-print(f"Created {len(docs)} daily summaries.")
+        # Final flush for the day
+        if current_chunk_lines:
+            content = header + "\n".join(current_chunk_lines)
+            final_splits.append(Document(
+                page_content=content,
+                metadata={"channel": channel, "date": date_str}
+            ))
+            
+    return final_splits
 
-# 2. Split (Crucial Step)
-# Even though we grouped them, a single day might be HUGE (10k messages).
-# We still need to split, but now we split a coherent conversation block 
-# rather than tiny isolated sentences.
-text_splitter = RecursiveCharacterTextSplitter(
-    chunk_size=1200,  # Larger chunks to keep conversation flow
-    chunk_overlap=100,
-    separators=["\n"] # Split cleanly at line breaks (messages)
-)
+if __name__ == "__main__":
+    # 1. OPTIONAL: Reset the collection to avoid pollution
+    print("Resetting vector store collection...")
+    try:
+        # This deletes all existing documents in this collection
+        create_store_rag.vector_store.delete_collection()
+        # Re-initialize the empty collection
+        create_store_rag.vector_store = create_store_rag.Chroma(
+            collection_name="messages_collection",
+            embedding_function=create_store_rag.embeddings,
+            persist_directory="./chroma_langchain_db",
+        )
+    except Exception as e:
+        print(f"Notice: Could not reset collection (it might be empty): {e}")
 
-final_splits = text_splitter.split_documents(docs)
+    # 2. Load and chunk
+    splits = load_and_group_logs("./messages_json")
+    print(f"Created {len(splits)} chunks.")
 
-# Note: text_splitter automatically copies the 'metadata' (users, date) 
-# from the parent Document to each new split chunk!
-print(f"Final chunks for vector store: {len(final_splits)}")
+    # 3. Add to store in batches
+    batch_size = 50 # Smaller batches for stability
+    for i in range(0, len(splits), batch_size):
+        batch = splits[i : i + batch_size]
+        create_store_rag.vector_store.add_documents(batch)
+        print(f"Loaded: {min(i + batch_size, len(splits))} / {len(splits)}")
 
-# Example of what a chunk looks like:
-# Content: 
-#   [18:26] <August>: куда лезеш
-#   [18:26] <Barmacar>: ты о чем
-#   ... (2000 chars of chat) ...
-# Metadata: {'date': '2025-12-09', 'users': 'August, Barmacar', ...}
-
-# Load documents into vector store in batches
-batch_size = 100
-total_splits = len(final_splits)
-all_ids = []
-print(f"Loading {total_splits} chunks into store in batches of {batch_size}...")
-
-for i in range(0, total_splits, batch_size):
-    batch = final_splits[i : i + batch_size]
-    ids = create_store_rag.vector_store.add_documents(documents=batch)
-    all_ids.extend(ids)
-    print(f"Loaded batch {i//batch_size + 1}/{ (total_splits-1)//batch_size + 1 } ({(i + len(batch))} / {total_splits})")
-
-print("Finished loading documents into vector store")
-if all_ids:
-    print(f"First 3 created IDs: {all_ids[:3]}")
+    print("Success! The vector store is now clean and optimized.")
