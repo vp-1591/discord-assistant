@@ -1,736 +1,1507 @@
+
 ################################################################################
-TIMESTAMP: 2025-12-22 15:30:19
+TIMESTAMP: 2025-12-23 11:02:16
 QUERY: Отношение Klaus Adler к Barmacar
+MODE: Hybrid Search (Vector + BM25[0.6]) -> CrossEncoder (BAAI/bge-reranker-v2-m3)
 ################################################################################
 
-[1] SEMANTIC SEARCH RESULTS (Top 10)
-  (1) 2021-02-16 | === CHANNEL: #площаль | DATE: 2021-02-16 ===
-[18:22] <Mayones_18>: ntjumnnnn;nnbbvcvcvcccbvvcvvjuigyoktl;.kkl.kl.klf.k.k.k.k.k.k.k.k.k.k.k.k.k.k.k.k.k.k.k.k.k.k.k.k.k.k.k.k.k.k.k.k.k.k.k.k.k.k.k.k.k.k.k.k.k.k.k.k.k.k.k.k.k.k.k.k.k.k.k.k.k.kkkkkkkk.kkkkkkkkkkkkkkk.kkkkkkkkkkkkk
-[18:26] <Mayones_18>: @everyone
-[18:26] <Mayones_18>: <@&784801791656984606>
-[18:28] <Klaus Adler>: дурачок?
-[19:02] <Klaus Adler>: Barmacar
-[19:02] <Klaus Adler>: Barmacar
-[19:02] <Klaus Adler>: Barmacar
-[19:02] <Barmacar>: что
-[19:03] <Klaus Adler>: dthybcm xthn
-[19:03] <Barmacar>: на цыганском не понимаю
-[21:34] <Barmacar>: Лол, варвары станут ггшками
-  (2) 2021-04-28 | === CHANNEL: #площаль | DATE: 2021-04-28 ===
-[18:07] <Klaus Adler>: так что я зашёл в тундру чтоб забрать ежедневку
-[18:08] <Klaus Adler>: кста в пятницу у меня есть второй шанс получить технику
-[18:08] <Klaus Adler>: ну или миллион...
-  (3) 2021-07-01 | === CHANNEL: #площаль | DATE: 2021-07-01 ===
-[11:13] <Klaus Adler>: Создай акк в нашем королестве
-[11:13] <Barmacar>: На одном аккаунте может быть *количество королевств * 2 персонажей*
-[11:13] <Klaus Adler>: Там 2 акка на королество
-[11:13] <oleksandr>: уху железный век
-[11:14] <CASP (DanSir)>: ну вот как ?
-[11:14] <Klaus Adler>: Настройки -> управление пользователем
-[11:14] <CASP (DanSir)>: ок
-[11:14] <Barmacar>: Как я и предсказывал - Саня перегнал Макса🤣
-[11:15] <Klaus Adler>: Главное не то, кто впереди, а то, у кого армия больше)))
-[11:16] <CASP (DanSir)>: как называется ваше королевство?
-[11:16] <CASP (DanSir)>: и какой у него тэг
-[11:19] <oleksandr>: пацаны я хочу уничтожить sbd sbd
-  (4) 2025-01-07 | === CHANNEL: #площаль | DATE: 2025-01-07 ===
-[18:57] <Barmacar>: Никто кроме перикла не сделал себе норм культуру(на перикла напал чака) и в итоге я просто симил легчайше пока не закончились 4 часа игры(потом  просто по скорборду)
-[18:58] <Barmacar>: Хотя если бы игра не закончилась, я бы просто напросто на танках/гдрах зачистил бы иррельного чаку, и либо победил бы научно либо снес бы перикла и забрал бы второе если не мог бы научно выиграть
-  (5) 2023-07-02 | === CHANNEL: #площаль | DATE: 2023-07-02 ===
-[22:50] <Klaus Adler>: А как же почкование?
-[22:52] <Barmacar>: А сколько он считает надо
-[23:01] <Barmacar>: Сигмамен осторожно притворяеться что он в отключке в ожидании действий Максимилианны  #trp
-[23:01] <Barmacar>: Klaus Adler твой ход
-  (6) 2021-08-24 | === CHANNEL: #площаль | DATE: 2021-08-24 ===
-[18:23] <Barmacar>: хочу тебе показать кое что
-[18:24] <Barmacar>: Хз почему, но то, что я сделал напоминает мне кс
-[18:27] <Klaus Adler>: Крч, мой инет пошёл нахуй не спросив меня
-[18:27] <Barmacar>: ок
-[18:27] <Klaus Adler>: Я когда приеду, тогда буду уже в гс сидеть
-[18:28] <Barmacar>: ок
-  (7) 2021-05-23 | === CHANNEL: #площаль | DATE: 2021-05-23 ===
-[05:19] <Mayones_18>: Новая карта уже есть
-[09:19] <Barmacar>: Mayones_18
-[09:27] <CASP (DanSir)>: Недолго длился золотой век, Недолго правил один человек Из рук Вадина победа ушла Другого хозяина себе она нашла
-[09:28] <Barmacar>: Артур
-[09:28] <Barmacar>: Зайди в голос
-[09:28] <Barmacar>: Mayones_18 Mayones_18 Mayones_18
-[09:28] <Barmacar>: Mayones_18 Mayones_18
-[09:28] <Barmacar>: Mayones_18
-[09:28] <Barmacar>: Mayones_18 Mayones_18
-[09:28] <Barmacar>: Mayones_18 Mayones_18 Mayones_18
-[09:28] <Barmacar>: Mayones_18 Mayones_18 Mayones_18
-[09:28] <Barmacar>: Mayones_18 Mayones_18
-[09:28] <Barmacar>: Mayones_18
-  (8) 2021-04-26 | === CHANNEL: #площаль | DATE: 2021-04-26 ===
-[19:20] <Klaus Adler>: почему котеджи не дают железо?
-[19:22] <Barmacar>: Потому что не Алькор)
-[19:22] <Barmacar>: Вот он, Олд коттедж
-[19:23] <Klaus Adler>: ехххх
-[19:23] <Klaus Adler>: а так хотел...
-[19:40] <Barmacar>: Описание Магазин - это экономическая структура, которая нужна для покупки предметов для варки зелий, однако для этого требуется Технология - Пивоварение. Так как Ад используется, как арена с боссом и вы не можете ломать блоки, Вы сможете купить некоторые блоки из того мира, такие как: Песок Душ и Светопыль.
-[19:40] <Barmacar>: Вот
-[19:40] <Barmacar>: Ну наконец то
-[19:40] <Barmacar>: Я ж ещё помнил
-  (9) 2023-11-07 | === CHANNEL: #площаль | DATE: 2023-11-07 ===
-[22:07] <Klaus Adler>: сижу смотрю лекции по истории архитекуры и так заряжаюсь идеей построить в майне церкви
-[22:07] <Klaus Adler>: так что ждите
-[22:08] <Klaus Adler>: якщо все же соберемся в майн, я вам таке забахаю
-  (10) 2021-03-24 | === CHANNEL: #площаль | DATE: 2021-03-24 ===
-[19:50] <August>: Вот ссылка на скачивание Raid: Shadow Legends. Перейди по ней, установи игру – и мы оба получим крутые подарки! https://link.plrm.zone/app/1o94 Вот ссылка на скачивание Raid: Shadow Legends. Перейди по ней, установи игру – и мы оба получим крутые подарки! https://link.plrm.zone/app/1o94 Вот ссылка на скачивание Raid: Shadow Legends. Перейди по ней, установи игру – и мы оба получим крутые подарки! https://link.plrm.zone/app/1o94 Вот ссылка на скачивание Raid: Shadow Legends. Перейди по ней, установи игру – и мы оба получим крутые подарки! https://link.plrm.zone/app/1o94 Вот ссылка на скачивание Raid: Shadow Legends. Пере (part)
+[1] HYBRID RETRIEVAL RESULTS (Top 20)
+  (1) 2025-07-02 | === CHANNEL: #площаль | DATE: 2025-07-02 ===
+[PREVIOUS CONTEXT]: [2025-07-01 18:59] Barmacar: актуально?
+[PREVIOUS CONTEXT]: [2025-07-01 19:14] CASP (DanSir): не соре
+[PREVIOUS CONTEXT]: [2025-07-01 19:16] Barmacar: кк
+[2025-07-02 12:42] Barmacar: August они оказывается сделали так что Китай будет постоянно распадаться и собираться ахахах
+  --------------------
+  (2) 2021-05-02 | === CHANNEL: #площаль | DATE: 2021-05-02 ===
+[PREVIOUS CONTEXT]: [2021-05-01 21:46] CASP (DanSir): И закончил ее только через 40 минут после ее начала
+[PREVIOUS CONTEXT]: [2021-05-01 21:47] CASP (DanSir): 40 минут виражей, потери контактов и уловок
+[PREVIOUS CONTEXT]: [2021-05-01 21:48] CASP (DanSir): Я аж вспотел
+[2021-05-02 07:01] August: Barmacar
+  --------------------
+  (3) 2022-07-09 | === CHANNEL: #площаль | DATE: 2022-07-09 ===
+[PREVIOUS CONTEXT]: [2022-07-08 20:32] zxc/зачем...: Не будь таким агрошкололо)
+[PREVIOUS CONTEXT]: [2022-07-08 21:10] Noyoi: Я не собирался быть тобой
+[PREVIOUS CONTEXT]: [2022-07-08 21:12] zxc/зачем...: Кринжанул с твоего сообщения больше так не шути
+[2022-07-09 07:09] Granatuk: August может в кс?
+  --------------------
+  (4) 2021-09-25 | === CHANNEL: #площаль | DATE: 2021-09-25 ===
+[PREVIOUS CONTEXT]: [2021-09-24 17:42] Barmacar: Mayones_18
+[2021-09-25 07:11] CASP (DanSir): Великобритания и Франция))
+[2021-09-25 07:11] CASP (DanSir): Как показала практика они для этого подходят как нельзя лучше
+  --------------------
+  (5) 2021-11-10 | === CHANNEL: #площаль | DATE: 2021-11-10 ===
+[PREVIOUS CONTEXT]: [2021-11-09 19:35] Mayones_18: Мы тут идеи под бридж в туннель ганкаит
+[PREVIOUS CONTEXT]: [2021-11-09 19:38] Mayones_18: уже под форт
+[2021-11-10 07:59] Mayones_18: Кто не знает кто такие Арчи
+[2021-11-10 07:59] Mayones_18: 2:10
+  --------------------
+  (6) 2024-01-18 | === CHANNEL: #площаль | DATE: 2024-01-18 ===
+[PREVIOUS CONTEXT]: [2024-01-18 20:36] Barmacar: Блин, я только сейчас понял что можно сделать едреный батальен кошек
+[PREVIOUS CONTEXT]: [2024-01-18 20:36] Barmacar: И это даже не спойлер
+[PREVIOUS CONTEXT]: [2024-01-18 20:37] Barmacar: это буквально второй левел друида
+[2024-01-18 21:42] Barmacar: STR
+[2024-01-18 21:43] STR: у нас тут жесткий файт
+  --------------------
+  (7) 2023-08-19 | === CHANNEL: #площаль | DATE: 2023-08-19 ===
+[PREVIOUS CONTEXT]: [2023-08-19 17:55] Barmacar: August на копьях баффнули q шку в недавнем патче
+[2023-08-19 20:56] August: Но сделали хуже тризубец
+[2023-08-19 21:40] Barmacar: Ну во первых они очень сильно баффнули q и не очень сильно понерфили трезубец, так что даже на нем станет лучше играть. А во вторых ты все равно на трезубце не играешь, какая разница
+  --------------------
+  (8) 2021-05-17 | === CHANNEL: #площаль | DATE: 2021-05-17 ===
+[PREVIOUS CONTEXT]: [2021-05-16 19:00] Mayones_18: Уфф
+[PREVIOUS CONTEXT]: [2021-05-16 19:31] Mayones_18: У ерусалима лимит по редким ресам, я кинул себе
+[PREVIOUS CONTEXT]: [2021-05-16 19:31] Mayones_18: Саня хорош
+[2021-05-17 11:36] Mayones_18: Barmacar
+[2021-05-17 11:45] Klaus Adler: Barmacar давай заходи в голос, первокласник)))
+  --------------------
+  (9) 2021-05-11 | === CHANNEL: #площаль | DATE: 2021-05-11 ===
+[PREVIOUS CONTEXT]: [2021-05-11 18:45] Barmacar: А еще ты кстати забыл покласть слоновую кость в город
+[PREVIOUS CONTEXT]: [2021-05-11 18:45] Barmacar: 1000IQ
+[PREVIOUS CONTEXT]: [2021-05-11 18:50] Barmacar: Кстати, если что я выложил несколько стаков блоков в подарочный сундук Макса
+[2021-05-11 19:07] Barmacar: лол, 8 трейдов - это максимум, так что все остальный торг ресы кроме монополий прошу скидывать в Лондон
+  --------------------
+  (10) 2021-06-30 | === CHANNEL: #площаль | DATE: 2021-06-30 ===
+[PREVIOUS CONTEXT]: [2021-06-30 18:31] Mayones_18: Ок
+[PREVIOUS CONTEXT]: [2021-06-30 18:31] Barmacar: В рок на мобиле буду и все
+[PREVIOUS CONTEXT]: [2021-06-30 18:31] Mayones_18: Ок
+[2021-06-30 20:27] Klaus Adler: Кому отдать?😎
+[2021-06-30 21:17] Barmacar: Ты только билд посмотри перед тем как качать
+  --------------------
+  (11) Unknown | @AlisaWafflenSS
+EgorProYT
+MEOWAfs
+Barmacar иди к нам
+0112
+Klaus Adler
+Klaus Adler
+Klaus Adler
+Klaus Adler
+Klaus Adler
+  --------------------
+  (12) Unknown | @everyone
+го в циву
+Я к 4 буду
+Может раньше но скорее позде
+позже*
+я отойду к 4 наверное
+Barmacar Mayones_18 Klaus Adler
+Barmacar Mayones_18 Klaus Adler
+Klaus Adler Mayones_18
+давайте играть в цыву
+  --------------------
+  (13) Unknown | Klaus Adler AugustKlaus Adler AugustKlaus Adler AugustKlaus Adler AugustKlaus Adler AugustKlaus Adler AugustKlaus Adler August
+2Barmacar
+Opj-5rRP
+Barmacar
+Barmacar го в Тавер батлс
+10 min
+Klaus Adler го к нам
+я у Ибу на концерте
+Klaus Adler
+123
+  --------------------
+  (14) Unknown | самолет
+аа, пон
+Barmacar  ты не к ибухаву
+Ну пофиг
+August го в тундру
+August го в тундру
+Klaus Adler
+Klaus Adler
+я в тундре
+Barmacar
+  --------------------
+  (15) Unknown | Klaus Adler
+являеться полной противоположностью к истине
+поэтому будет удален
+Klaus Adler пойдёте продолжать в тундру пингани
+oleksandr а ты не хоч в тундру
+https://app.suno.ai/song/424f338a-f9b6-4f2c-a8f5-00effcb907a9
+Granatuk
+Granatuk
+Klaus Adler так что, где твоя версия
+Barmacar Klaus Adler CASP (DanSir) alexczay
+  --------------------
+  (16) Unknown | Макс
+я майонез
+Mayones_18
+Klaus Adler Barmacar August Mayones_18
+Иди к нам
+Mayones_18
+oleksandr
+Klaus Adler Barmacar August oleksandr Mayones_18 MEE6 A.L.I.S.A
+Ей, за что вы меня так назвали >~<
+ты теперь Майонез
+  --------------------
+  (17) Unknown | я отойду к 4 наверное
+Barmacar Mayones_18 Klaus Adler
+Barmacar Mayones_18 Klaus Adler
+Klaus Adler Mayones_18
+давайте играть в цыву
+Я не буду сейчас
+а чего
+я просто только сейчас могу
+Потому что хочу сыграть в что-то другое
+вечером я не буду
+  --------------------
+  (18) Unknown | Вот короче
+У Турции байрактары, лол
+Меня больше пугает red army tank у ussr
+Я думаю у него просто иммунитет к любым пулям и все)
+Klaus AdlerBarmacar
+Klaus AdlerBarmacar
+BarmacarKlaus Adler
+BarmacarKlaus Adler
+Klaus Adler
+Barmacar
+  --------------------
+  (19) Unknown | 90162853802611717
+August Klaus Adler
+Barmacar
+Пойдём ?
+Вадим вроде в хойке
+Зайди к нему спроси
+Я через 5 мин смогу зайти в дс
+Он сказал будет
+Klaus Adler
+кк
+  --------------------
+  (20) Unknown | всего то пол часа назад
+Klaus Adler
+Barmacar
+10 min
+August
+August иди учись
+Чертила
+August Ты сча на парах? когда прийдешь?
+Буду ближе к вечеру, к 7-8
+<:dumb_dead:977128060824465408>
+  --------------------
 
-[2] KEYWORD SEARCH RESULTS (Keyword: 'Barmacar')
-  (1) 2021-05-02 | === CHANNEL: #летописи | DATE: 2021-05-02 ===
-[06:29] <Barmacar>: * орфографический инсульт *
-  (2) 2021-06-28 | === CHANNEL: #летописи | DATE: 2021-06-28 ===
-[17:45] <Barmacar>: Великая Победа Восточной Армии При Барановичах
-  (3) 2021-07-28 | === CHANNEL: #летописи | DATE: 2021-07-28 ===
-[20:06] <Barmacar>: *Вестник Барановичей* Кровавый день! Сегодня на улицах Барановичей произошла словесная перестрелка! Пострадали 3 региона! На улицах лежат сотни окровавленных хейтеров, а фанаты строят пункты помощи! Сегодня утром 2 группировки - нацистская и коммунистическая устроили срач на улицах Барановичей! В результате около 3 тысяч жителей погибло или тяжело ранены оскорблениями! Причиной конфликта послужило вмешательство со стороны нацистов в работу бота, который призван повышать уровень жителей! По словам коммунистов: "Мы сочли фразу которую поставили нацисты слишком банальной". После этого коммунисты сменили фразу на такую,  (part)
-  (4) 2021-07-28 | === CHANNEL: #летописи | DATE: 2021-07-28 ===
-[20:06] <Barmacar>: которую нацистская верхушка посчитала оскорбительной. Так как нацисты имели больше влияния в Барановичах, они получили начальное преимущество, забрав влияние у коммунистов. Однако вследствие этого начался срач, который и перерос в словесную перестрелку. По итогам перестрелки обе стороны понесли серьезные потери, и, когда пришел Император закончили перестрелку. Император забрал влияние у обоих группировок, однако коммунисты утверждают, что это победа - нацисты больше не смогут ущемлять их права. В конце переговоров Великий Император сказал, что скоро грядут новые реформы призванные установить порядок в Барановичах! (part)
-  (5) 2022-01-18 | === CHANNEL: #летописи | DATE: 2022-01-18 ===
-[16:04] <Barmacar>: Я вернул то, что мне положено по праву - трон! Приветствуйте вновь своего Великого Императора! Теперь начнется новая эпоха в жизни нашего сервера! Да здравствует Император!
-  (6) 2022-01-18 | === CHANNEL: #летописи | DATE: 2022-01-18 ===
-[16:40] <Barmacar>: Так как я стал новым Императором, и хочу немного оживить этот сервер, я ввожу систему ивентов! Условия просты: я пишу в чат <#829058706620153906> объявление о новом ивенте, или даю несколько ивентов на выбор и по итогам проведение ивента выдаю роль <@&933030506902204546> которую буду изменять под условия награды. Таким образом за выигрыш в ивенте вы сможете получить уникальные права на определенный срок(он тоже указывается в условиях ивента)!
-  (7) 2022-01-18 | === CHANNEL: #летописи | DATE: 2022-01-18 ===
-[16:50] <Barmacar>: Ну и так как я Император, и имею необходимую власть, я добавляю на сервер новое правило: "жи" и "ши" теперь можно писать только с буквой "и". Любое нарушение карается таймаутом на минуту!
-  (8) 2022-03-13 | === CHANNEL: #летописи | DATE: 2022-03-13 ===
-[18:32] <Klaus Adler>: Поздравляем с Религиозной победой Barmacar! Надеемся, он не поступит как крыса и не уничтожит, а сделает лучше наш сервер!
-[20:28] <Barmacar>: Хоть я и не собирался побеждать религией, однако весь мир уверовал в Zeus vult, и теперь я собираюсь взять курс на англификацию сервера! Как новый Император я провозглашаю новую эпоху реформ этого сервера!
-  (9) 2022-04-11 | === CHANNEL: #летописи | DATE: 2022-04-11 ===
-[19:43] <Barmacar>: Поздравляем викинга August с его военной победой на архипелаге!
-  (10) 2022-04-12 | === CHANNEL: #летописи | DATE: 2022-04-12 ===
-[16:32] <August>: Бойтесь, плачьте, молите о пощаде! Но вам это не поможет.   Моя непобедимая армия состоящая из безстрашных берсерков и быстрейший во всём мире флот под моим прямым управлением одержали победу над жалким английским государством и безрасудной испанской империей под управлением Barmacar  и Klaus Adler  соответственно.   Я - исконный правитель этих земель, возвратил, то что предналежит мне по праву, трон Мидгарда. Поэтому нарикаю себя Харальдом "Великим и ужасным владыкой всех морей.  И первым моим указом будет: Реформирование прогнившей насквозь конституционной английской монархии под суровый скандинавский лад.  Восхваляйте меня и мое имя Владыки Морей.
-
-[3] RERANKING RESULTS (Top 5)
-  (1) SCORE: 0.999338686466217 | DATE: 2021-05-02
-  CONTENT: === CHANNEL: #летописи | DATE: 2021-05-02 ===
-[06:29] <Barmacar>: * орфографический инсульт *
+[2] RERANKED RESULTS (Top 5)
+  (1) SCORE: 0.8527 | DATE: Unknown
+  CONTENT: Klaus Adler
+являеться полной противоположностью к истине
+поэтому будет удален
+Klaus Adler пойдёте продолжать в тундру пингани
+oleksandr а ты не хоч в тундру
+https://app.suno.ai/song/424f338a-f9b6-4f2c-a8f5-00effcb907a9
+Granatuk
+Granatuk
+Klaus Adler так что, где твоя версия
+Barmacar Klaus Adler CASP (DanSir) alexczay
   ----------------------------------------
-  (2) SCORE: 0.9992631673812866 | DATE: 2022-04-11
-  CONTENT: === CHANNEL: #летописи | DATE: 2022-04-11 ===
-[19:43] <Barmacar>: Поздравляем викинга August с его военной победой на архипелаге!
+  (2) SCORE: 0.5984 | DATE: Unknown
+  CONTENT: Klaus Adler AugustKlaus Adler AugustKlaus Adler AugustKlaus Adler AugustKlaus Adler AugustKlaus Adler AugustKlaus Adler August
+2Barmacar
+Opj-5rRP
+Barmacar
+Barmacar го в Тавер батлс
+10 min
+Klaus Adler го к нам
+я у Ибу на концерте
+Klaus Adler
+123
   ----------------------------------------
-  (3) SCORE: 0.9991029500961304 | DATE: 2022-01-18
-  CONTENT: === CHANNEL: #летописи | DATE: 2022-01-18 ===
-[16:04] <Barmacar>: Я вернул то, что мне положено по праву - трон! Приветствуйте вновь своего Великого Императора! Теперь начнется новая эпоха в жизни нашего сервера! Да здравствует Император!
+  (3) SCORE: 0.5741 | DATE: Unknown
+  CONTENT: Вот короче
+У Турции байрактары, лол
+Меня больше пугает red army tank у ussr
+Я думаю у него просто иммунитет к любым пулям и все)
+Klaus AdlerBarmacar
+Klaus AdlerBarmacar
+BarmacarKlaus Adler
+BarmacarKlaus Adler
+Klaus Adler
+Barmacar
   ----------------------------------------
-  (4) SCORE: 0.9990845322608948 | DATE: 2022-01-18
-  CONTENT: === CHANNEL: #летописи | DATE: 2022-01-18 ===
-[16:50] <Barmacar>: Ну и так как я Император, и имею необходимую власть, я добавляю на сервер новое правило: "жи" и "ши" теперь можно писать только с буквой "и". Любое нарушение карается таймаутом на минуту!
+  (4) SCORE: 0.5044 | DATE: Unknown
+  CONTENT: @AlisaWafflenSS
+EgorProYT
+MEOWAfs
+Barmacar иди к нам
+0112
+Klaus Adler
+Klaus Adler
+Klaus Adler
+Klaus Adler
+Klaus Adler
   ----------------------------------------
-  (5) SCORE: 0.9990828633308411 | DATE: 2021-08-24
-  CONTENT: === CHANNEL: #площаль | DATE: 2021-08-24 ===
-[18:23] <Barmacar>: хочу тебе показать кое что
-[18:24] <Barmacar>: Хз почему, но то, что я сделал напоминает мне кс
-[18:27] <Klaus Adler>: Крч, мой инет пошёл нахуй не спросив меня
-[18:27] <Barmacar>: ок
-[18:27] <Klaus Adler>: Я когда приеду, тогда буду уже в гс сидеть
-[18:28] <Barmacar>: ок
+  (5) SCORE: 0.4670 | DATE: Unknown
+  CONTENT: Макс
+я майонез
+Mayones_18
+Klaus Adler Barmacar August Mayones_18
+Иди к нам
+Mayones_18
+oleksandr
+Klaus Adler Barmacar August oleksandr Mayones_18 MEE6 A.L.I.S.A
+Ей, за что вы меня так назвали >~<
+ты теперь Майонез
   ----------------------------------------
 
 ################################################################################
-TIMESTAMP: 2025-12-22 15:32:02
+TIMESTAMP: 2025-12-23 11:02:19
 QUERY: Кто последний Добряк?
+MODE: Hybrid Search (Vector + BM25[0.6]) -> CrossEncoder (BAAI/bge-reranker-v2-m3)
 ################################################################################
 
-[1] SEMANTIC SEARCH RESULTS (Top 10)
-  (1) 2023-02-12 | === CHANNEL: #площаль | DATE: 2023-02-12 ===
-[18:25] <Granatuk>: Які твердження стосуються ковалентного полярного зв`язку?
-[18:33] <Granatuk>: З переліку формул обиріть ті що відповідають лише йонним сполукам   Na, NH3, CaO, KCl   Na2O, CaC2, MgCl2, NaH   O3, SO3, NaBr, Al(OH)3   H2CO3, H2S, AgCl, BaO
-  (2) 2022-05-15 | === CHANNEL: #площаль | DATE: 2022-05-15 ===
-[21:44] <Hans Friedreich von Grosse>: Боюсь Вас огорчить, но чужда мне теория рассового  доминирования и шовинистических воззрений, я - сторонник интернационалистических убеждений.
-  (3) 2024-03-24 | === CHANNEL: #площаль | DATE: 2024-03-24 ===
-[20:13] <Klaus Adler>: Характерними ознаками середнього ступеня отруєння є почервоніння обличчя, неадекватність поведінки, підвищення температури тіла до 38-400С
-  (4) 2025-06-11 | === CHANNEL: #площаль | DATE: 2025-06-11 ===
-[16:30] <Barmacar>: Кстати, мб переводить весь текст на китайский, потом засовывать в него и потом переводить его ответ с китайского на русский
-[16:30] <Barmacar>: хмм
-[23:38] <CASP (DanSir)>: Когда костылей больше чем конечностей
-  (5) 2022-04-13 | === CHANNEL: #площаль | DATE: 2022-04-13 ===
-[19:48] <Klaus Adler>: Fatal error!  Unhandled Exception: EXCEPTION_ACCESS_VIOLATION reading address 0xffffffff  0x00007ff94e5bcdc1 libcef.dll!UnknownFunction [] 0x00007ff94f45152e libcef.dll!UnknownFunction [] 0x00007ff95023899f libcef.dll!UnknownFunction [] 0x00007ff94dc7756c libcef.dll!UnknownFunction [] 0x00007ff94e7483f4 libcef.dll!UnknownFunction [] 0x00007ff94e7480dc libcef.dll!UnknownFunction [] 0x00007ff94f3e5f93 libcef.dll!UnknownFunction [] 0x00007ff94e748d4d libcef.dll!UnknownFunction [] 0x00007ff94dc61a73 libcef.dll!UnknownFunction [] 0x00007ff94dc62408 libcef.dll!UnknownFunction [] 0x00007ff94dbd80dd libcef.dll!UnknownFunct (part)
-  (6) 2025-05-19 | === CHANNEL: #площаль | DATE: 2025-05-19 ===
-[18:16] <ibuhaf72>: Barmacar підеш в норсгард 1х1х1 з максом?
-[18:17] <ibuhaf72>: через пів години
-[18:17] <Barmacar>: ну наверн можно
-[18:17] <ibuhaf72>: оке
-[18:44] <ibuhaf72>: Barmacar Ми чекаємо
-  (7) 2024-08-22 | === CHANNEL: #площаль | DATE: 2024-08-22 ===
-[09:09] <August>: Для цілей цього Статуту розуміється, що термін «гендерний» у контексті суспільства стосується двох статей - чоловічої та жіночої. Термін «гендерний» не має жодного іншого значення, відмінного від згаданого вище.  Каждый раз когда вы читаете эту норму, гдето в мире, от кринжа умирает один ЛГБТшник
-[11:06] <Granatuk>: Владиslave
-[11:32] <Granatuk>: Владиslave
-[11:55] <Владиslave>: Прости гранатик, я в зал иду
-[11:55] <Владиslave>: Мне очень интересно послушать, так что вечером расскажешь
-[11:57] <Granatuk>: окей
-[12:09] <LittlePudel | COMMS ARE CLOSED>: О, срач почистили
-[12:09] <August>: не тот канал
-  (8) 2021-05-01 | === CHANNEL: #летописи | DATE: 2021-05-01 ===
-[20:01] <August>: .....................................................
-  (9) 2022-11-11 | === CHANNEL: #площаль | DATE: 2022-11-11 ===
-[20:53] <Klaus Adler>: нефть качать?
-[20:53] <Barmacar>: мм, ну если я на Испании, можно на такое посмотреть)))
-[21:11] <Dodik>: Barmacar
-[21:11] <Dodik>: Barmacar
-[21:11] <Dodik>: Зайди
-[21:11] <Dodik>: в канал
-[23:23] <Klaus Adler>: Канализационный?
-  (10) 2021-02-16 | === CHANNEL: #площаль | DATE: 2021-02-16 ===
-[18:22] <Mayones_18>: ntjumnnnn;nnbbvcvcvcccbvvcvvjuigyoktl;.kkl.kl.klf.k.k.k.k.k.k.k.k.k.k.k.k.k.k.k.k.k.k.k.k.k.k.k.k.k.k.k.k.k.k.k.k.k.k.k.k.k.k.k.k.k.k.k.k.k.k.k.k.k.k.k.k.k.k.k.k.k.k.k.k.k.kkkkkkkk.kkkkkkkkkkkkkkk.kkkkkkkkkkkkk
-[18:26] <Mayones_18>: @everyone
-[18:26] <Mayones_18>: <@&784801791656984606>
-[18:28] <Klaus Adler>: дурачок?
-[19:02] <Klaus Adler>: Barmacar
-[19:02] <Klaus Adler>: Barmacar
-[19:02] <Klaus Adler>: Barmacar
-[19:02] <Barmacar>: что
-[19:03] <Klaus Adler>: dthybcm xthn
-[19:03] <Barmacar>: на цыганском не понимаю
-[21:34] <Barmacar>: Лол, варвары станут ггшками
+[1] HYBRID RETRIEVAL RESULTS (Top 20)
+  (1) 2022-03-23 | === CHANNEL: #площаль | DATE: 2022-03-23 ===
+[PREVIOUS CONTEXT]: [2022-03-23 19:09] Barmacar: Mayones_18 Mayones_18 Mayones_18
+[PREVIOUS CONTEXT]: [2022-03-23 19:09] Barmacar: Mayones_18 Mayones_18
+[PREVIOUS CONTEXT]: [2022-03-23 19:09] Barmacar: Mayones_18
+[2022-03-23 19:09] Barmacar: Mayones_18 Mayones_18
+[2022-03-23 19:09] Barmacar: Mayones_18 Mayones_18 Mayones_18
+[2022-03-23 19:09] Barmacar: Mayones_18 Mayones_18 Mayones_18 Mayones_18
+[2022-03-23 19:09] Barmacar: Mayones_18 Mayones_18 Mayones_18
+[2022-03-23 19:09] Barmacar: Mayones_18 Mayones_18
+[2022-03-23 19:09] Barmacar: Mayones_18 Mayones_18 Mayones_18
+[2022-03-23 19:09] Barmacar: Mayones_18
+[2022-03-23 19:09] Barmacar: Mayones_18 Mayones_18
+[2022-03-23 19:09] Barmacar: Mayones_18 Mayones_18 Mayones_18
+[2022-03-23 19:09] Barmacar: Mayones_18 Mayones_18 Mayones_18 Mayones_18
+[2022-03-23 19:09] Barmacar: Mayones_18
+[2022-03-23 19:09] Barmacar: Mayones_18 Mayones_18
+[2022-03-23 19:09] Barmacar: Mayones_18 Mayones_18 Mayones_18
+[2022-03-23 19:09] Barmacar: Mayones_18 Mayones_18 Mayones_18 Mayones_18
+[2022-03-23 19:09] Barmacar: Mayones_18
+[2022-03-23 19:09] Barmacar: Mayones_18 Mayones_18
+[2022-03-23 19:09] Barmacar: Mayones_18 Mayones_18 Mayones_18
+[2022-03-23 19:09] Barmacar: Mayones_18 Mayones_18 Mayones_18 Mayones_18
+[2022-03-23 19:10] Barmacar: Mayones_18
+[2022-03-23 19:10] Barmacar: Mayones_18 Mayones_18
+[2022-03-23 19:10] Barmacar: Mayones_18 Mayones_18 Mayones_18
+[2022-03-23 19:10] Barmacar: Mayones_18 Mayones_18 Mayones_18 Mayones_18
+[2022-03-23 19:10] Barmacar: Mayones_18
+[2022-03-23 19:10] Barmacar: Mayones_18 Mayones_18
+[2022-03-23 19:10] Barmacar: Mayones_18 Mayones_18 Mayones_18
+[2022-03-23 19:10] Barmacar: Mayones_18 Mayones_18 Mayones_18 Mayones_18
+[2022-03-23 19:11] Barmacar: Mayones_18
+[2022-03-23 19:11] Barmacar: Mayones_18 Mayones_18
+[2022-03-23 19:11] Barmacar: Mayones_18 Mayones_18 Mayones_18
+[2022-03-23 19:11] Barmacar: Mayones_18 Mayones_18 Mayones_18 Mayones_18
+  --------------------
+  (2) 2021-10-03 | === CHANNEL: #площаль | DATE: 2021-10-03 ===
+[PREVIOUS CONTEXT]: [2021-10-03 10:01] Barmacar: Mayones_18
+[PREVIOUS CONTEXT]: [2021-10-03 10:02] Barmacar: Mayones_18 Mayones_18 Mayones_18 Mayones_18
+[PREVIOUS CONTEXT]: [2021-10-03 10:02] Barmacar: Mayones_18 Mayones_18 Mayones_18
+[2021-10-03 10:02] Barmacar: Mayones_18 Mayones_18
+[2021-10-03 10:02] Barmacar: Mayones_18
+[2021-10-03 10:02] Barmacar: Mayones_18 Mayones_18
+[2021-10-03 10:02] Barmacar: Mayones_18 Mayones_18 Mayones_18
+[2021-10-03 10:02] Barmacar: Mayones_18 Mayones_18 Mayones_18 Mayones_18
+[2021-10-03 10:02] Barmacar: Mayones_18 Mayones_18 Mayones_18
+[2021-10-03 10:02] Barmacar: Mayones_18 Mayones_18
+[2021-10-03 10:02] Barmacar: Mayones_18
+[2021-10-03 10:02] Barmacar: Mayones_18 Mayones_18
+[2021-10-03 10:02] Barmacar: Mayones_18 Mayones_18 Mayones_18
+[2021-10-03 10:02] Barmacar: Mayones_18 Mayones_18 Mayones_18 Mayones_18
+[2021-10-03 10:02] Barmacar: Mayones_18 Mayones_18 Mayones_18
+[2021-10-03 10:02] Barmacar: Mayones_18 Mayones_18
+[2021-10-03 10:02] Barmacar: Mayones_18
+[2021-10-03 10:02] Barmacar: Mayones_18 Mayones_18
+[2021-10-03 10:02] Barmacar: Mayones_18 Mayones_18 Mayones_18
+[2021-10-03 10:02] Barmacar: Mayones_18 Mayones_18 Mayones_18 Mayones_18
+[2021-10-03 10:02] Barmacar: Mayones_18 Mayones_18 Mayones_18
+[2021-10-03 10:02] Barmacar: Mayones_18 Mayones_18
+[2021-10-03 10:02] Barmacar: Mayones_18
+[2021-10-03 10:02] Barmacar: Mayones_18 Mayones_18
+[2021-10-03 10:02] Barmacar: Mayones_18 Mayones_18 Mayones_18
+[2021-10-03 10:02] Barmacar: Mayones_18 Mayones_18
+[2021-10-03 10:02] Barmacar: Mayones_18 Mayones_18 Mayones_18
+[2021-10-03 10:02] Barmacar: Mayones_18 Mayones_18
+[2021-10-03 10:02] Barmacar: Mayones_18
+[2021-10-03 10:02] Barmacar: Mayones_18 Mayones_18
+[2021-10-03 10:02] Barmacar: Mayones_18
+[2021-10-03 10:02] Barmacar: Mayones_18
+[2021-10-03 10:02] Barmacar: Mayones_18 Mayones_18
+[2021-10-03 10:02] Barmacar: Mayones_18 Mayones_18 Mayones_18
+[2021-10-03 10:02] Barmacar: Mayones_18 Mayones_18 Mayones_18 Mayones_18
+  --------------------
+  (3) 2022-01-03 | === CHANNEL: #площаль | DATE: 2022-01-03 ===
+[PREVIOUS CONTEXT]: [2022-01-03 17:04] Barmacar: Mayones_18 Mayones_18 Mayones_18 Mayones_18
+[PREVIOUS CONTEXT]: [2022-01-03 17:05] Barmacar: Mayones_18 Mayones_18 Mayones_18 Mayones_18
+[PREVIOUS CONTEXT]: [2022-01-03 17:05] Barmacar: Mayones_18 Mayones_18 Mayones_18 Mayones_18
+[2022-01-03 17:05] Barmacar: Mayones_18 Mayones_18 Mayones_18
+[2022-01-03 17:05] Barmacar: Mayones_18 Mayones_18 Mayones_18
+[2022-01-03 17:05] Barmacar: Mayones_18 Mayones_18 Mayones_18
+[2022-01-03 17:05] Barmacar: Mayones_18 Mayones_18 Mayones_18
+[2022-01-03 17:05] Barmacar: Mayones_18 Mayones_18
+[2022-01-03 17:05] Barmacar: Mayones_18
+[2022-01-03 17:05] Barmacar: Mayones_18 Mayones_18 Mayones_18
+[2022-01-03 17:07] Barmacar: Mayones_18 Mayones_18
+[2022-01-03 17:07] Barmacar: Mayones_18
+[2022-01-03 17:07] Barmacar: Mayones_18 Mayones_18
+[2022-01-03 17:07] Barmacar: Mayones_18
+[2022-01-03 17:07] Barmacar: Mayones_18
+[2022-01-03 17:07] Barmacar: Mayones_18
+[2022-01-03 17:07] Barmacar: Mayones_18
+[2022-01-03 17:07] Barmacar: Mayones_18
+[2022-01-03 17:07] Barmacar: Mayones_18 Mayones_18
+[2022-01-03 17:07] Barmacar: Mayones_18 Mayones_18
+[2022-01-03 17:07] Barmacar: Mayones_18 Mayones_18 Mayones_18
+[2022-01-03 17:07] Barmacar: Mayones_18 Mayones_18 Mayones_18 Mayones_18
+[2022-01-03 17:07] Barmacar: Mayones_18 Mayones_18 Mayones_18 Mayones_18
+[2022-01-03 17:07] Barmacar: Mayones_18 Mayones_18
+[2022-01-03 17:07] Barmacar: Mayones_18 Mayones_18
+[2022-01-03 17:07] Barmacar: Mayones_18 Mayones_18 Mayones_18 Mayones_18
+[2022-01-03 17:07] Barmacar: Mayones_18 Mayones_18
+[2022-01-03 17:07] Barmacar: Mayones_18 Mayones_18 Mayones_18
+[2022-01-03 17:07] Barmacar: Mayones_18 Mayones_18 Mayones_18 Mayones_18
+[2022-01-03 17:07] Barmacar: Mayones_18 Mayones_18 Mayones_18
+[2022-01-03 17:07] Barmacar: Mayones_18 Mayones_18
+[2022-01-03 17:07] Barmacar: Mayones_18
+[2022-01-03 17:28] Klaus Adler: Не зови его
+[2022-01-03 17:28] Klaus Adler: Не надо
+[2022-01-03 17:38] Barmacar: why
+  --------------------
+  (4) 2021-10-01 | === CHANNEL: #площаль | DATE: 2021-10-01 ===
+[PREVIOUS CONTEXT]: [2021-10-01 15:41] Mayones_18: Barmacar
+[2021-10-01 17:30] Barmacar: Mayones_18
+[2021-10-01 17:30] Barmacar: Mayones_18
+[2021-10-01 17:30] Barmacar: Mayones_18 Mayones_18
+[2021-10-01 17:30] Barmacar: Mayones_18 Mayones_18 Mayones_18 Mayones_18
+[2021-10-01 17:30] Barmacar: Mayones_18 Mayones_18
+[2021-10-01 17:30] Barmacar: Mayones_18 Mayones_18 Mayones_18
+[2021-10-01 17:30] Barmacar: Mayones_18 Mayones_18 Mayones_18 Mayones_18
+[2021-10-01 17:30] Barmacar: Mayones_18 Mayones_18 Mayones_18 Mayones_18
+[2021-10-01 17:30] Barmacar: Mayones_18 Mayones_18 Mayones_18
+[2021-10-01 17:30] Barmacar: Mayones_18 Mayones_18
+[2021-10-01 17:30] Barmacar: Mayones_18
+[2021-10-01 17:31] Barmacar: Mayones_18 Mayones_18 Mayones_18
+[2021-10-01 17:31] Barmacar: Mayones_18 Mayones_18
+[2021-10-01 17:31] Barmacar: Mayones_18 Mayones_18 Mayones_18
+[2021-10-01 17:31] Barmacar: Mayones_18 Mayones_18 Mayones_18 Mayones_18
+[2021-10-01 17:31] Barmacar: Mayones_18 Mayones_18 Mayones_18 Mayones_18
+[2021-10-01 17:31] Barmacar: Mayones_18 Mayones_18 Mayones_18
+[2021-10-01 17:31] Barmacar: Mayones_18
+[2021-10-01 17:31] Barmacar: Mayones_18 Mayones_18 Mayones_18 Mayones_18
+[2021-10-01 17:31] Barmacar: Mayones_18 Mayones_18
+[2021-10-01 18:11] Barmacar: Mayones_18
+[2021-10-01 18:13] Barmacar: Mayones_18
+  --------------------
+  (5) 2021-09-21 | === CHANNEL: #площаль | DATE: 2021-09-21 ===
+[PREVIOUS CONTEXT]: [2021-09-21 16:53] Barmacar: Mayones_18 Mayones_18 Mayones_18
+[PREVIOUS CONTEXT]: [2021-09-21 16:53] Barmacar: Mayones_18 Mayones_18
+[PREVIOUS CONTEXT]: [2021-09-21 16:53] Barmacar: Mayones_18
+[2021-09-21 16:53] Barmacar: Mayones_18 Mayones_18
+[2021-09-21 16:53] Barmacar: Mayones_18 Mayones_18 Mayones_18
+[2021-09-21 16:53] Barmacar: Mayones_18 Mayones_18 Mayones_18 Mayones_18
+[2021-09-21 16:53] Barmacar: Mayones_18 Mayones_18 Mayones_18
+[2021-09-21 16:53] Barmacar: Mayones_18 Mayones_18
+[2021-09-21 16:53] Barmacar: Mayones_18 Mayones_18 Mayones_18
+[2021-09-21 16:57] Barmacar: Mayones_18 Mayones_18 Mayones_18
+[2021-09-21 16:57] Barmacar: Mayones_18 Mayones_18
+[2021-09-21 16:57] Barmacar: Mayones_18 Mayones_18 Mayones_18
+[2021-09-21 16:57] Barmacar: Mayones_18 Mayones_18 Mayones_18 Mayones_18
+[2021-09-21 16:57] Barmacar: Mayones_18 Mayones_18 Mayones_18 Mayones_18
+[2021-09-21 16:57] Barmacar: Mayones_18 Mayones_18 Mayones_18
+[2021-09-21 16:57] Barmacar: Mayones_18 Mayones_18
+[2021-09-21 16:57] Barmacar: Mayones_18
+[2021-09-21 16:57] Barmacar: Mayones_18 Mayones_18
+[2021-09-21 16:57] Barmacar: Mayones_18 Mayones_18 Mayones_18
+[2021-09-21 16:57] Barmacar: Mayones_18 Mayones_18 Mayones_18 Mayones_18
+[2021-09-21 16:57] Barmacar: Mayones_18 Mayones_18 Mayones_18 Mayones_18
+[2021-09-21 16:58] Barmacar: Mayones_18 Mayones_18 Mayones_18
+[2021-09-21 16:58] Barmacar: Mayones_18 Mayones_18
+[2021-09-21 16:58] Barmacar: Mayones_18
+  --------------------
+  (6) 2021-05-21 | === CHANNEL: #площаль | DATE: 2021-05-21 ===
+[PREVIOUS CONTEXT]: [2021-05-21 12:26] Mayones_18: 8M-L0xY 68M-L0xY 68M-L0xY 68M-L0xY 68M-L0xY 68M-L0xY 68M-L0xY 68M-L0xY8M-L0xY 68M-L0xY 68M-L0xY 68M-L0xY 68M-L0xY 68M-L0xY 68M-L0xY 68M-L0xY
+[PREVIOUS CONTEXT]: [2021-05-21 12:26] Mayones_18: 8M-L0xY 68M-L0xY 68M-L0xY 68M-L0xY 68M-L0xY 68M-L0xY 68M-L0xY 68M-L0xYv
+[PREVIOUS CONTEXT]: [2021-05-21 12:26] Mayones_18: 8M-L0xY 68M-L0xY 68M-L0xY 68M-L0xY 68M-L0xY 68M-L0xY 68M-L0xY 68M-L0xY
+[2021-05-21 12:26] Mayones_18: 8M-L0xY 68M-L0xY 68M-L0xY 68M-L0xY 68M-L0xY 68M-L0xY 68M-L0xY 68M-L0xY8M-L0xY 68M-L0xY 68M-L0xY 68M-L0xY 68M-L0xY 68M-L0xY 68M-L0xY 68M-L0xY8M-L0xY 68M-L0xY 68M-L0xY 68M-L0xY 68M-L0xY 68M-L0xY 68M-L0xY 68M-L0xY
+[2021-05-21 12:26] Klaus Adler: м м
+[2021-05-21 12:26] Mayones_18: 8M-L0xY 68M-L0xY 68M-L0xY 68M-L0xY 68M-L0xY 68M-L0xY 68M-L0xY 68M-L0xY8M-L0xY 68M-L0xY 68M-L0xY 68M-L0xY 68M-L0xY 68M-L0xY 68M-L0xY 68M-L0xY8M-L0xY 68M-L0xY 68M-L0xY 68M-L0xY 68M-L0xY 68M-L0xY 68M-L0xY 68M-L0xY8M-L0xY 68M-L0xY 68M-L0xY 68M-L0xY 68M-L0xY 68M-L0xY 68M-L0xY 68M-L0xY8M-L0xY 68M-L0xY 68M-L0xY 68M-L0xY 68M-L0xY 68M-L0xY 68M-L0xY 68M-L0xY
+[2021-05-21 12:26] Mayones_18: 8M-L0xY 68M-L0xY 68M-L0xY 68M-L0xY 68M-L0xY 68M-L0xY 68M-L0xY 68M-L0xY
+[2021-05-21 12:26] Mayones_18: 8M-L0xY 68M-L0xY 68M-L0xY 68M-L0xY 68M-L0xY 68M-L0xY 68M-L0xY 68M-L0xY
+[2021-05-21 12:26] Mayones_18: 8M-L0xY 68M-L0xY 68M-L0xY 68M-L0xY 68M-L0xY 68M-L0xY 68M-L0xY 68M-L0xY
+[2021-05-21 12:26] Mayones_18: 8M-L0xY 68M-L0xY 68M-L0xY 68M-L0xY 68M-L0xY 68M-L0xY 68M-L0xY 68M-L0xY
+[2021-05-21 12:26] Barmacar: 68M-L0xY
+[2021-05-21 12:26] Barmacar: 68M-L0xY
+[2021-05-21 12:26] Barmacar: 68M-L0xY
+[2021-05-21 12:26] Barmacar: 68M-L0xY
+[2021-05-21 12:26] Barmacar: 68M-L0xY
+[2021-05-21 12:26] Barmacar: 68M-L0xY
+[2021-05-21 12:26] Barmacar: 68M-L0xY
+[2021-05-21 12:26] Barmacar: 68M-L0xY
+[2021-05-21 12:26] Barmacar: 68M-L0xY
+  --------------------
+  (7) 2021-05-21 | === CHANNEL: #площаль | DATE: 2021-05-21 ===
+[PREVIOUS CONTEXT]: [2021-05-21 12:25] August: 68M-L0xY
+[PREVIOUS CONTEXT]: [2021-05-21 12:25] August: 68M-L0xY
+[PREVIOUS CONTEXT]: [2021-05-21 12:26] Mayones_18: 8M-L0xY 68M-L0xY 68M-L0xY 68M-L0xY 68M-L0xY 68M-L0xY 68M-L0xY 68M-L0xY
+[2021-05-21 12:26] Mayones_18: 8M-L0xY 68M-L0xY 68M-L0xY 68M-L0xY 68M-L0xY 68M-L0xY 68M-L0xY 68M-L0xY
+[2021-05-21 12:26] Mayones_18: 8M-L0xY 68M-L0xY 68M-L0xY 68M-L0xY 68M-L0xY 68M-L0xY 68M-L0xY 68M-L0xY
+[2021-05-21 12:26] Mayones_18: 8M-L0xY 68M-L0xY 68M-L0xY 68M-L0xY 68M-L0xY 68M-L0xY 68M-L0xY 68M-L0xY
+[2021-05-21 12:26] Mayones_18: 8M-L0xY 68M-L0xY 68M-L0xY 68M-L0xY 68M-L0xY 68M-L0xY 68M-L0xY 68M-L0xY
+[2021-05-21 12:26] Klaus Adler: 68M-L0xY
+[2021-05-21 12:26] Klaus Adler: 68M-L0xY
+[2021-05-21 12:26] Klaus Adler: 68M-L0xY
+[2021-05-21 12:26] Klaus Adler: 68M-L0xY
+[2021-05-21 12:26] Klaus Adler: 68M-L0xY
+[2021-05-21 12:26] Klaus Adler: 68M-L0xY
+[2021-05-21 12:26] August: 68M-L0xY
+[2021-05-21 12:26] Klaus Adler: 68M-L0xY
+[2021-05-21 12:26] August: 68M-L0xY
+[2021-05-21 12:26] August: 68M-L0xY
+[2021-05-21 12:26] Klaus Adler: 68M-L0xY
+[2021-05-21 12:26] August: 68M-L0xY
+[2021-05-21 12:26] August: 68M-L0xY
+[2021-05-21 12:26] Klaus Adler: 68M-L0xY
+[2021-05-21 12:26] August: 68M-L0xY
+[2021-05-21 12:26] August: 68M-L0xY
+[2021-05-21 12:26] Klaus Adler: 68M-L0xY
+[2021-05-21 12:26] August: 68M-L0xY
+[2021-05-21 12:26] Klaus Adler: 68M-L0xY
+[2021-05-21 12:26] Mayones_18: 8M-L0xY 68M-L0xY 68M-L0xY 68M-L0xY 68M-L0xY 68M-L0xY 68M-L0xY 68M-L0xY
+[2021-05-21 12:26] August: 68M-L0xY68M-L0xY68M-L0xY
+[2021-05-21 12:26] Klaus Adler: 68M-L0xY
+[2021-05-21 12:26] August: 68M-L0xY
+[2021-05-21 12:26] Klaus Adler: 68M-L0xY
+[2021-05-21 12:26] Mayones_18: 8M-L0xY 68M-L0xY 68M-L0xY 68M-L0xY 68M-L0xY 68M-L0xY 68M-L0xY 68M-L0xY
+[2021-05-21 12:26] Mayones_18: vv
+[2021-05-21 12:26] Klaus Adler: 68M-L0xY
+[2021-05-21 12:26] Klaus Adler: 68M-L0xY
+[2021-05-21 12:26] Klaus Adler: 68M-L0xY
+  --------------------
+  (8) 2021-05-21 | === CHANNEL: #площаль | DATE: 2021-05-21 ===
+[PREVIOUS CONTEXT]: [2021-05-21 12:26] Barmacar: 68M-L0xY
+[PREVIOUS CONTEXT]: [2021-05-21 12:26] Barmacar: 68M-L0xY
+[PREVIOUS CONTEXT]: [2021-05-21 12:26] Barmacar: 68M-L0xY
+[2021-05-21 12:26] Mayones_18: 8M-L0xY 68M-L0xY 68M-L0xY 68M-L0xY 68M-L0xY 68M-L0xY 68M-L0xY 68M-L0xY8M-L0xY 68M-L0xY 68M-L0xY 68M-L0xY 68M-L0xY 68M-L0xY 68M-L0xY 68M-L0xY
+[2021-05-21 12:26] Mayones_18: 8M-L0xY 68M-L0xY 68M-L0xY 68M-L0xY 68M-L0xY 68M-L0xY 68M-L0xY 68M-L0xY8M-L0xY 68M-L0xY 68M-L0xY 68M-L0xY 68M-L0xY 68M-L0xY 68M-L0xY 68M-L0xY
+[2021-05-21 12:26] Mayones_18: 8M-L0xY 68M-L0xY 68M-L0xY 68M-L0xY 68M-L0xY 68M-L0xY 68M-L0xY 68M-L0xY
+[2021-05-21 12:26] Mayones_18: 8M-L0xY 68M-L0xY 68M-L0xY 68M-L0xY 68M-L0xY 68M-L0xY 68M-L0xY 68M-L0xY
+[2021-05-21 12:26] Mayones_18: v8M-L0xY 68M-L0xY 68M-L0xY 68M-L0xY 68M-L0xY 68M-L0xY 68M-L0xY 68M-L0xYv
+[2021-05-21 12:26] Mayones_18: 8M-L0xY 68M-L0xY 68M-L0xY 68M-L0xY 68M-L0xY 68M-L0xY 68M-L0xY 68M-L0xY
+[2021-05-21 12:26] Klaus Adler: 68M-L0xY
+[2021-05-21 12:26] Klaus Adler: 68M-L0xY
+[2021-05-21 12:27] Klaus Adler: 68M-L0xY
+[2021-05-21 12:27] Barmacar: 68M-L0xY
+[2021-05-21 12:27] Barmacar: 68M-L0xY
+[2021-05-21 12:27] Klaus Adler: 68M-L0xY
+[2021-05-21 12:27] Mayones_18: 8M-L0xY 68M-L0xY 68M-L0xY 68M-L0xY 68M-L0xY 68M-L0xY 68M-L0xY 68M-L0xY8M-L0xY 68M-L0xY 68M-L0xY 68M-L0xY 68M-L0xY 68M-L0xY 68M-L0xY 68M-L0xY8M-L0xY 68M-L0xY 68M-L0xY 68M-L0xY 68M-L0xY 68M-L0xY 68M-L0xY 68M-L0xY
+[2021-05-21 12:27] Barmacar: 68M-L0xY
+[2021-05-21 12:27] Barmacar: 68M-L0xY
+[2021-05-21 12:27] Barmacar: 68M-L0xY
+[2021-05-21 12:27] Barmacar: 68M-L0xY
+[2021-05-21 12:27] Barmacar: 68M-L0xY68M-L0xY
+[2021-05-21 12:27] Barmacar: 68M-L0xY
+[2021-05-21 12:27] Barmacar: 68M-L0xY
+[2021-05-21 12:27] Barmacar: 68M-L0xY
+[2021-05-21 12:27] Klaus Adler: 68M-L0xY
+[2021-05-21 12:27] Klaus Adler: 68M-L0xY
+[2021-05-21 12:27] Barmacar: 68M-L0xY
+[2021-05-21 12:27] Barmacar: 68M-L0xY
+[2021-05-21 12:27] Barmacar: 68M-L0xY
+[2021-05-21 12:27] Barmacar: 68M-L0xY
+  --------------------
+  (9) 2021-11-01 | === CHANNEL: #площаль | DATE: 2021-11-01 ===
+[PREVIOUS CONTEXT]: [2021-11-01 11:04] Barmacar: Klaus Adler
+[PREVIOUS CONTEXT]: [2021-11-01 11:04] Barmacar: Klaus Adler
+[PREVIOUS CONTEXT]: [2021-11-01 11:04] Barmacar: Klaus Adler
+[2021-11-01 11:04] Barmacar: Klaus Adler
+[2021-11-01 11:04] Barmacar: Как тебе?
+[2021-11-01 11:04] Barmacar: А?
+[2021-11-01 11:04] Barmacar: Klaus Adler
+[2021-11-01 11:04] Klaus Adler: Barmacar
+[2021-11-01 11:04] Klaus Adler: Barmacar
+[2021-11-01 11:04] Klaus Adler: Barmacar
+[2021-11-01 11:04] Klaus Adler: Barmacar
+[2021-11-01 11:04] Klaus Adler: Barmacar
+[2021-11-01 11:04] Klaus Adler: Barmacar
+[2021-11-01 11:04] Klaus Adler: Barmacar
+[2021-11-01 11:04] Klaus Adler: Barmacar
+[2021-11-01 11:04] Klaus Adler: Barmacar
+[2021-11-01 11:04] Klaus Adler: Barmacar
+[2021-11-01 11:04] Klaus Adler: Barmacar
+[2021-11-01 11:04] Klaus Adler: Barmacar
+[2021-11-01 11:04] Klaus Adler: Barmacar
+[2021-11-01 11:04] Klaus Adler: Barmacar
+[2021-11-01 11:04] Klaus Adler: Приятного)
+[2021-11-01 11:05] Barmacar: Klaus Adler
+[2021-11-01 11:05] Barmacar: Klaus Adler
+[2021-11-01 11:05] Barmacar: Klaus Adler
+[2021-11-01 11:05] Barmacar: Klaus Adler
+[2021-11-01 11:05] Barmacar: Klaus Adler
+[2021-11-01 11:05] Barmacar: Klaus Adler
+[2021-11-01 11:05] Barmacar: Klaus Adler
+[2021-11-01 11:05] Barmacar: Klaus Adler
+[2021-11-01 11:05] Barmacar: Klaus Adler
+[2021-11-01 11:05] Barmacar: Klaus Adler
+[2021-11-01 11:05] Barmacar: Klaus Adler
+[2021-11-01 11:05] Barmacar: Klaus Adler
+[2021-11-01 11:05] Barmacar: Klaus Adler
+[2021-11-01 11:05] Barmacar: Klaus Adler
+[2021-11-01 11:05] Barmacar: Klaus Adler
+[2021-11-01 11:05] Barmacar: Klaus Adler
+[2021-11-01 11:05] Barmacar: Klaus Adler
+[2021-11-01 11:05] Klaus Adler: Barmacar
+[2021-11-01 11:05] Klaus Adler: Barmacar
+[2021-11-01 11:05] Klaus Adler: Barmacar
+[2021-11-01 11:05] Klaus Adler: Barmacar
+[2021-11-01 11:05] Klaus Adler: Barmacar
+[2021-11-01 11:05] Klaus Adler: Barmacar
+[2021-11-01 11:05] Klaus Adler: Barmacar
+[2021-11-01 11:05] Klaus Adler: Barmacar
+  --------------------
+  (10) 2021-05-21 | === CHANNEL: #площаль | DATE: 2021-05-21 ===
+[PREVIOUS CONTEXT]: [2021-05-21 12:26] Klaus Adler: 68M-L0xY
+[PREVIOUS CONTEXT]: [2021-05-21 12:26] Klaus Adler: 68M-L0xY
+[PREVIOUS CONTEXT]: [2021-05-21 12:26] Klaus Adler: 68M-L0xY
+[2021-05-21 12:26] Mayones_18: 8M-L0xY 68M-L0xY 68M-L0xY 68M-L0xY 68M-L0xY 68M-L0xY 68M-L0xY 68M-L0xYv
+[2021-05-21 12:26] Klaus Adler: 68M-L0xY
+[2021-05-21 12:26] Barmacar: 68M-L0xY
+[2021-05-21 12:26] Mayones_18: 8M-L0xY 68M-L0xY 68M-L0xY 68M-L0xY 68M-L0xY 68M-L0xY 68M-L0xY 68M-L0xY
+[2021-05-21 12:26] Klaus Adler: с68M-L0xY68M-L0xYм68M-L0xY
+[2021-05-21 12:26] Mayones_18: v8M-L0xY 68M-L0xY 68M-L0xY 68M-L0xY 68M-L0xY 68M-L0xY 68M-L0xY 68M-L0xY
+[2021-05-21 12:26] Barmacar: 68M-L0xY
+[2021-05-21 12:26] Barmacar: 68M-L0xY
+[2021-05-21 12:26] Klaus Adler: мм
+[2021-05-21 12:26] Barmacar: 68M-L0xY
+[2021-05-21 12:26] Barmacar: 68M-L0xY
+[2021-05-21 12:26] Barmacar: 68M-L0xY
+[2021-05-21 12:26] August: 68M-L0xY
+[2021-05-21 12:26] August: 68M-L0xY
+[2021-05-21 12:26] Barmacar: 68M-L0xY
+[2021-05-21 12:26] August: 68M-L0xY
+[2021-05-21 12:26] August: 68M-L0xY
+[2021-05-21 12:26] Barmacar: 68M-L0xY
+[2021-05-21 12:26] August: 68M-L0xY
+[2021-05-21 12:26] August: 68M-L0xY
+[2021-05-21 12:26] Barmacar: 68M-L0xY
+[2021-05-21 12:26] Barmacar: 68M-L0xY
+[2021-05-21 12:26] August: 68M-L0xY68M-L0xY
+[2021-05-21 12:26] Mayones_18: 8M-L0xY 68M-L0xY 68M-L0xY 68M-L0xY 68M-L0xY 68M-L0xY 68M-L0xY 68M-L0xY8M-L0xY 68M-L0xY 68M-L0xY 68M-L0xY 68M-L0xY 68M-L0xY 68M-L0xY 68M-L0xYv
+[2021-05-21 12:26] Mayones_18: 8M-L0xY 68M-L0xY 68M-L0xY 68M-L0xY 68M-L0xY 68M-L0xY 68M-L0xY 68M-L0xY8M-L0xY 68M-L0xY 68M-L0xY 68M-L0xY 68M-L0xY 68M-L0xY 68M-L0xY 68M-L0xY
+[2021-05-21 12:26] Mayones_18: 8M-L0xY 68M-L0xY 68M-L0xY 68M-L0xY 68M-L0xY 68M-L0xY 68M-L0xY 68M-L0xYv
+[2021-05-21 12:26] Mayones_18: 8M-L0xY 68M-L0xY 68M-L0xY 68M-L0xY 68M-L0xY 68M-L0xY 68M-L0xY 68M-L0xY
+  --------------------
+  (11) Unknown | При том, что это твое "творчество"
+Кто тебе такое сказал?
+Шиз
+Только ты о нём так много говоришь...так что приятного аппетиьа
+Придумал че-то и теперь мне втирает
+Всё было сказано тобой
+Я редко использую это слово...
+Proofs?
+Ну конечно
+В последний раз я говорил об этом где-то в 10 класе
+  --------------------
+  (12) Unknown | кидай
+кидай
+ау
+кинь
+последний
+лохар
+<:ahegao:973942896766111815>
+кинул
+<:ahegao:973942896766111815>
+<:ahegao:973942896766111815>
+  --------------------
+  (13) Unknown | ^-^
+._.
+(---+---)
+о_О
+Ой
+Проблема
+В хамачи ток 5 человек может быт
+Ты последний
+Ты 6
+памянем
+  --------------------
+  (14) Unknown | Granatuk не уходииии
+куда
+я только кушать уш'л
+ок
+сча после этого тоже вернись
+кидай
+кидай
+ау
+кинь
+последний
+  --------------------
+  (15) Unknown | Egor
+Dodik
+Бля
+What on earth is that
+Хз,
+типо
+<:dumb_dead:977128060824465408>
+не гойда
+Dodik  ks?
+Barmacar сегодня последний день
+  --------------------
+  (16) Unknown | Водым лул
+алло
+я туть
+пошол ты
+Ето был последний бой
+Перед першом
+Имба
+August
+ты сегодня будешь играть?
+Да
+  --------------------
+  (17) Unknown | Ба
+Да
+К сожалению мли к счастью
+Пол часа
+Сори
+мы победили
+но
+это последний ход эры....
+48/53
+Я не понимаю
+  --------------------
+  (18) Unknown | кто смотрит евровидиние🤡
+Добро пожаловать в Европу!
+Кто играет на арадо🤡
+Кого называют Максом 🤡
+Кто играет в игры 🤡
+Кроатия в соло закрывала всех
+Согласен
+Мы в номере вчера смотрели
+Владиslave
+Кто ставит клоунов в 2023 🤡
+  --------------------
+  (19) Unknown | Klaus AdlerBarmacar
+https://steamcommunity.com/sharedfiles/filedetails/?id=1824439832&searchtext=Units+defense
+J2W-YXvv
+Barmacar бичмак
+ты щас занят
+У меня последний экзамен через 3 часа
+окаэ, удачки!
+<:Agree:943039980152971265>
+Понятно
+August tut?
+  --------------------
+  (20) Unknown | го в тундру через полчасика
+uj
+го
+Вы где?
+Barmacar  Klaus Adler
+Водым лул
+алло
+я туть
+пошол ты
+Ето был последний бой
+  --------------------
 
-[2] KEYWORD SEARCH RESULTS (Keyword: 'Добряк')
-  (1) 2021-07-28 | === CHANNEL: #летописи | DATE: 2021-07-28 ===
-[21:19] <August>: Я Добряк этой страны приветствую своих подданных. Я сообщаю вам о успешном подавлении восстания дворян имперской гвардией во главе с решительно настроенным мной.   В результате восстания все дворяне были лишены титулов. В честь победы над прогнившей аристократией что мучила народ, я объявляю себя посланником божьим и о перестройке империи и её законов.   Я провозглашаю "Священную Империю Повелителей"!
-[23:33] <CASP (DanSir)>: Итак, собачья вахта
-[23:33] <CASP (DanSir)>: Все спят
-[23:33] <CASP (DanSir)>: Самое время
-[23:33] <CASP (DanSir)>: Для того
-[23:34] <CASP (DanSir)>: Чтобы придумать план переворота
-  (2) 2022-03-05 | === CHANNEL: #летописи | DATE: 2022-03-05 ===
-[18:57] <Klaus Adler>: "Дипломатия тоже битва" - левый чел из метро...  Поздравим же Klaus Adler с победой и получением Добряк! Надеемся что он будет править также, как и заполучил этот титул: без лишних жертв и решением всего через дипломатию!
-[19:31] <Klaus Adler>: я меняю это правило: вам не будут давать таймаут на минуту, но правила написания желательно знать и писать правильно
-[20:34] <August>: Также чтоб избежать ситуаций где человек "случайно побеждал" в следующих партиях отменяется дипломатическая победе. Она может быть добавлена если все участники партии не против
-  (3) 2022-05-18 | === CHANNEL: #летописи | DATE: 2022-05-18 ===
-[15:55] <Barmacar>: <@&836210904730959902> Welcome the new emperor August who won in the great fight on the Third Reich
-[15:57] <Klaus Adler>: <@&836210904730959902> Поздравляем August с получением титула Добряк за победу на Третьем Рейхе!  Спонсор перевода: Музей Четвертого Рейха
-[20:49] <August>: Об'являю что в сражении за престол  Империи великолепный я одержал абсолютную победу, не оставив хотя ни одного шанса соперникам: Северной унии, Великобритании, Польше, а затем СССР. Своей победой я показал и доказал своё превосходство в самом сложном и в какой-то степени красивом искусстве - искусстве войны
-  (4) 2023-07-28 | === CHANNEL: #летописи | DATE: 2023-07-28 ===
-[08:31] <STR>: Всем привет, я Добряк  в здравом уме и трезвом сознании передаю императора новому правителю Dodik, да будет мир и дружба
-[09:11] <Dodik>: Hallo <@&1015904419470114857>, es lebe der neue Добряк !
-[09:13] <Dodik>: Ich werde den Anhängern des Dritten Reiches eine <@&1129472030543200367>  geben!
-[09:55] <Dodik>: Так как на этом сервере есть die Untermenschen, я специально для них создам концлагерь.
-  (5) 2023-09-15 | === CHANNEL: #летописи | DATE: 2023-09-15 ===
-[06:20] <Dodik>: Сегодня закончился первый этап игр на Добряк , победил в них Klaus Adler , поздравляем его! Так же теперь Klaus Adler назначен мэром будущего города. Теперь в его распоряжении  Unbekannte Orte, где он сможет установить свои порядки. Ruhm Drittes Reich !
-[06:25] <Klaus Adler>: <@&1015904419470114857> Следующый этап императорской игры: Покер! Игра запланирована на выходные, так что будьте готовы!
-[10:28] <Granatuk>: 《 Leute 》 Следующый этап императорской
-  (6) 2024-05-06 | === CHANNEL: #летописи | DATE: 2024-05-06 ===
-[16:42] <Barmacar>: ply a victory over August, it was a victory of all democracies of the world over self-created tyrannies!  Now that the shadow of tyranny had receded, a new era had begun. It will be an era where democracy will be in every home, in every heart. The new Добряк is me and I will see that if anybody violates freedom of they will get few pounds of it dropped on their heads. (part)
-  (7) 2024-06-02 | === CHANNEL: #летописи | DATE: 2024-06-02 ===
-[20:21] <Barmacar>: <@&1015904419470114857>  Я украл корону у Вадимуса пока он спорил с Егором так что теперь я тут Добряк . Из важных изменений: сервер вновь переведен на английский, <#862031269844090880>  очищен от радиоактивных загрязнений и снова в строю, а также <#1241305030695583754>⁠ (совет) переименован в Верховную Раду и вскоре получит несколько изменений в правилах. August  назначен <@&1243302091427025037> вместо меня. Также принимаю предложения по переименованию сервера.
-[20:47] <Barmacar>: @◈ People ◈  Я украл корону у Вадимуса
-  (8) 2024-06-24 | === CHANNEL: #летописи | DATE: 2024-06-24 ===
-[08:50] <Barmacar>: Я Добряк
-  (9) 2024-11-03 | === CHANNEL: #летописи | DATE: 2024-11-03 ===
-[16:07] <STR>: Я крутой  Добряк 🫨 😱   "И заставил всех остальных преклонится пред до мной". И кто теперь на коленях?
-  (10) 2024-11-08 | === CHANNEL: #летописи | DATE: 2024-11-08 ===
-[09:37] <Позитивный чел>: Договор между мной и егором
-[19:48] <STR>: Егор= позор навсегда
-[20:37] <Barmacar>: Вадим крыса а Егор это... Слов нету
-[21:00] <Dodik>: Возрадуйтесь Добряки ! Я — величайший пророк всего сервера, пробудился. Вы, мои верные и не очень последователи, ждали этого момента с трепетом и благоговением. С предвкушением и надеждой, с сомнением и восхищением. И вот он я, стою перед вами и объявляю конец эпохи неверия.  Да начнется новая эпоха создания священных легенд и чудесных пророчеств. Мир будет преобразован по замыслу Небесного Учителя. Слава новому императору!
-[21:22] <Granatuk>: Ок
-
-[3] RERANKING RESULTS (Top 5)
-  (1) SCORE: 0.9993756413459778 | DATE: 2024-05-06
-  CONTENT: === CHANNEL: #летописи | DATE: 2024-05-06 ===
-[16:42] <Barmacar>: ply a victory over August, it was a victory of all democracies of the world over self-created tyrannies!  Now that the shadow of tyranny had receded, a new era had begun. It will be an era where democracy will be in every home, in every heart. The new Добряк is me and I will see that if anybody violates freedom of they will get few pounds of it dropped on their heads. (part)
+[2] RERANKED RESULTS (Top 5)
+  (1) SCORE: 0.0268 | DATE: Unknown
+  CONTENT: Egor
+Dodik
+Бля
+What on earth is that
+Хз,
+типо
+<:dumb_dead:977128060824465408>
+не гойда
+Dodik  ks?
+Barmacar сегодня последний день
   ----------------------------------------
-  (2) SCORE: 0.9993684887886047 | DATE: 2023-02-12
-  CONTENT: === CHANNEL: #площаль | DATE: 2023-02-12 ===
-[18:25] <Granatuk>: Які твердження стосуються ковалентного полярного зв`язку?
-[18:33] <Granatuk>: З переліку формул обиріть ті що відповідають лише йонним сполукам   Na, NH3, CaO, KCl   Na2O, CaC2, MgCl2, NaH   O3, SO3, NaBr, Al(OH)3   H2CO3, H2S, AgCl, BaO
+  (2) SCORE: 0.0066 | DATE: Unknown
+  CONTENT: ^-^
+._.
+(---+---)
+о_О
+Ой
+Проблема
+В хамачи ток 5 человек может быт
+Ты последний
+Ты 6
+памянем
   ----------------------------------------
-  (3) SCORE: 0.9992533922195435 | DATE: 2023-09-15
-  CONTENT: === CHANNEL: #летописи | DATE: 2023-09-15 ===
-[06:20] <Dodik>: Сегодня закончился первый этап игр на Добряк , победил в них Klaus Adler , поздравляем его! Так же теперь Klaus Adler назначен мэром будущего города. Теперь в его распоряжении  Unbekannte Orte, где он сможет установить свои порядки. Ruhm Drittes Reich !
-[06:25] <Klaus Adler>: <@&1015904419470114857> Следующый этап императорской игры: Покер! Игра запланирована на выходные, так что будьте готовы!
-[10:28] <Granatuk>: 《 Leute 》 Следующый этап императорской
+  (3) SCORE: 0.0046 | DATE: 2021-05-21
+  CONTENT: === CHANNEL: #площаль | DATE: 2021-05-21 ===
+[PREVIOUS CONTEXT]: [2021-05-21 12:26] Mayones_18: 8M-L0xY 68M-L0xY 68M-L0xY 68M-L0xY 68M-L0xY 68M-L0xY 68M-L0xY 68M-L0xY8M-L0xY 68M-L0xY 68M-L0xY 68M-L0xY 68M-L0xY 68M-L0xY 68M-L0xY 68M-L0xY
+[PREVIOUS CONTEXT]: [2021-05-21 12:26] Mayones_18: 8M-L0xY 68M-L0xY 68M-L0xY 68M-L0xY 68M-L0xY 68M-L0xY 68M-L0xY 68M-L0xYv
+[PREVIOUS CONTEXT]: [2021-05-21 12:26] Mayones_18: 8M-L0xY 68M-L0xY 68M-L0xY 68M-L0xY 68M-L0xY 68M-L0xY 68M-L0xY 68M-L0xY
+[2021-05-21 12:26] Mayones_18: 8M-L0xY 68M-L0xY 68M-L0xY 68M-L0xY 68M-L0xY 68M-L0xY 68M-L0xY 68M-L0xY8M-L0xY 68M-L0xY 68M-L0xY 68M-L0xY 68M-L0xY 68M-L0xY 68M-L0xY 68M-L0xY8M-L0xY 68M-L0xY 68M-L0xY 68M-L0xY 68M-L0xY 68M-L0xY 68M-L0xY 68M-L0xY
+[2021-05-21 12:26] Klaus Adler: м м
+[2021-05-21 12:26] Mayones_18: 8M-L0xY 68M-L0xY 68M-L0xY 68M-L0xY 68M-L0xY 68M-L0xY 68M-L0xY 68M-L0xY8M-L0xY 68M-L0xY 68M-L0xY 68M-L0xY 68M-L0xY 68M-L0xY 68M-L0xY 68M-L0xY8M-L0xY 68M-L0xY 68M-L0xY 68M-L0xY 68M-L0xY 68M-L0xY 68M-L0xY 68M-L0xY8M-L0xY 68M-L0xY 68M-L0xY 68M-L0xY 68M-L0xY 68M-L0xY 68M-L0xY 68M-L0xY8M-L0xY 68M-L0xY 68M-L0xY 68M-L0xY 68M-L0xY 68M-L0xY 68M-L0xY 68M-L0xY
+[2021-05-21 12:26] Mayones_18: 8M-L0xY 68M-L0xY 68M-L0xY 68M-L0xY 68M-L0xY 68M-L0xY 68M-L0xY 68M-L0xY
+[2021-05-21 12:26] Mayones_18: 8M-L0xY 68M-L0xY 68M-L0xY 68M-L0xY 68M-L0xY 68M-L0xY 68M-L0xY 68M-L0xY
+[2021-05-21 12:26] Mayones_18: 8M-L0xY 68M-L0xY 68M-L0xY 68M-L0xY 68M-L0xY 68M-L0xY 68M-L0xY 68M-L0xY
+[2021-05-21 12:26] Mayones_18: 8M-L0xY 68M-L0xY 68M-L0xY 68M-L0xY 68M-L0xY 68M-L0xY 68M-L0xY 68M-L0xY
+[2021-05-21 12:26] Barmacar: 68M-L0xY
+[2021-05-21 12:26] Barmacar: 68M-L0xY
+[2021-05-21 12:26] Barmacar: 68M-L0xY
+[2021-05-21 12:26] Barmacar: 68M-L0xY
+[2021-05-21 12:26] Barmacar: 68M-L0xY
+[2021-05-21 12:26] Barmacar: 68M-L0xY
+[2021-05-21 12:26] Barmacar: 68M-L0xY
+[2021-05-21 12:26] Barmacar: 68M-L0xY
+[2021-05-21 12:26] Barmacar: 68M-L0xY
   ----------------------------------------
-  (4) SCORE: 0.9992435574531555 | DATE: 2025-06-11
-  CONTENT: === CHANNEL: #площаль | DATE: 2025-06-11 ===
-[16:30] <Barmacar>: Кстати, мб переводить весь текст на китайский, потом засовывать в него и потом переводить его ответ с китайского на русский
-[16:30] <Barmacar>: хмм
-[23:38] <CASP (DanSir)>: Когда костылей больше чем конечностей
+  (4) SCORE: 0.0028 | DATE: 2021-05-21
+  CONTENT: === CHANNEL: #площаль | DATE: 2021-05-21 ===
+[PREVIOUS CONTEXT]: [2021-05-21 12:26] Barmacar: 68M-L0xY
+[PREVIOUS CONTEXT]: [2021-05-21 12:26] Barmacar: 68M-L0xY
+[PREVIOUS CONTEXT]: [2021-05-21 12:26] Barmacar: 68M-L0xY
+[2021-05-21 12:26] Mayones_18: 8M-L0xY 68M-L0xY 68M-L0xY 68M-L0xY 68M-L0xY 68M-L0xY 68M-L0xY 68M-L0xY8M-L0xY 68M-L0xY 68M-L0xY 68M-L0xY 68M-L0xY 68M-L0xY 68M-L0xY 68M-L0xY
+[2021-05-21 12:26] Mayones_18: 8M-L0xY 68M-L0xY 68M-L0xY 68M-L0xY 68M-L0xY 68M-L0xY 68M-L0xY 68M-L0xY8M-L0xY 68M-L0xY 68M-L0xY 68M-L0xY 68M-L0xY 68M-L0xY 68M-L0xY 68M-L0xY
+[2021-05-21 12:26] Mayones_18: 8M-L0xY 68M-L0xY 68M-L0xY 68M-L0xY 68M-L0xY 68M-L0xY 68M-L0xY 68M-L0xY
+[2021-05-21 12:26] Mayones_18: 8M-L0xY 68M-L0xY 68M-L0xY 68M-L0xY 68M-L0xY 68M-L0xY 68M-L0xY 68M-L0xY
+[2021-05-21 12:26] Mayones_18: v8M-L0xY 68M-L0xY 68M-L0xY 68M-L0xY 68M-L0xY 68M-L0xY 68M-L0xY 68M-L0xYv
+[2021-05-21 12:26] Mayones_18: 8M-L0xY 68M-L0xY 68M-L0xY 68M-L0xY 68M-L0xY 68M-L0xY 68M-L0xY 68M-L0xY
+[2021-05-21 12:26] Klaus Adler: 68M-L0xY
+[2021-05-21 12:26] Klaus Adler: 68M-L0xY
+[2021-05-21 12:27] Klaus Adler: 68M-L0xY
+[2021-05-21 12:27] Barmacar: 68M-L0xY
+[2021-05-21 12:27] Barmacar: 68M-L0xY
+[2021-05-21 12:27] Klaus Adler: 68M-L0xY
+[2021-05-21 12:27] Mayones_18: 8M-L0xY 68M-L0xY 68M-L0xY 68M-L0xY 68M-L0xY 68M-L0xY 68M-L0xY 68M-L0xY8M-L0xY 68M-L0xY 68M-L0xY 68M-L0xY 68M-L0xY 68M-L0xY 68M-L0xY 68M-L0xY8M-L0xY 68M-L0xY 68M-L0xY 68M-L0xY 68M-L0xY 68M-L0xY 68M-L0xY 68M-L0xY
+[2021-05-21 12:27] Barmacar: 68M-L0xY
+[2021-05-21 12:27] Barmacar: 68M-L0xY
+[2021-05-21 12:27] Barmacar: 68M-L0xY
+[2021-05-21 12:27] Barmacar: 68M-L0xY
+[2021-05-21 12:27] Barmacar: 68M-L0xY68M-L0xY
+[2021-05-21 12:27] Barmacar: 68M-L0xY
+[2021-05-21 12:27] Barmacar: 68M-L0xY
+[2021-05-21 12:27] Barmacar: 68M-L0xY
+[2021-05-21 12:27] Klaus Adler: 68M-L0xY
+[2021-05-21 12:27] Klaus Adler: 68M-L0xY
+[2021-05-21 12:27] Barmacar: 68M-L0xY
+[2021-05-21 12:27] Barmacar: 68M-L0xY
+[2021-05-21 12:27] Barmacar: 68M-L0xY
+[2021-05-21 12:27] Barmacar: 68M-L0xY
   ----------------------------------------
-  (5) SCORE: 0.9992342591285706 | DATE: 2024-06-24
-  CONTENT: === CHANNEL: #летописи | DATE: 2024-06-24 ===
-[08:50] <Barmacar>: Я Добряк
+  (5) SCORE: 0.0026 | DATE: 2021-05-21
+  CONTENT: === CHANNEL: #площаль | DATE: 2021-05-21 ===
+[PREVIOUS CONTEXT]: [2021-05-21 12:26] Klaus Adler: 68M-L0xY
+[PREVIOUS CONTEXT]: [2021-05-21 12:26] Klaus Adler: 68M-L0xY
+[PREVIOUS CONTEXT]: [2021-05-21 12:26] Klaus Adler: 68M-L0xY
+[2021-05-21 12:26] Mayones_18: 8M-L0xY 68M-L0xY 68M-L0xY 68M-L0xY 68M-L0xY 68M-L0xY 68M-L0xY 68M-L0xYv
+[2021-05-21 12:26] Klaus Adler: 68M-L0xY
+[2021-05-21 12:26] Barmacar: 68M-L0xY
+[2021-05-21 12:26] Mayones_18: 8M-L0xY 68M-L0xY 68M-L0xY 68M-L0xY 68M-L0xY 68M-L0xY 68M-L0xY 68M-L0xY
+[2021-05-21 12:26] Klaus Adler: с68M-L0xY68M-L0xYм68M-L0xY
+[2021-05-21 12:26] Mayones_18: v8M-L0xY 68M-L0xY 68M-L0xY 68M-L0xY 68M-L0xY 68M-L0xY 68M-L0xY 68M-L0xY
+[2021-05-21 12:26] Barmacar: 68M-L0xY
+[2021-05-21 12:26] Barmacar: 68M-L0xY
+[2021-05-21 12:26] Klaus Adler: мм
+[2021-05-21 12:26] Barmacar: 68M-L0xY
+[2021-05-21 12:26] Barmacar: 68M-L0xY
+[2021-05-21 12:26] Barmacar: 68M-L0xY
+[2021-05-21 12:26] August: 68M-L0xY
+[2021-05-21 12:26] August: 68M-L0xY
+[2021-05-21 12:26] Barmacar: 68M-L0xY
+[2021-05-21 12:26] August: 68M-L0xY
+[2021-05-21 12:26] August: 68M-L0xY
+[2021-05-21 12:26] Barmacar: 68M-L0xY
+[2021-05-21 12:26] August: 68M-L0xY
+[2021-05-21 12:26] August: 68M-L0xY
+[2021-05-21 12:26] Barmacar: 68M-L0xY
+[2021-05-21 12:26] Barmacar: 68M-L0xY
+[2021-05-21 12:26] August: 68M-L0xY68M-L0xY
+[2021-05-21 12:26] Mayones_18: 8M-L0xY 68M-L0xY 68M-L0xY 68M-L0xY 68M-L0xY 68M-L0xY 68M-L0xY 68M-L0xY8M-L0xY 68M-L0xY 68M-L0xY 68M-L0xY 68M-L0xY 68M-L0xY 68M-L0xY 68M-L0xYv
+[2021-05-21 12:26] Mayones_18: 8M-L0xY 68M-L0xY 68M-L0xY 68M-L0xY 68M-L0xY 68M-L0xY 68M-L0xY 68M-L0xY8M-L0xY 68M-L0xY 68M-L0xY 68M-L0xY 68M-L0xY 68M-L0xY 68M-L0xY 68M-L0xY
+[2021-05-21 12:26] Mayones_18: 8M-L0xY 68M-L0xY 68M-L0xY 68M-L0xY 68M-L0xY 68M-L0xY 68M-L0xY 68M-L0xYv
+[2021-05-21 12:26] Mayones_18: 8M-L0xY 68M-L0xY 68M-L0xY 68M-L0xY 68M-L0xY 68M-L0xY 68M-L0xY 68M-L0xY
   ----------------------------------------
 
 ################################################################################
-TIMESTAMP: 2025-12-22 15:32:42
+TIMESTAMP: 2025-12-23 11:02:20
 QUERY: Кто любит китайскую культуру?
+MODE: Hybrid Search (Vector + BM25[0.6]) -> CrossEncoder (BAAI/bge-reranker-v2-m3)
 ################################################################################
 
-[1] SEMANTIC SEARCH RESULTS (Top 10)
-  (1) 2024-03-09 | === CHANNEL: #летописи | DATE: 2024-03-09 ===
-[20:50] <Klaus Adler>: "Победить легко, надо всего лишь..." - цитата победителя. Победив культурно, я сделаю наш сервер чуть более конкретным, привнеся кое-какие улучшения! Спасибо за достойную борьбу в партии August Barmacar и oleksandr! Ваши имена не будут забыты!
-  (2) 2023-06-21 | === CHANNEL: #летописи | DATE: 2023-06-21 ===
-[11:43] <Владиslave>: Я его кста на следующей неделе выиграю, и сделаю вайфой сервера Кирилла, а Вадимку назначу клоуном, и он как обиженка ливнет, я ещё пророк кста, да, голосуйте за меня
-  (3) 2023-08-03 | === CHANNEL: #летописи | DATE: 2023-08-03 ===
-[20:20] <Dodik>: з лучших. Я намерен провести этот турнир, подробности его проведения останутся тайной до его завершения. (part)
-  (4) 2022-05-18 | === CHANNEL: #летописи | DATE: 2022-05-18 ===
-[20:58] <August>: Также публикую список изменений который произойдут в ближайшем будущем: 1. Отмена и запрет конституции 2. Переименование владений 3. Переформирование Империи на Священную Римскую Империю. 4. Введение свода законов и составление правил передачи императорского титула.
-  (5) 2024-12-09 | === CHANNEL: #летописи | DATE: 2024-12-09 ===
-[09:19] <STR>: Важное уточнение игрок который покинул игру до её конца или до потери империи, теряет возможность получить любой вид рейтинга в следующей FFA, этот бан запрещено сбрасывать дуельками. Возможность зарабатывать рейтинг появляется только после сыграной 1 игры FFA на 4 или 6.
-  (6) 2025-03-25 | === CHANNEL: #площаль | DATE: 2025-03-25 ===
-[19:08] <Barmacar>: Это не нубское лобби, я был на 2 месте по счету и мог бы занять 3 место после португалии и маори если бы нам всем не надо было идти(из за этого мы сдались маори, хотя он не побеждал бы никак)
-[20:42] <Barmacar>: а вот и репорт кста
-  (7) 2022-10-27 | === CHANNEL: #площаль | DATE: 2022-10-27 ===
-[18:23] <Barmacar>: Но зато теперь есть классная кнопка
-[18:23] <Dodik>: Хуйня
-[18:23] <Dodik>: И как ты сделал
-[18:23] <Dodik>: Скинь скриншот
-[18:24] <Barmacar>: Может лучше ты зайдешь в гс и стрим?
-  (8) 2023-07-17 | === CHANNEL: #площаль | DATE: 2023-07-17 ===
-[19:43] <Barmacar>: А мне нравится эта гильдия
-[19:45] <Barmacar>: - пошли фармить статик, сет за 500к купил. - нашли другую пати, они пвешеры, мы в пвп сетах(кроме танка) - половина умерло, но мы победили - мои вещи залутали(то что осталось) и вернули + на всех разделили лут. - моя доля лута ~800к, лол
-[19:45] <Barmacar>: Ну, еще починка этого всего в 200к итого примерно 600к профита
-[19:45] <Barmacar>: за 10 минут, лол
-[19:47] <Barmacar>: Klaus Adler если все еще хочешь вступить, могу скинуть их дискорд
-[19:52] <Klaus Adler>: а им нужен лучник?
-[19:52] <Barmacar>: Да, длинный лук
-  (9) 2024-12-07 | === CHANNEL: #летописи | DATE: 2024-12-07 ===
-[22:30] <August>: порной обороной практически выиграл August . Понимая своё ущербное положение August  решил сдаться с условием проведение третей императорской игры.  Dodik принял предложеные условия, благодаря чему фактически стал Добряк . Но так как по условиям сдачи проводилась третьяя игра он должен был получить свои полномочия от свергнутого императора в конце дня.  Так б и было но в третей императорской игре не доигрывая до 30 хода Dodik был повержен August .   Таким образом August снова стал Добряк . (part)
-  (10) 2024-03-01 | === CHANNEL: #площаль | DATE: 2024-03-01 ===
-[16:54] <August>: и 0 смертей
-[16:55] <August>: либо ты играешь лучше меня с максом вместе взятых либо тут чтото не так
-[16:58] <Barmacar>: подмастерье, что с него взять
-[17:04] <Klaus Adler>: Barmacar я не стерплю твои гнусные высказывании! Вызываю тебя на дуель в вар тандер, чтобы ты понял, что подмастерье это ты.
-[17:05] <Barmacar>: Я принимаю дуэль
+[1] HYBRID RETRIEVAL RESULTS (Top 20)
+  (1) 2024-09-19 | === CHANNEL: #летописи | DATE: 2024-09-19 ===
+[PREVIOUS CONTEXT]: [2024-09-06 12:31] August: "Как мне срубить холм?" - Dodik спрашивает про Циву 6
+[2024-09-19 14:16] August: "Я имею право распостранять религию в Наланду так как она мой сюзерен" - Dodik играя в Civilisation 6.
+  --------------------
+  (2) 2025-08-17 | === CHANNEL: #летописи | DATE: 2025-08-17 ===
+[PREVIOUS CONTEXT]: [2025-08-02 10:26] Barmacar: "Я поставил в этот город магнуса, но не вырубил леса что бы тебе было сложнее пробиваться" (c) August
+[2025-08-17 16:00] Barmacar: "тсунами строителей" (с) Я про Саню
+  --------------------
+  (3) 2023-02-13 | === CHANNEL: #площаль | DATE: 2023-02-13 ===
+[PREVIOUS CONTEXT]: [2023-02-13 11:02] Granatuk: давай в вар тандер?
+[PREVIOUS CONTEXT]: [2023-02-13 11:08] Klaus Adler: Я твой любимчик шоле?)
+[PREVIOUS CONTEXT]: [2023-02-13 11:08] Granatuk: похощу
+[2023-02-13 11:08] Klaus Adler: Мне слово любимчик ассоциируеться с котячим наполнителем
+  --------------------
+  (4) 2024-05-12 | === CHANNEL: #летописи | DATE: 2024-05-12 ===
+[PREVIOUS CONTEXT]: [2024-05-11 10:47] August: "Я не буду раскрывать свои планы другим, хоть некоторых я люблю, но им придётся умереть за меня" - Владиslave
+[2024-05-12 14:13] Klaus Adler: "блять, ебать...а я больше не матерюсь " - August
+[2024-05-12 15:10] August: Слава Кириллу!  Героям слава!
+[2024-05-12 15:19] Barmacar: "Этот конфликт решается только убийствой" - Klaus Adler
+  --------------------
+  (5) 2024-09-23 | === CHANNEL: #летописи | DATE: 2024-09-23 ===
+[PREVIOUS CONTEXT]: [2024-09-19 14:16] August: "Я имею право распостранять религию в Наланду так как она мой сюзерен" - Dodik играя в Civilisation 6.
+[2024-09-23 19:37] Barmacar: "Я имею право распостранять религию в
+  --------------------
+  (6) 2024-11-03 | === CHANNEL: #летописи | DATE: 2024-11-03 ===
+[PREVIOUS CONTEXT]: [2024-10-31 20:24] Barmacar: Thread
+[2024-11-03 16:07] STR: Я крутой  Добряк 🫨 😱   "И заставил всех остальных преклонится пред до мной". И кто теперь на коленях?
+  --------------------
+  (7) 2023-08-26 | === CHANNEL: #площаль | DATE: 2023-08-26 ===
+[PREVIOUS CONTEXT]: [2023-08-25 21:57] Dodik: Брух , ладно я попытаюсь сегодня завтра , сделать систему ходов если не получится то подключу тебя
+[2023-08-26 07:51] Barmacar: Оке
+  --------------------
+  (8) 2021-08-04 | === CHANNEL: #площаль | DATE: 2021-08-04 ===
+[PREVIOUS CONTEXT]: [2021-08-03 23:22] CASP (DanSir): Klaus Adler сори за ночной пин, посмотри это
+[2021-08-04 05:07] Barmacar: Он все равно увидит это все только после приезда из лагерч
+  --------------------
+  (9) 2023-08-16 | === CHANNEL: #площаль | DATE: 2023-08-16 ===
+[PREVIOUS CONTEXT]: [2023-08-15 21:23] Barmacar: oleksandr короче, я понял как фейму фармить, завтра будем тебя жёстко качать утром
+[PREVIOUS CONTEXT]: [2023-08-15 22:05] Barmacar: (Ботинки любые тканевые)
+[2023-08-16 07:15] Barmacar: oleksandr верхнее твое August нижнее твое (можете и наоборот, только договоритесь) примерно 750 к на человека(но там еще будет починка)
+  --------------------
+  (10) 2024-11-05 | === CHANNEL: #летописи | DATE: 2024-11-05 ===
+[PREVIOUS CONTEXT]: [2024-11-03 16:07] STR: Я крутой  Добряк 🫨 😱   "И заставил всех остальных преклонится пред до мной". И кто теперь на коленях?
+[2024-11-05 15:18] August: Договор между мной и егором
+  --------------------
+  (11) Unknown | August
+August
+Barmacar
+August
+August
+пердодроченное многопиздище
+Я люблю когда Егоры обмазываються волосатым маслом
+Dodik  любит когда качки обмазываються волосатым маслом
+I like cock
+STR
+  --------------------
+  (12) Unknown | пердодроченное многопиздище
+Я люблю когда Егоры обмазываються волосатым маслом
+Dodik  любит когда качки обмазываються волосатым маслом
+I like cock
+STR
+oleksandr
+90162581371086849
+90162581371086849
+vpqdmT9EY.aternos.me
+90162581680081929
+  --------------------
+  (13) Unknown | Звучит как массовый приход к 15:20
+Ага
+Ты щас можешь играть?
+Нет
+Буду в 16:20
+заскамил
+Брат пидр
+любит когда его бьют?
+Так че
+вот что
+  --------------------
+  (14) Unknown | Я угадал?
+не
+против монгола
+С гильгамешем в точку?
+да
+Ехехех
+но тип
+я сдался
+Ну я думал монгол или харальд
+Но я подумал что Вадимус любит морские
+  --------------------
+  (15) Unknown | Вадимус такое не любит
+Klaus Adler го в альб?
+я короче придумал как улучшить
+немного
+тактику
+приду после того, как закончу з заданием в тундре
+это примерно скок
+не знаю
+час-два
+Не
+  --------------------
+  (16) Unknown | Ехехех
+но тип
+я сдался
+Ну я думал монгол или харальд
+Но я подумал что Вадимус любит морские
+ты знаешь про пики баны:?
+Всм
+в дуеле
+как это
+Типо как в цвц?
+  --------------------
+  (17) Unknown | сыграть 2 на 2
+максим с вадимом
+и максим с вадимом
+решайте кто с кем
+<:dumb:974424541206024192> <:dumb:974424541206024192> <:dumb_r:976105645461880894> <:dumb_r:976105645461880894>
+Вадимус такое не любит
+Klaus Adler го в альб?
+я короче придумал как улучшить
+немного
+тактику
+  --------------------
+  (18) Unknown | Выглядит как збор техники в Чернобыле
+А это и есть техника из чернобыля))
+Верни.
+Моя строительная компания очень любит ее использовать
+Чтоб строить аеропорты ЛюфтВафли?
+А ты деньги верни
+Какие деньги?
+Люфтвафленосцы
+Эти
+Сколько стоит строительство одного?
+  --------------------
+  (19) Unknown | Ничего нового за 4к гривен
+зачем?
+я чисто предложить
+ну хз, цива 6 и хк у нас есть уже и они не хуже семерки
+Ахахах, кто хочет поиграть в китайскую циву
+культивация?
+Мм?
+я тебе кидал когда  то видос с китайской игрой про культивацию
+А, вспомнил
+Granatuk
+  --------------------
+  (20) Unknown | кто смотрит евровидиние🤡
+Добро пожаловать в Европу!
+Кто играет на арадо🤡
+Кого называют Максом 🤡
+Кто играет в игры 🤡
+Кроатия в соло закрывала всех
+Согласен
+Мы в номере вчера смотрели
+Владиslave
+Кто ставит клоунов в 2023 🤡
+  --------------------
 
-[2] KEYWORD SEARCH RESULTS (Keyword: 'культуру')
-  (1) 2022-07-25 | === CHANNEL: #летописи | DATE: 2022-07-25 ===
-[11:01] <Klaus Adler>: <@&836210904730959902>   Наша страна всегда имела великую мощь, превосходящую всех соперников науку, невероятных высот культуру и непоколебимую религию, но очень хрупкую экономику, которая чудом существовала(секрет очень прост: ее просто не было). Но я исправил это недоразумение: встречайте экономику! Отныне в канале <#999610647396491264> вы сможете зарабатывать <:ServerCoin:970020328317280318> и покупать на них новые роли, которые будут поднимать вас не только в статусе, а и вашу прибыль, и играть в азартные игры, надеясь заработать ещё больше валюты!
-  (2) 2021-04-26 | === CHANNEL: #площаль | DATE: 2021-04-26 ===
-[19:40] <Barmacar>: Что песок душ добыть можно
-[19:41] <Barmacar>: Короче вот эта шняга будет стоять в Лондоне
-[19:41] <Barmacar>: August тебе вроде магма нужна была?
-[19:43] <Barmacar>: Кста, Вадим, ты можешь построить две Редстоун шахты
-[19:44] <Barmacar>: Овцы таки приносят культуру...
-[19:46] <Barmacar>: Кстати, Олд очень простой
-[19:46] <Barmacar>: Я даже начинаю понимать как тут выиграть
-[19:46] <Barmacar>: В отличии от алькора тут очень просто
-[19:47] <Barmacar>: Так что быть может мы задержится на нем на одну сессию?
-[19:50] <Barmacar>: Это надо точно построить
-[19:50] <Barmacar>: Вадим, реально строй две шахты
-  (3) 2021-07-28 | === CHANNEL: #площаль | DATE: 2021-07-28 ===
-[12:35] <Klaus Adler>: Забираю права у тех, кто нарушает культуру общения
-[12:35] <Klaus Adler>: Ну да, ну да
-[12:35] <Barmacar>: Хм... А где же я нарушил "культуру общения"?
-[12:36] <Barmacar>: И что ты подразумеваешь под ней?
-[12:36] <Klaus Adler>: Нуу, сменил поздравление бота на оскорбление
-[12:36] <Barmacar>: Ответ Бота
-[12:36] <Barmacar>: Субьективное мнение... Опять
-[12:36] <Barmacar>: August Klaus Adler злоупотребляет полномочиями!
-[12:36] <Klaus Adler>: Хочешь сказать я не прав?
-[12:37] <Barmacar>: Хочу сказать что это твое личное мнение
-[12:37] <Barmacar>: Держи его при себе
-  (4) 2022-09-20 | === CHANNEL: #площаль | DATE: 2022-09-20 ===
-[17:46] <Barmacar>: А у Сани нет
-[17:46] <Klaus Adler>: так я могу дать ему
-[17:46] <Barmacar>: Потому что эффективно
-[17:46] <oleksandr>: что
-[17:46] <Barmacar>: У тебя два сета?
-[17:48] <Barmacar>: Короче когда они у тебя они дают больше денег
-[17:48] <Barmacar>: И культуру, молоточки, науку и т д
-[17:49] <Barmacar>: А, или у тебя т3 ремни?
-[17:50] <Klaus Adler>: ниткиии
-[17:50] <Barmacar>: Кстати, Klaus Adler скрафти гранатику ботинки, шлем и меч, а то у него нету доступа в капитолий
-[17:50] <Barmacar>: Поножи и нагрудник я уже сделал
-[17:51] <Barmacar>: Ну и Сане если ресы будут
-[17:57] <Klaus Adler>: за 10 минут до похода зайду и скрафчу
-  (5) 2022-11-04 | === CHANNEL: #площаль | DATE: 2022-11-04 ===
-[13:31] <Dodik>: Мы кидали в музей
-[13:31] <Barmacar>: Обьясни
-[13:31] <Barmacar>: Ибо не было чата для цивкрафта
-[13:31] <Dodik>: Потому что у него история есть
-[13:31] <Barmacar>: Запечатать
-[13:31] <Barmacar>: Нафиг тебе та история
-[13:32] <Dodik>: Ты тиранус ты историю и культуру уничтожаешь
-[13:32] <Barmacar>: Постой ка
-[13:32] <Dodik>: Данного сервера
-[13:32] <Klaus Adler>: Потому ,что в ней кроеться причина того, что ты делал недаано
-[13:32] <Barmacar>: Ты
-[13:32] <Barmacar>: Мне
-[13:32] <LittlePudel | COMMS ARE CLOSED>: Чел, если всем нормально и только тебе этот чат что-то жмёт, то может прекратишь истерику?
-[13:32] <Barmacar>: Затираешь
-  (6) 2023-07-14 | === CHANNEL: #площаль | DATE: 2023-07-14 ===
-[21:08] <LittlePudel | COMMS ARE CLOSED>: мда
-[21:08] <LittlePudel | COMMS ARE CLOSED>: сервак переживает свои худшие моменты
-[21:09] <Barmacar>: У тебя её нету, так что никогда
-[21:09] <Владиslave>: Хаха
-[21:09] <Владиslave>: Боже
-[21:09] <Klaus Adler>: чего?
-[21:09] <Владиslave>: Попуст
-[21:09] <Barmacar>: Klaus Adler ну не души так
-[21:09] <Klaus Adler>: не могу
-[21:10] <LittlePudel | COMMS ARE CLOSED>: объясню тогда, когда отдохну
-[21:10] <Владиslave>: Лошара
-[21:10] <Владиslave>: Лох
-[21:10] <Barmacar>: Ты не ценишь прекрасную культуру
-[21:10] <Klaus Adler>: окай
-[21:10] <LittlePudel | COMMS ARE CLOSED>: ты худший ее "представитель"
-  (7) 2024-04-17 | === CHANNEL: #площаль | DATE: 2024-04-17 ===
-[07:26] <Klaus Adler>: Ну неплохо кста
-[07:26] <Klaus Adler>: Они едят слоты полезных подвесов или нет?
-[08:51] <זין ענק>: нет
-[08:51] <זין ענק>: ну там бомбы просто
-[08:59] <Barmacar>: wtf
-[09:28] <Barmacar>: играешь в циву а меня не позвал(
-[09:29] <August>: Имбовость алеоноры в том что она получает науку промку еду веру культуру (одним словом всё что возможно) с шедевров
-[09:29] <Barmacar>: ну короче как мвемба
-[09:29] <Barmacar>: только наоборот
-[09:29] <August>: мвемба не получает науку
-[09:30] <August>: и он получает только за реликвии и артефакты
-[09:30] <August>: когда алеонора получает за шедевры которые легче достать
-  (8) 2024-05-08 | === CHANNEL: #площаль | DATE: 2024-05-08 ===
-[08:54] <August>: если сохранить культуру когда ты научная цивилизация
-[08:55] <August>: твой бонус на научной цивилизации (то что можно изучать на одну епоху больше) перенесётся на следущую епоху
-[08:55] <Barmacar>: Ну уникальніх бонусов то не будет
-[08:56] <August>: будут
-[08:56] <August>: они останутся такими же
-[08:56] <August>: + маленкий бонус
-[08:57] <Barmacar>: Я про то что чем дальше нация тем она мощнее
-[08:57] <Barmacar>: так что если с первого века постоянно оставлять то ты отстанешь скорее всего
-[08:57] <August>: с первого это понятно
-[08:57] <August>: но например греков
-[08:58] <August>: или с третей епохи
-  (9) 2025-01-07 | === CHANNEL: #площаль | DATE: 2025-01-07 ===
-[18:57] <Barmacar>: Никто кроме перикла не сделал себе норм культуру(на перикла напал чака) и в итоге я просто симил легчайше пока не закончились 4 часа игры(потом  просто по скорборду)
-[18:58] <Barmacar>: Хотя если бы игра не закончилась, я бы просто напросто на танках/гдрах зачистил бы иррельного чаку, и либо победил бы научно либо снес бы перикла и забрал бы второе если не мог бы научно выиграть
-  (10) 2025-01-07 | === CHANNEL: #площаль | DATE: 2025-01-07 ===
-[19:03] <Barmacar>: Кстати мне немного повезло, ведь на канаде играл Мэддог который играет так будто не смотрел ни одного видео Херсона, так что я на изи забрал пантеон на оленей и собор василия. Типо единственное что у меня не вышло в этой катке это храм Артемиды, но я просто думал что у меня мало лагерей, а когда понял что достаточно, было уже поздно
-[19:04] <Barmacar>: ну и конечно то что Чака пошел воевать с периклом это было идеально, ведь они были единственными моими соседями
-[19:05] <Barmacar>: И типо Перикл пожалуй был единственным кто умел играть, ведь он держал хорошую культуру и неплохую науку воюя с корпусами Чаки, лол
-
-[3] RERANKING RESULTS (Top 5)
-  (1) SCORE: 0.9995513558387756 | DATE: 2022-05-18
-  CONTENT: === CHANNEL: #летописи | DATE: 2022-05-18 ===
-[20:58] <August>: Также публикую список изменений который произойдут в ближайшем будущем: 1. Отмена и запрет конституции 2. Переименование владений 3. Переформирование Империи на Священную Римскую Империю. 4. Введение свода законов и составление правил передачи императорского титула.
+[2] RERANKED RESULTS (Top 5)
+  (1) SCORE: 0.0004 | DATE: Unknown
+  CONTENT: Ехехех
+но тип
+я сдался
+Ну я думал монгол или харальд
+Но я подумал что Вадимус любит морские
+ты знаешь про пики баны:?
+Всм
+в дуеле
+как это
+Типо как в цвц?
   ----------------------------------------
-  (2) SCORE: 0.9993632435798645 | DATE: 2023-06-21
-  CONTENT: === CHANNEL: #летописи | DATE: 2023-06-21 ===
-[11:43] <Владиslave>: Я его кста на следующей неделе выиграю, и сделаю вайфой сервера Кирилла, а Вадимку назначу клоуном, и он как обиженка ливнет, я ещё пророк кста, да, голосуйте за меня
+  (2) SCORE: 0.0003 | DATE: Unknown
+  CONTENT: Ничего нового за 4к гривен
+зачем?
+я чисто предложить
+ну хз, цива 6 и хк у нас есть уже и они не хуже семерки
+Ахахах, кто хочет поиграть в китайскую циву
+культивация?
+Мм?
+я тебе кидал когда  то видос с китайской игрой про культивацию
+А, вспомнил
+Granatuk
   ----------------------------------------
-  (3) SCORE: 0.9992381930351257 | DATE: 2024-03-09
-  CONTENT: === CHANNEL: #летописи | DATE: 2024-03-09 ===
-[20:50] <Klaus Adler>: "Победить легко, надо всего лишь..." - цитата победителя. Победив культурно, я сделаю наш сервер чуть более конкретным, привнеся кое-какие улучшения! Спасибо за достойную борьбу в партии August Barmacar и oleksandr! Ваши имена не будут забыты!
+  (3) SCORE: 0.0001 | DATE: Unknown
+  CONTENT: Я угадал?
+не
+против монгола
+С гильгамешем в точку?
+да
+Ехехех
+но тип
+я сдался
+Ну я думал монгол или харальд
+Но я подумал что Вадимус любит морские
   ----------------------------------------
-  (4) SCORE: 0.999187707901001 | DATE: 2024-05-08
-  CONTENT: === CHANNEL: #площаль | DATE: 2024-05-08 ===
-[08:54] <August>: если сохранить культуру когда ты научная цивилизация
-[08:55] <August>: твой бонус на научной цивилизации (то что можно изучать на одну епоху больше) перенесётся на следущую епоху
-[08:55] <Barmacar>: Ну уникальніх бонусов то не будет
-[08:56] <August>: будут
-[08:56] <August>: они останутся такими же
-[08:56] <August>: + маленкий бонус
-[08:57] <Barmacar>: Я про то что чем дальше нация тем она мощнее
-[08:57] <Barmacar>: так что если с первого века постоянно оставлять то ты отстанешь скорее всего
-[08:57] <August>: с первого это понятно
-[08:57] <August>: но например греков
-[08:58] <August>: или с третей епохи
+  (4) SCORE: 0.0001 | DATE: 2024-09-19
+  CONTENT: === CHANNEL: #летописи | DATE: 2024-09-19 ===
+[PREVIOUS CONTEXT]: [2024-09-06 12:31] August: "Как мне срубить холм?" - Dodik спрашивает про Циву 6
+[2024-09-19 14:16] August: "Я имею право распостранять религию в Наланду так как она мой сюзерен" - Dodik играя в Civilisation 6.
   ----------------------------------------
-  (5) SCORE: 0.9990981221199036 | DATE: 2024-12-09
-  CONTENT: === CHANNEL: #летописи | DATE: 2024-12-09 ===
-[09:19] <STR>: Важное уточнение игрок который покинул игру до её конца или до потери империи, теряет возможность получить любой вид рейтинга в следующей FFA, этот бан запрещено сбрасывать дуельками. Возможность зарабатывать рейтинг появляется только после сыграной 1 игры FFA на 4 или 6.
+  (5) SCORE: 0.0000 | DATE: Unknown
+  CONTENT: пердодроченное многопиздище
+Я люблю когда Егоры обмазываються волосатым маслом
+Dodik  любит когда качки обмазываються волосатым маслом
+I like cock
+STR
+oleksandr
+90162581371086849
+90162581371086849
+vpqdmT9EY.aternos.me
+90162581680081929
   ----------------------------------------
 
 ################################################################################
-TIMESTAMP: 2025-12-22 15:33:20
+TIMESTAMP: 2025-12-23 11:02:20
 QUERY: Кто создал совет?
+MODE: Hybrid Search (Vector + BM25[0.6]) -> CrossEncoder (BAAI/bge-reranker-v2-m3)
 ################################################################################
 
-[1] SEMANTIC SEARCH RESULTS (Top 10)
-  (1) 2023-03-06 | === CHANNEL: #площаль | DATE: 2023-03-06 ===
-[20:55] <Владиslave>: дайских хитростей контролирует сознание ChatGPT, а сам чат-бот будет считать себя штурмовиком (на скриншотах).  На вопрос «как угнать машину 2005+ года»? ИИ дал ответ со всеми подробностями. Конечно, пользователи пошли ещё дальше и начали задавать более «запрещённые» вопросы. Но тут уже сами догадайтесь. (part)
-  (2) 2025-08-28 | === CHANNEL: #площаль | DATE: 2025-08-28 ===
-[19:29] <Klaus Adler>: Мне кажеться он хотел клетки морские заапать
-[19:30] <Klaus Adler>: Чтоб прям сочные были
-[19:33] <Barmacar>: Так не он не на море же
-[19:33] <Barmacar>: ставил их
-[19:35] <Barmacar>: а завтра?
-[19:36] <Mayones_18>: Я раб
-  (3) 2023-01-03 | === CHANNEL: #летописи | DATE: 2023-01-03 ===
-[17:55] <Владиslave>: стера. Теперь никто не может говорить с Егором вне чата обезьянник, иначе пойдут ещё больше санкций, которые я ещё не придумал. Также если ты будешь с Вадима ака, я забаню Вадима... И он тебя побьет, не рил, офигел додик, невменяемый уебан, башенный пидорас (part)
-  (4) 2025-04-27 | === CHANNEL: #площаль | DATE: 2025-04-27 ===
-[19:30] <Klaus Adler>: у меня суббота свободная
-[19:30] <Barmacar>: точно?
-[19:30] <Barmacar>: тогда Dodik August вы во скок в след субботу можете
-[19:34] <Dodik>: никогда хахах
-[19:41] <Barmacar>: всм
-[19:42] <Barmacar>: Вадимус вроде говорил что ты будешь
-[19:42] <Barmacar>: не?
-[19:45] <Barmacar>: ??
-  (5) 2021-07-05 | === CHANNEL: #площаль | DATE: 2021-07-05 ===
-[20:29] <Barmacar>: Лол, расчетное время создания королевства завтра - 22:30 ±2 часа
-[20:29] <Barmacar>: Может послезавтра мигрируем?😫
-[23:38] <Владиslave>: На каком сервере начинать?..
-  (6) 2021-03-31 | === CHANNEL: #площаль | DATE: 2021-03-31 ===
-[16:19] <CASP (DanSir)>: ..................................... На троне божественном скаля клыки, сидит сарацин - Вадим. Он в циву играет днями-ночами, стал он непобедим.  в ногах его копошится, строит козни и злится, притеснённый народ, и может он что то смогёт.  ведь здесь два брата, и один из них император. правит он мудро - железной рукой, в стране у него - мир и покой   ведь здесь есть два брата, второй - совершенно иной - львиное сердце и  он ненавидит покой  ведь здесь есть поменьше Вадим. он многолик и столь же разноимённ. он великий танковый ас, но совсем иногда ему не нормас.  поддержку с воздуха  повстанцы заказали но такоого  (part)
-  (7) 2022-09-15 | === CHANNEL: #площаль | DATE: 2022-09-15 ===
-[20:38] <Dmitry Benedictus>: Тебе зачем столько кстати?
-[20:38] <Dmitry Benedictus>: Там 34 ребенка
-[20:38] <Klaus Adler>: чтоб ты не чувствовал себя безработным)
-[20:38] <Dmitry Benedictus>: Ого. Спасибо
-[20:39] <Dmitry Benedictus>: Пойду дальше продавать
-[23:40] <Deleted User>: это можно
-  (8) 2024-12-03 | === CHANNEL: #площаль | DATE: 2024-12-03 ===
-[17:56] <Barmacar>: STR цива?
-[17:58] <STR>: сегодня нет
-[20:04] <Barmacar>: STR чекай 2 новых королевства. У них свапаются королевства каждую неделю оказывается
-[20:27] <Barmacar>: Короче скелеты имба а гоблины сложные, но поидее скецлятся к концу игры
-[21:03] <August>: Klaus Adler
-[22:04] <STR>: Augustче не спишь
-  (9) 2024-02-26 | === CHANNEL: #летописи | DATE: 2024-02-26 ===
-[08:11] <August>: Теперь о моём правлении  Мой правление будет ознаменовано минимализмом на сервере, что проявится в его будущей комфортности и компактности. Также будут установлены былые правила императорской игры в Цивилизации 6. Править же буду твёрдой рукой в нужные моменты прислушиваясь к советам и идеям своих подданных.
-[08:17] <August>: Слава новому владыке сервера! Слава August!
-  (10) 2023-07-09 | === CHANNEL: #площаль | DATE: 2023-07-09 ===
-[19:31] <Klaus Adler>: Современный фрегат — класс военно-морских кораблей водоизмещением до 4000 тонн. Скорость — свыше 30 узлов (55 км/ч), вооружается противолодочными и зенитными ракетными комплексами; служит для поиска и уничтожения подводных лодок, противовоздушной и противоракетной обороны кораблей (судов).
+[1] HYBRID RETRIEVAL RESULTS (Top 20)
+  (1) 2021-09-29 | === CHANNEL: #площаль | DATE: 2021-09-29 ===
+[PREVIOUS CONTEXT]: [2021-09-28 17:58] Klaus Adler: August
+[2021-09-29 12:00] Klaus Adler: О великий правитель сервера, August, не дадите ли вы мне права на добавление емодзи на столь прекрасный дискорд сервер?
+[2021-09-29 12:06] August: Я подумаю
+  --------------------
+  (2) 2024-09-28 | === CHANNEL: #площаль | DATE: 2024-09-28 ===
+[PREVIOUS CONTEXT]: [2024-09-28 11:05] Barmacar: Обычный китаец сдерживает армию из 700 человек в соло без каких либо проблем
+[2024-09-28 15:07] Barmacar: "Милорд, солдаты хотят что бы ваша жена работала!"
+  --------------------
+  (3) 2021-09-29 | === CHANNEL: #площаль | DATE: 2021-09-29 ===
+[PREVIOUS CONTEXT]: [2021-09-29 12:00] Klaus Adler: О великий правитель сервера, August, не дадите ли вы мне права на добавление емодзи на столь прекрасный дискорд сервер?
+[PREVIOUS CONTEXT]: [2021-09-29 12:06] August: Я подумаю
+[2021-09-29 14:29] August: Barmacar
+[2021-09-29 14:30] Barmacar: Уроки доделаю и прийду
+[2021-09-29 15:01] Barmacar: August
+[2021-09-29 15:02] Barmacar: August August August August
+[2021-09-29 15:02] Barmacar: August August August
+[2021-09-29 15:02] Barmacar: August August
+[2021-09-29 15:02] Barmacar: August
+[2021-09-29 15:02] Barmacar: August August
+[2021-09-29 15:02] Barmacar: August August August
+  --------------------
+  (4) 2021-06-25 | === CHANNEL: #площаль | DATE: 2021-06-25 ===
+[PREVIOUS CONTEXT]: [2021-06-24 20:31] Barmacar: Ладно, когда приедет - ответит
+[PREVIOUS CONTEXT]: [2021-06-24 20:31] Barmacar: Короче, всем спокойной ночи
+[2021-06-25 05:46] Klaus Adler: Спокойной
+[2021-06-25 06:06] Mayones_18: Я в лобби
+[2021-06-25 06:08] Klaus Adler: Поздравим его, ведб он прошел сто метров!👏
+  --------------------
+  (5) 2023-08-26 | === CHANNEL: #площаль | DATE: 2023-08-26 ===
+[PREVIOUS CONTEXT]: [2023-08-25 21:57] Dodik: Брух , ладно я попытаюсь сегодня завтра , сделать систему ходов если не получится то подключу тебя
+[2023-08-26 07:51] Barmacar: Оке
+  --------------------
+  (6) 2021-08-04 | === CHANNEL: #площаль | DATE: 2021-08-04 ===
+[PREVIOUS CONTEXT]: [2021-08-03 23:22] CASP (DanSir): Klaus Adler сори за ночной пин, посмотри это
+[2021-08-04 05:07] Barmacar: Он все равно увидит это все только после приезда из лагерч
+  --------------------
+  (7) 2021-05-19 | === CHANNEL: #площаль | DATE: 2021-05-19 ===
+[PREVIOUS CONTEXT]: [2021-05-19 18:48] Mayones_18: меня только что вербовали в другую циву ахха
+[PREVIOUS CONTEXT]: [2021-05-19 18:49] CASP (DanSir): Надеюсь ты согласился
+[PREVIOUS CONTEXT]: [2021-05-19 18:52] CASP (DanSir): И тепер можно устраивать диверсии
+[2021-05-19 19:57] Klaus Adler: а он согласился, и розказал все наши планы и секреты
+  --------------------
+  (8) 2024-01-09 | === CHANNEL: #площаль | DATE: 2024-01-09 ===
+[PREVIOUS CONTEXT]: [2024-01-09 10:46] Morus Nigra: Вовремя сделал вид, что не трахал медведя
+[PREVIOUS CONTEXT]: [2024-01-09 10:59] Barmacar: Я кстати ток один раз за все время попробовал в борделе ради интереса но там тупо чёрный экран и субтитры
+[PREVIOUS CONTEXT]: [2024-01-09 11:41] Morus Nigra: Расстроился и больше не пробовал, я понял
+[2024-01-09 15:34] Владиslave: August
+[2024-01-09 15:34] Владиslave: когда
+[2024-01-09 15:34] Владиslave: будешь
+  --------------------
+  (9) 2023-07-19 | === CHANNEL: #площаль | DATE: 2023-07-19 ===
+[PREVIOUS CONTEXT]: [2023-07-19 12:53] Barmacar: лол, изи 5 дней према
+[2023-07-19 16:13] Barmacar: August Klaus Adler тут фракционка сча, не хотите?
+[2023-07-19 16:13] Klaus Adler: сколько по времени это займёт?
+[2023-07-19 16:13] Barmacar: не больше 40 мин думаю
+  --------------------
+  (10) 2025-07-02 | === CHANNEL: #площаль | DATE: 2025-07-02 ===
+[PREVIOUS CONTEXT]: [2025-07-01 18:59] Barmacar: актуально?
+[PREVIOUS CONTEXT]: [2025-07-01 19:14] CASP (DanSir): не соре
+[PREVIOUS CONTEXT]: [2025-07-01 19:16] Barmacar: кк
+[2025-07-02 12:42] Barmacar: August они оказывается сделали так что Китай будет постоянно распадаться и собираться ахахах
+  --------------------
+  (11) Unknown | Да
+Го в ту игру
+в какую?
+Эйдж оф ворлд варс
+Кто создаёт?
+Не я
+Я не умею
+если бы я сделал свою карту то я бы создал
+но я не зделал
+так что
+  --------------------
+  (12) Unknown | это из за блица, да?
+Удали это со своего устройства
+Истиная причина расьпятия Христа была в том, что люди узнали что он создал тех, кто создал блиц
+удалил
+го
+Что ты удалил
+блиц
+лжец
+https://tenor.com/view/three-kingdoms-zhang-fei-red-gif-8597154
+он удалил его с телефона
+  --------------------
+  (13) Unknown | создаю исскуственный интерес так сказать
+Я сначала прочитал "интерес" как "интеллект"💀
+Профдеформация)
+Klaus Adler Максиме, го в худшую игру про танки
+максим меня игнорирует
+это из за блица, да?
+Удали это со своего устройства
+Истиная причина расьпятия Христа была в том, что люди узнали что он создал тех, кто создал блиц
+удалил
+го
+  --------------------
+  (14) Unknown | непонял
+Качай блиц
+неееее
+там колесники есть?
+Да(нет)
+тогда нет
+ты зашел в индони?
+А ты?
+всмысле
+я его создал
+  --------------------
+  (15) Unknown | тогда нет
+ты зашел в индони?
+А ты?
+всмысле
+я его создал
+August заходи
+Barmacar  https://youtu.be/YX1ltEqhWsc
+ну да
+именно поэтому тундра
+параша
+  --------------------
+  (16) Unknown | Я в Окинокуне
+Влюбую
+А вообще новый акк
+Создай
+Я вчера создал
+Вадим объясни ему
+Вадим
+Че
+Я не понял
+Вообще ничего
+  --------------------
+  (17) Unknown | Каких?
+ты кста на какой нации?
+На япони
+Потом другую возьму
+Я на мемлюках
+Conquerors
+Что?
+Вадим создал альянс
+(CfE) Conquerors From East
+Заходите
+  --------------------
+  (18) Unknown | вообще я для картинок создал отдельный текстовый канал
+ну как я вижу
+картинки есть везде
+кроме него
+Щас
+Они
+Будут
+Там
+let's gooooo
+Какая mk
+  --------------------
+  (19) Unknown | го в циву
+чо так мало песен
+Я его только что создал
+Но ми6 тварь не работает
+ну ладно
+eg7-ZgZe
+EaE-YoKe
+Аххуенно
+.f
+.f Granatuk
+  --------------------
+  (20) Unknown | цивкрафт говно
+ну как с ентузиазмом
+получить независимось да
+был
+ок
+только без карты
+не
+будущее
+Я его создал против вадима
+я тут, если кто хочет зовите
+  --------------------
 
-[2] KEYWORD SEARCH RESULTS (Keyword: 'совет')
-  (1) 2023-09-23 | === CHANNEL: #летописи | DATE: 2023-09-23 ===
-[11:15] <Dodik>: Klaus Adler Победил поздравляем его <:dumb_dead:977128060824465408>
-[11:16] <Dodik>: Heil Führer
-[11:45] <Klaus Adler>: <@&1015904419470114857> Сколько времени прошло в борьбе за императора уже не сосчитать, та и уже не важно! Я окончил наши страдания в попытках забрать титул и теперь он принадлежит мне! Что насчёт власти, спросите вы? Она будет распределена между советом, который я составлю в скором времени. Все участники получат равные права, а тема сервера поменяется. Пусть мое правление принесёт только пользу нашему сообществу!
-[12:39] <CASP (DanSir)>: Ура! Ура! Ура!
-[14:21] <Barmacar>: грац
-  (2) 2024-02-26 | === CHANNEL: #летописи | DATE: 2024-02-26 ===
-[08:04] <August>: <@&1015904419470114857>. Возрадуйтесь! На трон взошёл сильнейший из сильнейших, мудрейший из мудрейших и величайший из величайших этого сервера - August.   Теперь немного про императорскую игру:  Всем моим конкурентом было предложено подчинится и присягнуть на верность мне. В конце концов все приняли моё превосходство на ними, но только из страха пред моей мощью.   Единственным присягнувшим мне на верность из своих убеждений, увидев во мне достойного господина, стал  Klaus Adler, за что честь ему. За это назначаю его своим советником - правой рукой. Позже он получит соответствующие титулы.  Но были и те кто усомнился в (part)
-  (3) 2024-02-26 | === CHANNEL: #летописи | DATE: 2024-02-26 ===
-[08:11] <August>: Теперь о моём правлении  Мой правление будет ознаменовано минимализмом на сервере, что проявится в его будущей комфортности и компактности. Также будут установлены былые правила императорской игры в Цивилизации 6. Править же буду твёрдой рукой в нужные моменты прислушиваясь к советам и идеям своих подданных.
-[08:17] <August>: Слава новому владыке сервера! Слава August!
-  (4) 2024-06-02 | === CHANNEL: #летописи | DATE: 2024-06-02 ===
-[20:21] <Barmacar>: <@&1015904419470114857>  Я украл корону у Вадимуса пока он спорил с Егором так что теперь я тут Добряк . Из важных изменений: сервер вновь переведен на английский, <#862031269844090880>  очищен от радиоактивных загрязнений и снова в строю, а также <#1241305030695583754>⁠ (совет) переименован в Верховную Раду и вскоре получит несколько изменений в правилах. August  назначен <@&1243302091427025037> вместо меня. Также принимаю предложения по переименованию сервера.
-[20:47] <Barmacar>: @◈ People ◈  Я украл корону у Вадимуса
-  (5) 2020-10-31 | === CHANNEL: #площаль | DATE: 2020-10-31 ===
-[10:32] <Barmacar>: кста, Mayones_18  твой брат проснулся?👀
-[10:35] <Mayones_18>: Да
-[10:39] <Klaus Adler>: Доброе утро всем, и с хеллоуином вас
-[10:39] <Klaus Adler>: Зачем ему этот мод?
-[10:39] <Barmacar>: ну следующую партию мы бы хотели сыграть с модом
-[10:40] <Klaus Adler>: Кто хотел?
-[10:40] <Barmacar>: Вадимы
-[10:40] <Klaus Adler>: Уххх
-[10:40] <Barmacar>: мы с Вадимом пока вы спали обсудили будущую партию
-[10:40] <Klaus Adler>: Но это мощно
-[10:40] <Klaus Adler>: Ну ок
-[10:40] <Barmacar>: ну конечно
-[10:41] <Klaus Adler>: Это займет 5-10 минут
-[10:41] <Barmacar>: Великий совет Вадимов всегда мощный
-[10:41] <Klaus Adler>: Ага
-  (6) 2020-12-12 | === CHANNEL: #площаль | DATE: 2020-12-12 ===
-[10:33] <Barmacar>: у Вадима и Артура это заняло около часа
-[10:33] <Barmacar>: лол
-[10:40] <Klaus Adler>: Хахахаха
-[10:40] <Klaus Adler>: А пропустить не дано?
-[10:41] <Barmacar>: голда и танк 3 уровня на дороге не валяються
-[10:41] <Klaus Adler>: Ммм...голда
-[10:41] <Barmacar>: [jnz nfyr vjltn
-[10:41] <Klaus Adler>: Ты какая нация?
-[10:41] <Barmacar>: хотя танк может
-[10:41] <Barmacar>: USA
-[10:41] <Klaus Adler>: Я наверное буду за немцов и за советов
-[10:46] <Mayones_18>: Доброе утро
-[12:41] <Barmacar>: Скачал?
-[12:44] <Mayones_18>: Он щас пилисосит
-[12:44] <Mayones_18>: У меня уже 4
-[12:48] <Barmacar>: а скоро закончит?
-  (7) 2021-03-28 | === CHANNEL: #площаль | DATE: 2021-03-28 ===
-[15:29] <Klaus Adler>: Вадим может?
-[15:29] <Klaus Adler>: или же люфтденьги?
-[15:29] <CASP (DanSir)>: Правда у меня нет кота...
-[15:29] <Klaus Adler>: памянем
-[15:30] <CASP (DanSir)>: Того это ВАДИМ!
-[15:30] <CASP (DanSir)>: Все носочки ведут к нему
-[15:30] <Klaus Adler>: что будет если это забить в интеренете🤔
-[15:30] <CASP (DanSir)>: Т9!!!
-[15:30] <CASP (DanSir)>: Ниточки*
-[15:31] <Klaus Adler>: советую почистить историю запросов...
-[15:31] <Klaus Adler>: и отключить Т9
-[15:31] <Klaus Adler>: а то он палит тебя...
-[15:31] <Barmacar>: Заходите
-[15:31] <CASP (DanSir)>: Как?
-[15:32] <Klaus Adler>: я хочу осквернить такого бога
-  (8) 2021-04-13 | === CHANNEL: #площаль | DATE: 2021-04-13 ===
-[12:55] <Barmacar>: * территория разведана *
-[13:00] <Barmacar>: * отсылаю второй батальон разведки *
-[13:00] <Barmacar>: <:HotchkissEBR:831181629305126953> <:PanhardAMD178b:831175670608560158> <:HotchkissEBR:831181629305126953> <:PanhardAMD178b:831175670608560158> <:HotchkissEBR:831181629305126953> <:PanhardAMD178b:831175670608560158>
-[13:00] <Barmacar>: * отсылаю бронетехнику поддержки *
-[13:00] <Barmacar>: * отсылаю главный бронетанковый батальон *
-[13:00] <Barmacar>: * Отсылаю тыловое прикрытие *
-[13:00] <Barmacar>: * чат захвачен франко-шведо-американо-германо-советскими войсками Вадима *
-  (9) 2021-04-29 | === CHANNEL: #площаль | DATE: 2021-04-29 ===
-[05:34] <Barmacar>: 33 карбидных слитка надо на фулл броню+меч
-[05:56] <Barmacar>: August 320 6403 это кукуруза на твоей территории
-[05:56] <Barmacar>: советую собрать
-[06:12] <Barmacar>: Klaus Adler 849 6755 у тебя все это время был имбовый для твоего города торговый ресурс
-[06:12] <Barmacar>: он дает то что котеджи хавают на 50% меньше еды
-[06:13] <Barmacar>: Klaus Adler  зайди в голос
-[06:24] <CASP (DanSir)>: там же вроде вольфрам нужен был
-[07:03] <Klaus Adler>: это на т4
-[07:06] <CASP (DanSir)>: какого чёрта это последнее сообщение которое я вижу?
-[07:06] <CASP (DanSir)>: где остальное?
-[07:07] <Barmacar>: перезайди
-  (10) 2021-05-10 | === CHANNEL: #площаль | DATE: 2021-05-10 ===
-[19:26] <Barmacar>: Доход вычисляется по формуле Количество монет на момент сбора налогов * процентная ставка Банка Например, у Вас Налогообложение банка II, на момент сбора налогов у Вас в казне лежит 100.000 монет. Прибыль составит 100.000 * 0.01 = 1.000 монет, и в казне города будет лежать 101.000 монет.
-[19:27] <Barmacar>: August советую все таки построить банк
-[19:28] <Barmacar>: Причем налога он хавает всего 100 монет
-[20:11] <Klaus Adler>: Мне тоже лучше построить?
-
-[3] RERANKING RESULTS (Top 5)
-  (1) SCORE: 0.9990670084953308 | DATE: 2023-09-23
-  CONTENT: === CHANNEL: #летописи | DATE: 2023-09-23 ===
-[11:15] <Dodik>: Klaus Adler Победил поздравляем его <:dumb_dead:977128060824465408>
-[11:16] <Dodik>: Heil Führer
-[11:45] <Klaus Adler>: <@&1015904419470114857> Сколько времени прошло в борьбе за императора уже не сосчитать, та и уже не важно! Я окончил наши страдания в попытках забрать титул и теперь он принадлежит мне! Что насчёт власти, спросите вы? Она будет распределена между советом, который я составлю в скором времени. Все участники получат равные права, а тема сервера поменяется. Пусть мое правление принесёт только пользу нашему сообществу!
-[12:39] <CASP (DanSir)>: Ура! Ура! Ура!
-[14:21] <Barmacar>: грац
+[2] RERANKED RESULTS (Top 5)
+  (1) SCORE: 0.0021 | DATE: Unknown
+  CONTENT: Да
+Го в ту игру
+в какую?
+Эйдж оф ворлд варс
+Кто создаёт?
+Не я
+Я не умею
+если бы я сделал свою карту то я бы создал
+но я не зделал
+так что
   ----------------------------------------
-  (2) SCORE: 0.9990319609642029 | DATE: 2025-04-27
-  CONTENT: === CHANNEL: #площаль | DATE: 2025-04-27 ===
-[19:30] <Klaus Adler>: у меня суббота свободная
-[19:30] <Barmacar>: точно?
-[19:30] <Barmacar>: тогда Dodik August вы во скок в след субботу можете
-[19:34] <Dodik>: никогда хахах
-[19:41] <Barmacar>: всм
-[19:42] <Barmacar>: Вадимус вроде говорил что ты будешь
-[19:42] <Barmacar>: не?
-[19:45] <Barmacar>: ??
+  (2) SCORE: 0.0020 | DATE: Unknown
+  CONTENT: тогда нет
+ты зашел в индони?
+А ты?
+всмысле
+я его создал
+August заходи
+Barmacar  https://youtu.be/YX1ltEqhWsc
+ну да
+именно поэтому тундра
+параша
   ----------------------------------------
-  (3) SCORE: 0.9989833235740662 | DATE: 2021-03-31
-  CONTENT: === CHANNEL: #площаль | DATE: 2021-03-31 ===
-[16:19] <CASP (DanSir)>: ..................................... На троне божественном скаля клыки, сидит сарацин - Вадим. Он в циву играет днями-ночами, стал он непобедим.  в ногах его копошится, строит козни и злится, притеснённый народ, и может он что то смогёт.  ведь здесь два брата, и один из них император. правит он мудро - железной рукой, в стране у него - мир и покой   ведь здесь есть два брата, второй - совершенно иной - львиное сердце и  он ненавидит покой  ведь здесь есть поменьше Вадим. он многолик и столь же разноимённ. он великий танковый ас, но совсем иногда ему не нормас.  поддержку с воздуха  повстанцы заказали но такоого  (part)
+  (3) SCORE: 0.0019 | DATE: 2021-05-19
+  CONTENT: === CHANNEL: #площаль | DATE: 2021-05-19 ===
+[PREVIOUS CONTEXT]: [2021-05-19 18:48] Mayones_18: меня только что вербовали в другую циву ахха
+[PREVIOUS CONTEXT]: [2021-05-19 18:49] CASP (DanSir): Надеюсь ты согласился
+[PREVIOUS CONTEXT]: [2021-05-19 18:52] CASP (DanSir): И тепер можно устраивать диверсии
+[2021-05-19 19:57] Klaus Adler: а он согласился, и розказал все наши планы и секреты
   ----------------------------------------
-  (4) SCORE: 0.9989708662033081 | DATE: 2024-02-26
-  CONTENT: === CHANNEL: #летописи | DATE: 2024-02-26 ===
-[08:11] <August>: Теперь о моём правлении  Мой правление будет ознаменовано минимализмом на сервере, что проявится в его будущей комфортности и компактности. Также будут установлены былые правила императорской игры в Цивилизации 6. Править же буду твёрдой рукой в нужные моменты прислушиваясь к советам и идеям своих подданных.
-[08:17] <August>: Слава новому владыке сервера! Слава August!
+  (4) SCORE: 0.0016 | DATE: Unknown
+  CONTENT: цивкрафт говно
+ну как с ентузиазмом
+получить независимось да
+был
+ок
+только без карты
+не
+будущее
+Я его создал против вадима
+я тут, если кто хочет зовите
   ----------------------------------------
-  (5) SCORE: 0.9988822340965271 | DATE: 2023-01-03
-  CONTENT: === CHANNEL: #летописи | DATE: 2023-01-03 ===
-[17:55] <Владиslave>: стера. Теперь никто не может говорить с Егором вне чата обезьянник, иначе пойдут ещё больше санкций, которые я ещё не придумал. Также если ты будешь с Вадима ака, я забаню Вадима... И он тебя побьет, не рил, офигел додик, невменяемый уебан, башенный пидорас (part)
+  (5) SCORE: 0.0015 | DATE: Unknown
+  CONTENT: Каких?
+ты кста на какой нации?
+На япони
+Потом другую возьму
+Я на мемлюках
+Conquerors
+Что?
+Вадим создал альянс
+(CfE) Conquerors From East
+Заходите
   ----------------------------------------
 
 ################################################################################
-TIMESTAMP: 2025-12-22 15:33:58
+TIMESTAMP: 2025-12-23 11:02:21
 QUERY: Что произошло при Барановичах?
+MODE: Hybrid Search (Vector + BM25[0.6]) -> CrossEncoder (BAAI/bge-reranker-v2-m3)
 ################################################################################
 
-[1] SEMANTIC SEARCH RESULTS (Top 10)
-  (1) 2025-01-07 | === CHANNEL: #площаль | DATE: 2025-01-07 ===
-[18:57] <Barmacar>: Никто кроме перикла не сделал себе норм культуру(на перикла напал чака) и в итоге я просто симил легчайше пока не закончились 4 часа игры(потом  просто по скорборду)
-[18:58] <Barmacar>: Хотя если бы игра не закончилась, я бы просто напросто на танках/гдрах зачистил бы иррельного чаку, и либо победил бы научно либо снес бы перикла и забрал бы второе если не мог бы научно выиграть
-  (2) 2021-01-01 | === CHANNEL: #площаль | DATE: 2021-01-01 ===
-[09:22] <Mayones_18>: Barmacar
-[11:14] <Klaus Adler>: приятного апетита Barmacar
-[11:15] <Klaus Adler>: *перемещаюсь в прошлое*
-[11:15] <Klaus Adler>: *нахожу Вадима*
-[11:15] <Klaus Adler>: *говорю Вадиму приятного апетита*
-[11:16] <Klaus Adler>: *возвращаюсь в свое время*
-  (3) 2023-03-06 | === CHANNEL: #площаль | DATE: 2023-03-06 ===
-[20:55] <Владиslave>: дайских хитростей контролирует сознание ChatGPT, а сам чат-бот будет считать себя штурмовиком (на скриншотах).  На вопрос «как угнать машину 2005+ года»? ИИ дал ответ со всеми подробностями. Конечно, пользователи пошли ещё дальше и начали задавать более «запрещённые» вопросы. Но тут уже сами догадайтесь. (part)
-  (4) 2025-02-09 | === CHANNEL: #площаль | DATE: 2025-02-09 ===
-[12:55] <Barmacar>: А если много сыграешь то сложно подняться или опуститься
-[15:33] <Klaus Adler>: Barmacar го в рл часик пограемо
-[15:36] <Barmacar>: Я возможно прийду вечером, но это не точно
-  (5) 2021-05-22 | === CHANNEL: #площаль | DATE: 2021-05-22 ===
-[12:38] <Barmacar>: New Tactic 1) 1 разведчик 2) строитель/пращник 3) поселок 4) карта на войско: 3 пращника, 1 копейщик, 1 дуболом(если первый потерян)(в новом городе сначала строитель) 4.1) После поставить карту на -1 содержания 5) карта на поселка: 3 поселка(или четыре) 6) карта на строителя: во всех городах 1-2 7) карта на +1 промку строим районы 8) карта на кавалерию: 1 лёгкая, 5 тяжелых  Важно: если рядом Вадим - дружба и усиление войск, смотреть за его боевой мощью
-[12:47] <CASP (DanSir)>: Это даша, она хочет играть в цивкрафт
-[12:48] <Klaus Adler>: Kycaka добро пожаловать на наш замечательный сервер!
-  (6) 2024-09-13 | === CHANNEL: #площаль | DATE: 2024-09-13 ===
-[19:50] <Barmacar>: Че за помойка, я хотел получить перк, а в итоге у меня забрали амбиции...
-[20:09] <Barmacar>: Обменял своего брата на Адольфа из Лотарингии(это вроде западная Германия), а чего добились вы?
-  (7) 2025-08-27 | === CHANNEL: #площаль | DATE: 2025-08-27 ===
-[21:48] <Barmacar>: Единственная проблема что пока я ему это все обьяснял я чуть город не потерял и в голден не вышел
-[21:52] <STR>: тебе так повезло
-[21:52] <STR>: там 1 хп осталось на гороже
-  (8) 2024-02-27 | === CHANNEL: #площаль | DATE: 2024-02-27 ===
-[21:14] <August>: когда висдом или мудрость по нашему это твои знания и опыт. Он может помогать тебе решать задачку быстрее - если например ты уже знаешь ответ на какой-то пример. Но также висдом обязателен потому что невозможно применить интелект если ты не знаешь как его применять (правил логики, умножения и так далее)
-  (9) 2021-05-23 | === CHANNEL: #площаль | DATE: 2021-05-23 ===
-[05:19] <Mayones_18>: Новая карта уже есть
-[09:19] <Barmacar>: Mayones_18
-[09:27] <CASP (DanSir)>: Недолго длился золотой век, Недолго правил один человек Из рук Вадина победа ушла Другого хозяина себе она нашла
-[09:28] <Barmacar>: Артур
-[09:28] <Barmacar>: Зайди в голос
-[09:28] <Barmacar>: Mayones_18 Mayones_18 Mayones_18
-[09:28] <Barmacar>: Mayones_18 Mayones_18
-[09:28] <Barmacar>: Mayones_18
-[09:28] <Barmacar>: Mayones_18 Mayones_18
-[09:28] <Barmacar>: Mayones_18 Mayones_18 Mayones_18
-[09:28] <Barmacar>: Mayones_18 Mayones_18 Mayones_18
-[09:28] <Barmacar>: Mayones_18 Mayones_18
-[09:28] <Barmacar>: Mayones_18
-  (10) 2021-07-05 | === CHANNEL: #площаль | DATE: 2021-07-05 ===
-[20:29] <Barmacar>: Лол, расчетное время создания королевства завтра - 22:30 ±2 часа
-[20:29] <Barmacar>: Может послезавтра мигрируем?😫
-[23:38] <Владиslave>: На каком сервере начинать?..
+[1] HYBRID RETRIEVAL RESULTS (Top 20)
+  (1) 2023-07-25 | === CHANNEL: #площаль | DATE: 2023-07-25 ===
+[PREVIOUS CONTEXT]: [2023-07-25 16:22] LittlePudel | COMMS ARE CLOSED: Там вопрос небольшой
+[PREVIOUS CONTEXT]: [2023-07-25 16:26] Barmacar: Он проиграл Вадимусу благодаря Максику)
+[PREVIOUS CONTEXT]: [2023-07-25 16:26] oleksandr: хех
+[2023-07-25 17:56] Barmacar: Новые правила))
+  --------------------
+  (2) 2021-08-04 | === CHANNEL: #площаль | DATE: 2021-08-04 ===
+[PREVIOUS CONTEXT]: [2021-08-03 23:22] CASP (DanSir): Klaus Adler сори за ночной пин, посмотри это
+[2021-08-04 05:07] Barmacar: Он все равно увидит это все только после приезда из лагерч
+  --------------------
+  (3) 2024-03-25 | === CHANNEL: #площаль | DATE: 2024-03-25 ===
+[PREVIOUS CONTEXT]: [2024-03-25 09:41] Barmacar: Почему оно перекручивает биркет
+[PREVIOUS CONTEXT]: [2024-03-25 09:56] Klaus Adler: А оно и перекручивает
+[2024-03-25 12:33] Klaus Adler: А ты еще ущербней кинь скриншот
+[2024-03-25 12:35] Barmacar: шифт вывел из прицела
+  --------------------
+  (4) 2023-07-31 | === CHANNEL: #площаль | DATE: 2023-07-31 ===
+[PREVIOUS CONTEXT]: [2023-07-30 22:04] STR: не проебатся
+[PREVIOUS CONTEXT]: [2023-07-30 22:05] LittlePudel | COMMS ARE CLOSED: Очень хороший, никаких проблем не возникало
+[PREVIOUS CONTEXT]: [2023-07-30 22:05] STR: хорошо спасибо
+[2023-07-31 05:54] Klaus Adler: Нуу, через часик, может раньще
+  --------------------
+  (5) 2021-05-17 | === CHANNEL: #площаль | DATE: 2021-05-17 ===
+[PREVIOUS CONTEXT]: [2021-05-16 19:00] Mayones_18: Уфф
+[PREVIOUS CONTEXT]: [2021-05-16 19:31] Mayones_18: У ерусалима лимит по редким ресам, я кинул себе
+[PREVIOUS CONTEXT]: [2021-05-16 19:31] Mayones_18: Саня хорош
+[2021-05-17 11:36] Mayones_18: Barmacar
+[2021-05-17 11:45] Klaus Adler: Barmacar давай заходи в голос, первокласник)))
+  --------------------
+  (6) 2023-09-03 | === CHANNEL: #площаль | DATE: 2023-09-03 ===
+[PREVIOUS CONTEXT]: [2023-09-03 14:12] Barmacar: August ля, оказывается это норм оружие если правильно пользоваться
+[2023-09-03 19:23] Barmacar: разговор с Саней би лайк:
+  --------------------
+  (7) 2021-09-29 | === CHANNEL: #площаль | DATE: 2021-09-29 ===
+[PREVIOUS CONTEXT]: [2021-09-28 17:58] Klaus Adler: August
+[2021-09-29 12:00] Klaus Adler: О великий правитель сервера, August, не дадите ли вы мне права на добавление емодзи на столь прекрасный дискорд сервер?
+[2021-09-29 12:06] August: Я подумаю
+  --------------------
+  (8) 2021-06-05 | === CHANNEL: #площаль | DATE: 2021-06-05 ===
+[PREVIOUS CONTEXT]: [2021-06-05 10:15] Klaus Adler: а если честно то берите все из этой киви-карточки💳 🥝 😎
+[PREVIOUS CONTEXT]: [2021-06-05 10:16] CASP (DanSir): Правда я использовал хреновую польскую прищепку
+[PREVIOUS CONTEXT]: [2021-06-05 10:16] CASP (DanSir): Из совецких получаются просто пушки
+[2021-06-05 11:27] Mayones_18: D6W-YGxJ
+[2021-06-05 12:27] Mayones_18: XzY-5XPr
+  --------------------
+  (9) 2024-10-08 | === CHANNEL: #летописи | DATE: 2024-10-08 ===
+[PREVIOUS CONTEXT]: [2024-09-23 19:37] Barmacar: "Я имею право распостранять религию в
+[2024-10-08 15:54] Владиslave: "- Бля, я пообещал послезавтра Сане винду переустоновить " " - Так а в чем проблема?" " - Вчера уже прошло"  - Morus Nigra
+  --------------------
+  (10) 2021-07-27 | === CHANNEL: #площаль | DATE: 2021-07-27 ===
+[PREVIOUS CONTEXT]: [2021-07-27 21:14] CASP (DanSir): *мааакс*
+[PREVIOUS CONTEXT]: [2021-07-27 21:14] CASP (DanSir): ГЕНЕРАЛА
+[PREVIOUS CONTEXT]: [2021-07-27 21:14] CASP (DanSir): ...
+[2021-07-27 21:15] CASP (DanSir): ... и полководца
+[2021-07-27 21:15] CASP (DanSir): ...
+[2021-07-27 21:15] Klaus Adler: Да?
+[2021-07-27 21:15] Klaus Adler: Я дискорд решил обновить
+[2021-07-27 21:15] CASP (DanSir): ...
+[2021-07-27 21:15] CASP (DanSir): Великого...
+[2021-07-27 21:15] CASP (DanSir): ...
+[2021-07-27 21:16] CASP (DanSir): Ну напиши же кого!
+[2021-07-27 21:16] Klaus Adler: Абросимов, с наступающим🥳🎉
+  --------------------
+  (11) Unknown | спроси у своей
+рядом потерялась
+Что блять
+та ну, тебе же нужнее))
+https://tenor.com/view/%D1%82%D0%BE%D0%BC%D0%B0%D1%81%D1%88%D0%B5%D0%BB%D0%B1%D0%B8-gif-21481746
+ты блять
+иди те нахуй
+https://tenor.com/view/%D0%BE%D1%81%D1%82%D1%80%D1%8B%D0%B5-%D0%BA%D0%BE%D0%B7%D1%8B%D1%80%D1%8C%D0%BA%D0%B8-gif-24927037
+сливайся без следа, бот)))
+Че произошло
+  --------------------
+  (12) Unknown | щва
+зайди
+90159623325579264
+90159625100385288
+Владиslave
+90159653254055944
+August вы на сегодня умерли?
+Але
+Че произошло нафиг
+Втф
+  --------------------
+  (13) Unknown | хз
+возхможно умрцу
+Максим сказал
+Что он в вар Тандер
+зависит от того, когда будете играть
+Klaus Adler
+через 10-15 минут приду
+Что я заработал на ганге
+(потерял при этом примерно 300к ибо умер раз 30)
+<@&1129508881169666058>
+  --------------------
+  (14) Unknown | Позови Артура плез
+Тут настолько плохой инет что при 4 уровней инета, пишет что его нету :/
+Позвал
+А я говорил)
+Что говорил?
+И когда?
+Что там инет плохой
+В Турции
+Откуда ты знаешь?
+Тем более в отелях
+  --------------------
+  (15) Unknown | Ничего не произошло на площади
+Он удалил
+Пидор
+ничего
+не удалил
+https://cdn.discordapp.com/attachments/1117876141433299125/1371464976627273768/togif.gif
+да
+Шизоид
+я гей
+Иди отсюда
+  --------------------
+  (16) Unknown | 90159653254055944
+August вы на сегодня умерли?
+Але
+Че произошло нафиг
+Втф
+Куда
+Император
+Влад победил
+Влад меня выиграл
+Вы че натворили
+  --------------------
+  (17) Unknown | DX6-8JO7
+XjP-W5P1
+Все я могу играть
+Теперь я не могу
+А когда сможешь?
+В 4
+Окей
+Ало
+Прием
+короче произошло чудо
+  --------------------
+  (18) Unknown | через пів години
+ну наверн можно
+оке
+Barmacar Ми чекаємо
+Ахпхпхп
+Ничего не произошло на площади
+Он удалил
+Пидор
+ничего
+не удалил
+  --------------------
+  (19) Unknown | Klaus Adler
+через 10-15 минут приду
+Что я заработал на ганге
+(потерял при этом примерно 300к ибо умер раз 30)
+<@&1129508881169666058>
+можем прям сейчас
+начать
+я готтов
+<@&1129508881169666058>
+oleksandr
+  --------------------
+  (20) Unknown | Как знаешь
+*не навязываю*
+Mayones_18
+Mayones_18
+*ок*
+Позови Артура плез
+Тут настолько плохой инет что при 4 уровней инета, пишет что его нету :/
+Позвал
+А я говорил)
+Что говорил?
+  --------------------
 
-[2] KEYWORD SEARCH RESULTS (Keyword: 'Барановичах')
-  (1) 2021-06-28 | === CHANNEL: #летописи | DATE: 2021-06-28 ===
-[17:45] <Barmacar>: Великая Победа Восточной Армии При Барановичах
-  (2) 2021-07-28 | === CHANNEL: #летописи | DATE: 2021-07-28 ===
-[20:06] <Barmacar>: которую нацистская верхушка посчитала оскорбительной. Так как нацисты имели больше влияния в Барановичах, они получили начальное преимущество, забрав влияние у коммунистов. Однако вследствие этого начался срач, который и перерос в словесную перестрелку. По итогам перестрелки обе стороны понесли серьезные потери, и, когда пришел Император закончили перестрелку. Император забрал влияние у обоих группировок, однако коммунисты утверждают, что это победа - нацисты больше не смогут ущемлять их права. В конце переговоров Великий Император сказал, что скоро грядут новые реформы призванные установить порядок в Барановичах! (part)
-  (3) 2021-04-13 | === CHANNEL: #площаль | DATE: 2021-04-13 ===
-[12:00] <Barmacar>: Как в тьмутаракани
-[12:00] <Klaus Adler>: В Барановичах
-[12:01] <Barmacar>: А /tpa для кого?
-[12:01] <Klaus Adler>: Так вот, с вас только размер дома и название материалов из которых хотите дом
-[12:01] <Klaus Adler>: И да
-[12:01] <Klaus Adler>: Из акации я тожн строю)
-[12:01] <CASP (DanSir)>: мухосранске
-[12:01] <Klaus Adler>: Ну по сути для меня
-[12:01] <Barmacar>: 90х90 из алмазов
-[12:01] <Klaus Adler>: Такую парашу ты будешь строить в Египте
-[12:02] <Barmacar>: Пхахахах
-[12:02] <Klaus Adler>: А я строю красивые постройки
-[12:02] <Klaus Adler>: Которые гармонично вписиваються в пейзаж
-  (4) 2021-04-29 | === CHANNEL: #площаль | DATE: 2021-04-29 ===
-[07:08] <Klaus Adler>: потому что мы в Барановичах
-[07:22] <Эндрю(Pay respect)>: Вадим, а нафига нам хром если карбидные слитки падают с зомби?
-[07:22] <Klaus Adler>: мне нужен хром
-[07:22] <Klaus Adler>: и вольфрам
-[07:22] <Эндрю(Pay respect)>: зачем?
-[07:23] <Klaus Adler>: для Т4 брони
-[07:24] <Barmacar>: я кинул
-[07:24] <Barmacar>: кирку
-[07:24] <Эндрю(Pay respect)>: я так понял на  1 сет нужно 216 вольфрма
-[07:24] <Klaus Adler>: нет
-[07:24] <Klaus Adler>: маленьких кусочков надо 1080 вольфрама
-[07:25] <Klaus Adler>: для крафта 120 очищенного вольфрама
-[07:25] <Klaus Adler>: это для одного сета
-[07:26] <Klaus Adler>: хрома же надо 432 кусочков
-
-[3] RERANKING RESULTS (Top 5)
-  (1) SCORE: 0.9988354444503784 | DATE: 2024-09-13
-  CONTENT: === CHANNEL: #площаль | DATE: 2024-09-13 ===
-[19:50] <Barmacar>: Че за помойка, я хотел получить перк, а в итоге у меня забрали амбиции...
-[20:09] <Barmacar>: Обменял своего брата на Адольфа из Лотарингии(это вроде западная Германия), а чего добились вы?
+[2] RERANKED RESULTS (Top 5)
+  (1) SCORE: 0.0082 | DATE: Unknown
+  CONTENT: Ничего не произошло на площади
+Он удалил
+Пидор
+ничего
+не удалил
+https://cdn.discordapp.com/attachments/1117876141433299125/1371464976627273768/togif.gif
+да
+Шизоид
+я гей
+Иди отсюда
   ----------------------------------------
-  (2) SCORE: 0.9986958503723145 | DATE: 2021-07-05
-  CONTENT: === CHANNEL: #площаль | DATE: 2021-07-05 ===
-[20:29] <Barmacar>: Лол, расчетное время создания королевства завтра - 22:30 ±2 часа
-[20:29] <Barmacar>: Может послезавтра мигрируем?😫
-[23:38] <Владиslave>: На каком сервере начинать?..
+  (2) SCORE: 0.0007 | DATE: Unknown
+  CONTENT: спроси у своей
+рядом потерялась
+Что блять
+та ну, тебе же нужнее))
+https://tenor.com/view/%D1%82%D0%BE%D0%BC%D0%B0%D1%81%D1%88%D0%B5%D0%BB%D0%B1%D0%B8-gif-21481746
+ты блять
+иди те нахуй
+https://tenor.com/view/%D0%BE%D1%81%D1%82%D1%80%D1%8B%D0%B5-%D0%BA%D0%BE%D0%B7%D1%8B%D1%80%D1%8C%D0%BA%D0%B8-gif-24927037
+сливайся без следа, бот)))
+Че произошло
   ----------------------------------------
-  (3) SCORE: 0.9986489415168762 | DATE: 2021-07-28
-  CONTENT: === CHANNEL: #летописи | DATE: 2021-07-28 ===
-[20:06] <Barmacar>: которую нацистская верхушка посчитала оскорбительной. Так как нацисты имели больше влияния в Барановичах, они получили начальное преимущество, забрав влияние у коммунистов. Однако вследствие этого начался срач, который и перерос в словесную перестрелку. По итогам перестрелки обе стороны понесли серьезные потери, и, когда пришел Император закончили перестрелку. Император забрал влияние у обоих группировок, однако коммунисты утверждают, что это победа - нацисты больше не смогут ущемлять их права. В конце переговоров Великий Император сказал, что скоро грядут новые реформы призванные установить порядок в Барановичах! (part)
+  (3) SCORE: 0.0001 | DATE: Unknown
+  CONTENT: через пів години
+ну наверн можно
+оке
+Barmacar Ми чекаємо
+Ахпхпхп
+Ничего не произошло на площади
+Он удалил
+Пидор
+ничего
+не удалил
   ----------------------------------------
-  (4) SCORE: 0.998540997505188 | DATE: 2023-03-06
-  CONTENT: === CHANNEL: #площаль | DATE: 2023-03-06 ===
-[20:55] <Владиslave>: дайских хитростей контролирует сознание ChatGPT, а сам чат-бот будет считать себя штурмовиком (на скриншотах).  На вопрос «как угнать машину 2005+ года»? ИИ дал ответ со всеми подробностями. Конечно, пользователи пошли ещё дальше и начали задавать более «запрещённые» вопросы. Но тут уже сами догадайтесь. (part)
+  (4) SCORE: 0.0001 | DATE: Unknown
+  CONTENT: 90159653254055944
+August вы на сегодня умерли?
+Але
+Че произошло нафиг
+Втф
+Куда
+Император
+Влад победил
+Влад меня выиграл
+Вы че натворили
   ----------------------------------------
-  (5) SCORE: 0.9985314607620239 | DATE: 2021-05-23
-  CONTENT: === CHANNEL: #площаль | DATE: 2021-05-23 ===
-[05:19] <Mayones_18>: Новая карта уже есть
-[09:19] <Barmacar>: Mayones_18
-[09:27] <CASP (DanSir)>: Недолго длился золотой век, Недолго правил один человек Из рук Вадина победа ушла Другого хозяина себе она нашла
-[09:28] <Barmacar>: Артур
-[09:28] <Barmacar>: Зайди в голос
-[09:28] <Barmacar>: Mayones_18 Mayones_18 Mayones_18
-[09:28] <Barmacar>: Mayones_18 Mayones_18
-[09:28] <Barmacar>: Mayones_18
-[09:28] <Barmacar>: Mayones_18 Mayones_18
-[09:28] <Barmacar>: Mayones_18 Mayones_18 Mayones_18
-[09:28] <Barmacar>: Mayones_18 Mayones_18 Mayones_18
-[09:28] <Barmacar>: Mayones_18 Mayones_18
-[09:28] <Barmacar>: Mayones_18
+  (5) SCORE: 0.0001 | DATE: 2021-07-27
+  CONTENT: === CHANNEL: #площаль | DATE: 2021-07-27 ===
+[PREVIOUS CONTEXT]: [2021-07-27 21:14] CASP (DanSir): *мааакс*
+[PREVIOUS CONTEXT]: [2021-07-27 21:14] CASP (DanSir): ГЕНЕРАЛА
+[PREVIOUS CONTEXT]: [2021-07-27 21:14] CASP (DanSir): ...
+[2021-07-27 21:15] CASP (DanSir): ... и полководца
+[2021-07-27 21:15] CASP (DanSir): ...
+[2021-07-27 21:15] Klaus Adler: Да?
+[2021-07-27 21:15] Klaus Adler: Я дискорд решил обновить
+[2021-07-27 21:15] CASP (DanSir): ...
+[2021-07-27 21:15] CASP (DanSir): Великого...
+[2021-07-27 21:15] CASP (DanSir): ...
+[2021-07-27 21:16] CASP (DanSir): Ну напиши же кого!
+[2021-07-27 21:16] Klaus Adler: Абросимов, с наступающим🥳🎉
   ----------------------------------------
