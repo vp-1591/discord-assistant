@@ -20,8 +20,6 @@ async def on_ready():
     print("Connecting...")
     await client.wait_until_ready()
     print("Connected")
-    
-    
 
 @client.event
 async def on_message(message):
