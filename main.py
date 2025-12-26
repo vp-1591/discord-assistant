@@ -1,8 +1,6 @@
 import discord
 import os
 from dotenv import load_dotenv
-from google import genai
-from google.genai import types
 from export_chat import export_chat_to_json, resolve_mentions
 
 load_dotenv()

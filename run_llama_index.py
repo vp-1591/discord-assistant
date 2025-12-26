@@ -217,7 +217,7 @@ def main():
     # C. Hybrid Fusion
     fusion_retriever = QueryFusionRetriever(
         [vector_retriever, bm25_retriever],
-        similarity_top_k=50,
+        similarity_top_k=100,
         num_queries=1,
         mode="reciprocal_rerank",
         use_async=False,
@@ -227,7 +227,7 @@ def main():
     print("🎯 Initializing Reranker...")
     reranker = FlagEmbeddingReranker(
         model="BAAI/bge-reranker-v2-m3",
-        top_n=20 # Top 10 to provide more context to the LLM
+        top_n=7 # Top 10 to provide more context to the LLM
     )
 
     # --- 6. QUERY ENGINE ---
@@ -265,7 +265,7 @@ def main():
         {"response_synthesizer:text_qa_template": qa_prompt_tmpl}
     )
 
-    query = "Кто нынешний Добряк?"
+    query = "Что произошло в Барановичах?"
     print(f"\n🔍 Querying: '{query}'")
     response = query_engine.query(query)
     
@@ -280,12 +280,12 @@ def main():
         print("-" * 50)
 
     # --- RETRIEVAL TEST ---
-    print("\n🧪 Running retrieval validation...")
-    test_passed = any("Dodik - Добряк" in node.node.get_content() for node in response.source_nodes)
-    if test_passed:
-        print("✅ PASS: 'Dodik - Добряк' is present in the source nodes.")
-    else:
-        print("❌ FAIL: 'Dodik - Добряк' was NOT found in the source nodes.")
+    # print("\n🧪 Running retrieval validation...")
+    # test_passed = any("Dodik - Добряк" in node.node.get_content() for node in response.source_nodes)
+    # if test_passed:
+    #     print("✅ PASS: 'Dodik - Добряк' is present in the source nodes.")
+    # else:
+    #     print("❌ FAIL: 'Dodik - Добряк' was NOT found in the source nodes.")
 
 #     # --- 4. RETRIEVAL ENGINE (HYBRID) ---
 #     # A. Vector Retriever (Top 50)
