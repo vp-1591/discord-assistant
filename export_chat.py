@@ -101,12 +101,13 @@ async def export_chat_to_txt(channel):
     # Just printing the 'file_count' might be off by 1 if the last one was deleted.
     # Let's just trust the logs above for individual file creation.
 
-async def export_chat_to_json(channel):
+async def export_chat_to_json(channel, skip_id=None):
     """
     Fetches message history from a Discord channel and exports it to a JSON file.
     
     args:
         channel: The Discord channel object (must have history attribute).
+        skip_id: The ID of a message to exclude from the export.
     """
     print(f"Starting JSON export from channel: {channel.name} ({channel.id})...")
     
@@ -115,6 +116,10 @@ async def export_chat_to_json(channel):
     try:
         # Using oldest_first=True ensures chronological order
         async for message in channel.history(limit=None, oldest_first=True):
+            # Skip the trigger message if skip_id is provided
+            if skip_id and message.id == skip_id:
+                continue
+                
             # Skip messages from bots or without content
             if message.author.bot or not message.content:
                 continue
@@ -122,19 +127,25 @@ async def export_chat_to_json(channel):
             # Extract fields and format timestamp
             timestamp = message.created_at.strftime('%Y-%m-%dT%H:%M:%S')
             
+            # Create a lookup for this specific message's entities
+            known_in_msg = {str(m.id): m.display_name for m in message.mentions}
+            for r in message.role_mentions:
+                known_in_msg[str(r.id)] = r.name
+            known_in_msg[str(message.author.id)] = message.author.display_name
+
             messages_data.append({
                 "timestamp": timestamp,
                 "channel": channel.name,
-                "user": message.author.display_name,
-                "mentions": [m.display_name for m in message.mentions],
-                "roles": [r.name for r in message.role_mentions],
-                "message": resolve_mentions(message)
+                "user_id": str(message.author.id),
+                "message": message.content,
+                "last_known_names": known_in_msg
             })
             
             if len(messages_data) % 2000 == 0:
                  print(f"Processed {len(messages_data)} messages...")
 
-        output_filename = f"{channel.name}.json"
+        os.makedirs("messages_json", exist_ok=True)
+        output_filename = os.path.join("messages_json", f"{channel.name}.json")
         
         with open(output_filename, 'w', encoding='utf-8') as f:
             json.dump(messages_data, f, ensure_ascii=False, indent=2)

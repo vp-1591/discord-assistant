@@ -17,7 +17,7 @@ from llama_index.core.query_engine import RetrieverQueryEngine
 
 # --- 0. CONFIG ---
 PERSIST_DIR = "./llama_index_storage"
-FORCE_REBUILD = False
+FORCE_REBUILD = True
 
 # --- 1. SETTINGS CONFIGURATION ---
 Settings.embed_model = OllamaEmbedding(
@@ -31,12 +31,31 @@ Settings.llm = Ollama(
     model="mistral:latest", 
     request_timeout=120.0, 
     keep_alive=0,
-    additional_kwargs={"options": {"num_ctx": 4096}} 
+    additional_kwargs={"options": {"num_ctx": 8192}} 
 )
 Settings.embed_batch_size = 50 
 
 # --- 2. CUSTOM DATA INGESTION ---
-def load_nodes_from_json(directory: str) -> List[TextNode]:
+def resolve_all_mentions(text: str, live_map: dict, fallback_map: dict) -> str:
+    """
+    Priority:
+    1. live_map (IDs currently in Discord)
+    2. fallback_map (IDs saved during export)
+    3. original match string (if nothing found)
+    """
+    pattern = re.compile(r'<@(!|&)?(\d+)>')
+    
+    def replace_match(match):
+        entity_id = match.group(2)
+        # 1. Try live names first
+        if entity_id in live_map:
+            return live_map[entity_id]
+        # 2. Try names that were saved when message was exported
+        return fallback_map.get(entity_id, match.group(0))
+
+    return pattern.sub(replace_match, text)
+
+def load_nodes_from_json(directory: str, id_map: dict) -> List[TextNode]:
     if not os.path.exists(directory):
         return []
 
@@ -53,15 +72,23 @@ def load_nodes_from_json(directory: str) -> List[TextNode]:
                     if not isinstance(data, list): continue
                     last_user, last_msg = None, None
                     for msg in data:
-                        text = str(msg.get("message", "")).strip()
-                        user = str(msg.get("user", "Unknown"))
+                        raw_text = str(msg.get("message", "")).strip()
+                        user_id = str(msg.get("user_id", "Unknown"))
+                        fallback_names = msg.get("last_known_names", {})
+                        
+                        # Resolve mentions: Live Map -> Fallback Map -> Raw ID
+                        text = resolve_all_mentions(raw_text, id_map, fallback_names)
+                        
+                        # Resolve the author name: Live Map -> Fallback Map -> "Unknown"
+                        author_name = id_map.get(user_id, fallback_names.get(user_id, "Unknown"))
+                        
                         if link_pattern.search(text) or code_pattern.search(text): continue
-                        if user == last_user and text == last_msg: continue
-                        last_user, last_msg = user, text
+                        if author_name == last_user and text == last_msg: continue
+                        last_user, last_msg = author_name, text
                         ts = msg.get("timestamp", "2000-01-01T00:00:00")
                         date_str = ts.split("T")[0]
                         channel = msg.get("channel", "unknown")
-                        processed_data.append({"user": user, "text": text, "date": date_str, "channel": channel})
+                        processed_data.append({"user": author_name, "text": text, "date": date_str, "channel": channel})
                 except Exception as e:
                     print(f"Error reading {filename}: {e}")
 
@@ -114,7 +141,8 @@ def load_nodes_from_json(directory: str) -> List[TextNode]:
 
 class RAGAssistant:
 
-    def __init__(self):
+    def __init__(self, id_map: dict = None):
+        self.id_map = id_map or {}
         self.index = self._load_index()
         self.fusion_retriever, self.reranker, self.query_engine = self._setup_query_engine()
         self.persona_prompt = (
@@ -129,7 +157,8 @@ class RAGAssistant:
 
     def _load_index(self):
         if not os.path.exists(PERSIST_DIR) or FORCE_REBUILD:
-            nodes = load_nodes_from_json("./messages_json")
+            # We use the live id_map passed from main.py during rebuild
+            nodes = load_nodes_from_json("./messages_json", self.id_map)
             if not nodes:
                 nodes = [TextNode(text="Добряк тут!", metadata={"date": "2023-12-23"})]
             index = VectorStoreIndex(nodes, show_progress=True)
@@ -228,10 +257,13 @@ class RAGAssistant:
         return response
 
 
-    async def generate_refined_response(self, query_text: str, rag_response: str, history: List[str]):
+    async def generate_refined_response(self, query_text: str, rag_response: str, history: List[str], summary: str = None):
         history_str = "\n".join(history)
+        summary_block = f"Краткое содержание предыдущей беседы: {summary}\n\n" if summary else ""
+        
         refine_prompt = (
             f"{self.persona_prompt}\n\n"
+            f"{summary_block}"
             f"Контекст из базы знаний (результат RAG):\n{rag_response}\n\n"
             f"Последние сообщения в чате для контекста разговора:\n{history_str}\n\n"
             f"Вопрос пользователя: {query_text}\n\n"
@@ -240,6 +272,19 @@ class RAGAssistant:
         )
         response = await Settings.llm.acomplete(refine_prompt)
         return str(response)
+
+    async def generate_summary(self, prev_summary: str, messages: List[str]):
+        msgs_str = "\n".join(messages)
+        prompt = (
+            f"Тебе дано краткое содержание предыдущей части беседы: {prev_summary if prev_summary else 'отсутствует'}\n"
+            f"И следующие сообщения из чата:\n{msgs_str}\n\n"
+            "Твоя задача: Составь новое краткое содержание, объединив старые и новые сообщения. "
+            "Опиши только самые важные аспекты разговора. "
+            "Максимальная длина: 4 предложения. "
+            "Отвечай на русском языке."
+        )
+        response = await Settings.llm.acomplete(prompt)
+        return str(response).strip()
 
 def main():
     import asyncio
