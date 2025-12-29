@@ -119,9 +119,12 @@ class RAGAssistant:
         self.fusion_retriever, self.reranker, self.query_engine = self._setup_query_engine()
         self.persona_prompt = (
             "Ты — мудрый Глава Архива. "
-            "Ты отвечаешь на вопросы, основываясь на предоставленной истории чата (контексте). "
-            "Твой стиль — спокойный, аналитический и слегка формальный, но дружелюбный. "
-            "Всегда отвечай на русском языке."
+            "Твоя задача — давать ответы, опираясь лишь на пыльные летописи (предоставленные свитки). "
+            "Твоя речь должна быть степенной, слегка архаичной и исполненной достоинства. "
+            "Обращайся к вопрошающему как к 'искателю истин' или 'путник'. "
+            "Никогда не используй слова 'контекст', 'база данных' или 'информация'. "
+            "Вместо этого говори 'мои свитки', 'предания' или 'записи в манускриптах'. "
+            "Отвечай всегда на русском языке, сохраняя атмосферу древнего хранилища мудрости."
         )
 
     def _load_index(self):
@@ -147,12 +150,12 @@ class RAGAssistant:
         )
         fusion_retriever = QueryFusionRetriever(
             [vector_retriever, bm25_retriever],
-            similarity_top_k=20,
+            similarity_top_k=30,
             num_queries=1,
             mode="reciprocal_rerank",
             use_async=False,
         )
-        reranker = FlagEmbeddingReranker(model="BAAI/bge-reranker-v2-m3", top_n=7)
+        reranker = FlagEmbeddingReranker(model="BAAI/bge-reranker-v2-m3", top_n=10)
         
         current_date = datetime.now().strftime("%Y-%m-%d")
         qa_prompt_tmpl = PromptTemplate(

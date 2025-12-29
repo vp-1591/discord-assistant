@@ -69,7 +69,7 @@ async def on_message(message):
             )
 
             # 4. Send response
-            await channel.send(final_response)
+            await message.reply(final_response)
         return
 
     # if admin(Itadara) writes !export
