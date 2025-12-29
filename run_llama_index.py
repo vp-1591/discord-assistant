@@ -200,26 +200,26 @@ class RAGAssistant:
             f.write(f"3. 1ST AGENT RESPONSE (RAG Synthesis):\n{agent_response}\n")
             f.write(f"{'='*80}\n\n")
 
-    def query(self, query_text: str):
+    async def aquery(self, query_text: str):
         print(f"🔍 Processing RAG Pipeline for: {query_text}")
         
-        # Initial RAG
-        initial_nodes = self.fusion_retriever.retrieve(query_text)
+        # Initial RAG - Use async version
+        initial_nodes = await self.fusion_retriever.aretrieve(query_text)
         
-        # Reranking
-        reranked_nodes = self.reranker.postprocess_nodes(initial_nodes, query_str=query_text)
+        # Reranking - Most rerankers are synchronous, wrap in to_thread to keep event loop alive
+        import asyncio
+        reranked_nodes = await asyncio.to_thread(
+            self.reranker.postprocess_nodes, initial_nodes, query_str=query_text
+        )
         
-        # 1st Agent Response (Synthesis)
-        # We can use the query_engine directly with the nodes we already retrieved/reranked
-        # by calling synthesize if we want to be exact, but query() is simpler.
-        # To avoid re-retrieving, let's use the synthesizer.
+        # 1st Agent Response (Synthesis) - Use async version
         from llama_index.core.schema import QueryBundle
-        response = self.query_engine.synthesize(
+        response = await self.query_engine.asynthesize(
             query_bundle=QueryBundle(query_text),
             nodes=reranked_nodes
         )
         
-        # Log everything
+        # Log everything (can be sync, but keep it minimal)
         self._log_results(query_text, initial_nodes, reranked_nodes, str(response))
         
         return response
@@ -239,9 +239,10 @@ class RAGAssistant:
         return str(response)
 
 def main():
+    import asyncio
     assistant = RAGAssistant()
     query = "Что произошло в Барановичах?"
-    response = assistant.query(query)
+    response = asyncio.run(assistant.aquery(query))
     print(f"\nQUERY: {query}\nANSWER: {response}")
 
 if __name__ == "__main__":

@@ -59,7 +59,7 @@ async def on_message(message):
                 history.insert(0, f"{author}: {content}")
 
             # 2. Run RAG Query
-            rag_response = client.assistant.query(query)
+            rag_response = await client.assistant.aquery(query)
             
             # 3. Agent 2: Synthesis with history and persona
             final_response = await client.assistant.generate_refined_response(
@@ -70,12 +70,6 @@ async def on_message(message):
 
             # 4. Send response
             await channel.send(final_response)
-        return
-
-    if message.content.startswith("!test"):
-        async for msg in channel.history(limit=10):
-            content = resolve_mentions(msg)
-            print(f"{msg.author.display_name}: {content}")
         return
 
     # if admin(Itadara) writes !export
