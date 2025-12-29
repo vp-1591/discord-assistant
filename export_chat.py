@@ -6,8 +6,13 @@ import json
 OUTPUT_PREFIX = "discord_chat_part"
 LINES_PER_FILE = 10000
 
-def resolve_mentions(message):
-    content = message.content
+
+def resolve_mentions(message, text=None):
+    """
+    Resolves mentions in text using the message metadata.
+    If text is provided, it uses that. Otherwise, uses message.content.
+    """
+    content = text if text is not None else message.content
     for user in message.mentions:
         content = content.replace(f'<@{user.id}>', user.display_name).replace(f'<@!{user.id}>', user.display_name)
     for role in message.role_mentions:
