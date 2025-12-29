@@ -1,3 +1,5 @@
 .env
 chroma_langchain_db/
 messages_json/
+cache/
+llama_index_storage/
