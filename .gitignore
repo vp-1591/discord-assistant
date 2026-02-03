@@ -3,3 +3,6 @@ chroma_langchain_db/
 messages_json/
 cache/
 llama_index_storage/
+__pycache__/
+messages_txt/
+temp-cache/
