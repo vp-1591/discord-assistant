@@ -1,0 +1,9 @@
+discord.py
+python-dotenv
+llama-index
+llama-index-embeddings-ollama
+llama-index-llms-ollama
+llama-index-retrievers-bm25
+llama-index-postprocessor-flag-embedding-reranker
+pystemmer
+ollama
