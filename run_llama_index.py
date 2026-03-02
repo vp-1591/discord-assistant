@@ -17,7 +17,7 @@ from llama_index.core.query_engine import RetrieverQueryEngine
 
 # --- 0. CONFIG ---
 PERSIST_DIR = "./llama_index_storage"
-FORCE_REBUILD = True
+FORCE_REBUILD = False
 
 # --- 1. SETTINGS CONFIGURATION ---
 Settings.embed_model = OllamaEmbedding(
