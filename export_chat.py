@@ -52,6 +52,7 @@ async def export_chat_to_json(channel, skip_id=None):
             known_in_msg[str(message.author.id)] = message.author.display_name
 
             messages_data.append({
+                "message_id": str(message.id),
                 "timestamp": timestamp,
                 "channel": channel.name,
                 "user_id": str(message.author.id),
@@ -64,7 +65,21 @@ async def export_chat_to_json(channel, skip_id=None):
 
         os.makedirs("messages_json", exist_ok=True)
         output_filename = os.path.join("messages_json", f"{channel.name}.json")
-        
+
+        # Merge with old export to preserve names of deleted users
+        if os.path.exists(output_filename):
+            try:
+                with open(output_filename, 'r', encoding='utf-8') as f:
+                    old_data = {msg['message_id']: msg for msg in json.load(f) if 'message_id' in msg}
+                for msg in messages_data:
+                    old_msg = old_data.get(msg['message_id'])
+                    if old_msg:
+                        # Old names are the base; new names override them
+                        merged = {**old_msg.get('last_known_names', {}), **msg['last_known_names']}
+                        msg['last_known_names'] = merged
+            except Exception as e:
+                print(f"Warning: Could not merge old export ({e}), overwriting.")
+
         with open(output_filename, 'w', encoding='utf-8') as f:
             json.dump(messages_data, f, ensure_ascii=False, indent=2)
             
