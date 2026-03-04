@@ -24,7 +24,7 @@ Settings.embed_model = OllamaEmbedding(
     model_name="bge-m3", 
     base_url="http://localhost:11434",
     request_timeout=600.0,
-    keep_alive=-1,  # keep model loaded in VRAM between batches
+    keep_alive="30s",  # keep model warm between batches but free VRAM after idle
 )
 
 Settings.llm = Ollama(
