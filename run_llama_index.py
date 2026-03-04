@@ -23,8 +23,8 @@ FORCE_REBUILD = False
 Settings.embed_model = OllamaEmbedding(
     model_name="bge-m3", 
     base_url="http://localhost:11434",
-    request_timeout=300.0,
-    keep_alive=0,
+    request_timeout=600.0,
+    keep_alive=-1,  # keep model loaded in VRAM between batches
 )
 
 Settings.llm = Ollama(
@@ -33,7 +33,7 @@ Settings.llm = Ollama(
     keep_alive=0,
     additional_kwargs={"options": {"num_ctx": 8192}} 
 )
-Settings.embed_batch_size = 50 
+Settings.embed_batch_size = 10  # smaller batches = less chance of Ollama dropping the connection
 
 # --- 2. CUSTOM DATA INGESTION ---
 def resolve_all_mentions(text: str, live_map: dict, fallback_map: dict) -> str:
@@ -161,15 +161,27 @@ class RAGAssistant:
             nodes = load_nodes_from_json("./messages_json", self.id_map)
             if not nodes:
                 nodes = [TextNode(text="Добряк тут!", metadata={"date": "2023-12-23"})]
+            # Apply metadata templates BEFORE embedding so nodes are
+            # embedded with the correct format from the start.
+            # This prevents RetrieverQueryEngine from detecting "changed"
+            # nodes and triggering a second embedding pass.
+            for node in nodes:
+                node.excluded_llm_metadata_keys = []
+                node.metadata_template = "{key}: {value}"
+                node.text_template = "Metadata: {metadata_str}\nContent: {content}"
+            print(f"📄 Building index from {len(nodes)} nodes...")
             index = VectorStoreIndex(nodes, show_progress=True)
             index.storage_context.persist(persist_dir=PERSIST_DIR)
         else:
             storage_context = StorageContext.from_defaults(persist_dir=PERSIST_DIR)
             index = load_index_from_storage(storage_context)
+            nodes = list(index.docstore.docs.values())
+        self._nodes = nodes
         return index
 
     def _setup_query_engine(self):
-        nodes = list(self.index.docstore.docs.values())
+        nodes = self._nodes  # use nodes cached by _load_index, not docstore (which strips embeddings)
+        print(f"⚙️ Setting up query engine with {len(nodes)} nodes...")
         vector_retriever = self.index.as_retriever(similarity_top_k=50)
         bm25_retriever = BM25Retriever.from_defaults(
             nodes=nodes, 
@@ -196,17 +208,13 @@ class RAGAssistant:
             "Если информации нет в контексте, так и скажи.\nОтвет:"
         )
 
-        for node in nodes:
-            node.excluded_llm_metadata_keys = []
-            node.metadata_template = "{key}: {value}"
-            node.text_template = "Metadata: {metadata_str}\nContent: {content}"
-
         query_engine = RetrieverQueryEngine.from_args(
             retriever=fusion_retriever,
             node_postprocessors=[reranker],
             response_mode="compact",
         )
         query_engine.update_prompts({"response_synthesizer:text_qa_template": qa_prompt_tmpl})
+        print("✅ Query engine ready.")
         return fusion_retriever, reranker, query_engine
 
     def _log_results(self, query: str, initial_nodes: List, reranked_nodes: List, agent_response: str):
