@@ -24,14 +24,14 @@ Settings.embed_model = OllamaEmbedding(
     model_name="bge-m3", 
     base_url="http://localhost:11434",
     request_timeout=600.0,
-    keep_alive="30s",  # keep model warm between batches but free VRAM after idle
+    keep_alive=0,  # free VRAM after query-time embedding; bumped to 30s during index build
 )
 
 Settings.llm = Ollama(
     model="mistral:latest", 
-    request_timeout=120.0, 
+    request_timeout=300.0, 
     keep_alive=0,
-    additional_kwargs={"options": {"num_ctx": 8192}} 
+    context_window=8192,
 )
 Settings.embed_batch_size = 10  # smaller batches = less chance of Ollama dropping the connection
 
@@ -170,8 +170,22 @@ class RAGAssistant:
                 node.metadata_template = "{key}: {value}"
                 node.text_template = "Metadata: {metadata_str}\nContent: {content}"
             print(f"📄 Building index from {len(nodes)} nodes...")
-            index = VectorStoreIndex(nodes, show_progress=True)
-            index.storage_context.persist(persist_dir=PERSIST_DIR)
+            # Temporarily keep bge-m3 warm during bulk embedding to avoid cold-start per batch
+            build_embed_model = OllamaEmbedding(
+                model_name="bge-m3", 
+                base_url="http://localhost:11434",
+                request_timeout=600.0,
+                keep_alive="30s",
+            )
+            try:
+                # insert_batch_size=len(nodes) ensures all nodes are in one batch,
+                # giving a single continuous progress bar instead of one bar per 2048 nodes
+                index = VectorStoreIndex(nodes, show_progress=True, insert_batch_size=len(nodes), embed_model=build_embed_model)
+                index.storage_context.persist(persist_dir=PERSIST_DIR)
+            finally:
+                # Revert index to use the global embed_model with keep_alive=0 for inference
+                index._embed_model = Settings.embed_model
+                print("🧹 Embedding model keep_alive reset to 0 (VRAM freed for Mistral)")
         else:
             storage_context = StorageContext.from_defaults(persist_dir=PERSIST_DIR)
             index = load_index_from_storage(storage_context)

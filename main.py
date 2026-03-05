@@ -14,6 +14,7 @@ class aclient(discord.Client):
         super().__init__(intents = discord.Intents.all())
         self.synced = False 
         self.assistant = None
+        self._assistant_loading = False  # guard against concurrent on_ready calls during build
         self.summaries_path = "cache/summaries.json"
         self.summaries = self._load_summaries()
 
@@ -29,32 +30,36 @@ class aclient(discord.Client):
             json.dump(self.summaries, f, ensure_ascii=False, indent=4)
 
     async def setup_assistant(self):
-        if self.assistant is None:
-            from run_llama_index import FORCE_REBUILD, PERSIST_DIR
-            
-            id_map = {}
-            # Only scan the server if we are going to rebuild the index
-            if FORCE_REBUILD or not os.path.exists(PERSIST_DIR):
-                print("🤖 Rebuild required. Collecting latest names and roles...")
-                # Map all users the bot can see
-                for user in self.users:
-                    id_map[str(user.id)] = user.display_name
-                
-                # Map all roles and guild members
-                for guild in self.guilds:
-                    for role in guild.roles:
-                        id_map[str(role.id)] = role.name
-                    for member in guild.members:
-                        id_map[str(member.id)] = member.display_name
-                print(f"✅ Map built with {len(id_map)} identities.")
-            else:
-                print("📦 Loading existing index (skipping identity scan).")
+        if self.assistant is None and not self._assistant_loading:
+            self._assistant_loading = True
+            try:
+                from run_llama_index import FORCE_REBUILD, PERSIST_DIR
 
-            print("🤖 Initializing RAG Assistant (This may take a while if rebuilding)...")
+                id_map = {}
+                # Only scan the server if we are going to rebuild the index
+                if FORCE_REBUILD or not os.path.exists(PERSIST_DIR):
+                    print("🤖 Rebuild required. Collecting latest names and roles...")
+                    # Map all users the bot can see
+                    for user in self.users:
+                        id_map[str(user.id)] = user.display_name
 
-            # Use to_thread to prevent blocking the heartbeat during heavy indexing
-            self.assistant = await asyncio.to_thread(RAGAssistant, id_map=id_map)
-            print("✅ RAG Assistant ready.")
+                    # Map all roles and guild members
+                    for guild in self.guilds:
+                        for role in guild.roles:
+                            id_map[str(role.id)] = role.name
+                        for member in guild.members:
+                            id_map[str(member.id)] = member.display_name
+                    print(f"✅ Map built with {len(id_map)} identities.")
+                else:
+                    print("📦 Loading existing index (skipping identity scan).")
+
+                print("🤖 Initializing RAG Assistant (This may take a while if rebuilding)...")
+
+                # Use to_thread to prevent blocking the heartbeat during heavy indexing
+                self.assistant = await asyncio.to_thread(RAGAssistant, id_map=id_map)
+                print("✅ RAG Assistant ready.")
+            finally:
+                self._assistant_loading = False  # always release the lock
 
 self_id = 1208704829665447947
 client = aclient()
