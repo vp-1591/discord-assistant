@@ -147,7 +147,7 @@ class RAGAssistant:
         self.fusion_retriever, self.reranker, self.query_engine = self._setup_query_engine()
         self.persona_prompt = (
             "Ты — мудрый Глава Архива. "
-            "Твоя задача — давать ответы, опираясь лишь на пыльные летописи (предоставленные свитки). "
+            "Твоя задача — давать ответы, опираясь на пыльные летописи (knowledge_base) и беседу (conversation_summary, chat_memory). "
             "Твоя речь должна быть степенной, слегка архаичной и исполненной достоинства. "
             "Обращайся к вопрошающему как к 'искателю истин' или 'путник'. "
             "Никогда не используй слова 'контекст', 'база данных' или 'информация'. "
@@ -205,7 +205,7 @@ class RAGAssistant:
         )
         fusion_retriever = QueryFusionRetriever(
             [vector_retriever, bm25_retriever],
-            similarity_top_k=30,
+            similarity_top_k=50,
             num_queries=1,
             mode="reciprocal_rerank",
             use_async=False,
@@ -213,13 +213,26 @@ class RAGAssistant:
         reranker = FlagEmbeddingReranker(model="BAAI/bge-reranker-v2-m3", top_n=10)
         
         current_date = datetime.now().strftime("%Y-%m-%d")
-        qa_prompt_tmpl = PromptTemplate(
-            f"Сегодняшняя дата: {current_date}\n"
-            "Ниже представлены фрагменты истории чата из Discord.\n"
-            "---------------------\n{context_str}\n---------------------\n"
-            "Используя предоставленную историю, ответь на вопрос: {query_str}\n"
-            "ОБЯЗАТЕЛЬНО: Если вопрос касается даты, сравнивай даты сообщений.\n"
-            "Если информации нет в контексте, так и скажи.\nОтвет:"
+        self.qa_prompt_tmpl = PromptTemplate(
+            f"# ИНСТРУКЦИЯ ПО АНАЛИЗУ ЛОГОВ\n"
+            f"**Ты — поисковая система Архива. Твоя цель — найти в логах информацию, которая поможет Главе Архива ответить на вопрос.**\n"
+            f"**Сегодняшняя дата:** {current_date}\n\n"
+            
+            "## КОНТЕКСТ (Фрагменты истории Discord)\n"
+            "Ниже приведены записи из базы знаний. Каждый фрагмент содержит метаданные и содержание.\n"
+            "--- \n"
+            "{context_str}\n"
+            "--- \n\n"
+            
+            "## ЗАДАНИЕ\n"
+            "Используя только предоставленные выше записи, ответь на вопрос:\n"
+            "> **{query_str}**\n\n"
+            
+            "### ТРЕБОВАНИЯ К ОТВЕТУ:\n"
+            "1. **Точность субъектов:** Четко разделяй, кто совершил действие, а кто о нем рассказывает.\n"
+            "2. **Хронология:** Сравнивай даты в метаданных, если это важно для ответа.\n"
+            "3. **Отсутствие данных:** Если в записях нет прямого ответа, напиши: 'В летописях об этом не сказано'.\n"
+            "4. **Стиль:** Фактологический, сухой, без домыслов.\n\n"
         )
 
         query_engine = RetrieverQueryEngine.from_args(
@@ -227,32 +240,44 @@ class RAGAssistant:
             node_postprocessors=[reranker],
             response_mode="compact",
         )
-        query_engine.update_prompts({"response_synthesizer:text_qa_template": qa_prompt_tmpl})
+        query_engine.update_prompts({"response_synthesizer:text_qa_template": self.qa_prompt_tmpl})
         print("✅ Query engine ready.")
         return fusion_retriever, reranker, query_engine
 
-    def _log_results(self, query: str, initial_nodes: List, reranked_nodes: List, agent_response: str):
-        log_path = "cache/logs.txt"
+    def _write_to_rolling_log(self, content: str, log_path: str = "cache/logs.txt", max_entries: int = 20):
         os.makedirs(os.path.dirname(log_path), exist_ok=True)
         
-        with open(log_path, "a", encoding="utf-8") as f:
-            f.write(f"\n{'='*80}\n")
-            f.write(f"TIMESTAMP: {datetime.now().isoformat()}\n")
-            f.write(f"QUERY: {query}\n")
-            f.write(f"{'-'*80}\n")
-            
-            f.write("1. INITIAL RAG RESULTS (Top 20 from Fusion):\n")
-            for i, n in enumerate(initial_nodes):
-                f.write(f"  [{i+1}] Score: {n.score:.4f} | {n.node.get_content()[:100]}...\n")
-            
-            f.write(f"{'-'*40}\n")
-            f.write("2. RERANKER RESULTS (Top 7):\n")
-            for i, n in enumerate(reranked_nodes):
-                f.write(f"  [{i+1}] Score: {n.score:.4f} | {n.node.get_content()[:100]}...\n")
-                
-            f.write(f"{'-'*40}\n")
-            f.write(f"3. 1ST AGENT RESPONSE (RAG Synthesis):\n{agent_response}\n")
-            f.write(f"{'='*80}\n\n")
+        separator = "=" * 80
+        entries = []
+        if os.path.exists(log_path):
+            with open(log_path, "r", encoding="utf-8") as f:
+                raw = f.read()
+                entries = [e.strip() for e in raw.split(separator) if e.strip()]
+        
+        # Add new content
+        entries.append(content.strip())
+        
+        # Keep only latest
+        entries = entries[-max_entries:]
+        
+        with open(log_path, "w", encoding="utf-8") as f:
+            for e in entries:
+                f.write(f"\n{separator}\n{e}\n")
+
+    def _log_interaction(self, query: str, agent1_prompt: str, agent1_response: str, agent2_prompt: str, agent2_response: str):
+        log_block = (
+            f"TIMESTAMP: {datetime.now().isoformat()}\n"
+            f"QUERY: {query}\n"
+            f"{'-'*80}\n"
+            f"--- AGENT 1 (RAG) PROMPT ---\n{agent1_prompt}\n"
+            f"{'-'*40}\n"
+            f"--- AGENT 1 RESPONSE ---\n{agent1_response}\n"
+            f"{'-'*80}\n"
+            f"--- AGENT 2 (SYNTHESIS) PROMPT ---\n{agent2_prompt}\n"
+            f"{'-'*40}\n"
+            f"--- AGENT 2 RESPONSE ---\n{agent2_response}\n"
+        )
+        self._write_to_rolling_log(log_block)
 
     async def aquery(self, query_text: str):
         print(f"🔍 Processing RAG Pipeline for: {query_text}")
@@ -260,53 +285,112 @@ class RAGAssistant:
         # Initial RAG - Use async version
         initial_nodes = await self.fusion_retriever.aretrieve(query_text)
         
-        # Reranking - Most rerankers are synchronous, wrap in to_thread to keep event loop alive
+        # Reranking
         import asyncio
         reranked_nodes = await asyncio.to_thread(
             self.reranker.postprocess_nodes, initial_nodes, query_str=query_text
         )
         
-        # 1st Agent Response (Synthesis) - Use async version
+        # Use the template to generate the exact same prompt sent to LLM for logging
+        context_str = "\n\n".join([n.node.get_content(metadata_mode="llm") for n in reranked_nodes])
+        agent1_prompt = self.qa_prompt_tmpl.format(
+            context_str=context_str,
+            query_str=query_text
+        )
+
+        # 1st Agent Response (Synthesis)
         from llama_index.core.schema import QueryBundle
         response = await self.query_engine.asynthesize(
             query_bundle=QueryBundle(query_text),
             nodes=reranked_nodes
         )
         
-        # Log everything (can be sync, but keep it minimal)
-        self._log_results(query_text, initial_nodes, reranked_nodes, str(response))
+        # We attach the agent1_prompt to the response object temporarily so main.py can log it later 
+        # or we log it here if we had agent2 prompt. 
+        # Actually, let's just return both for consolidated logging if needed, 
+        # but the request asks for specific steps.
         
+        # Add property to response for easier retrieval
+        response.agent1_prompt = agent1_prompt
         return response
 
 
-    async def generate_refined_response(self, query_text: str, rag_response: str, history: List[str], summary: str = None):
+    async def generate_refined_response(self, query_text: str, rag_response: str, history: List[str], summary: str = None, agent1_prompt: str = ""):
         history_str = "\n".join(history)
         summary_block = f"Краткое содержание предыдущей беседы: {summary}\n\n" if summary else ""
         
         refine_prompt = (
-            f"{self.persona_prompt}\n\n"
-            f"{summary_block}"
-            f"Контекст из базы знаний (результат RAG):\n{rag_response}\n\n"
-            f"Последние сообщения в чате для контекста разговора:\n{history_str}\n\n"
-            f"Вопрос пользователя: {query_text}\n\n"
-            f"Сформулируй окончательный ответ на русском языке, учитывая историю общения и информацию из базы знаний. "
-            "Будь кратким, но в стиле своего персонажа."
+            f"## ROLE\n{self.persona_prompt}\n\n"
+            "## CONTEXT_DATA\n"
+            
+            f"<knowledge_base>\n"
+            f"{rag_response}\n"
+            f"</knowledge_base>\n\n"
+            
+            f"<conversation_summary>\n"
+            f"{summary if summary else 'История пуста.'}\n"
+            f"</conversation_summary>\n\n"
+            
+            f"<chat_memory>\n"
+            f"{history_str}\n"
+            f"</chat_memory>\n\n"
+            
+            "--- \n"
+            "## TASK\n"
+            "1. **Анализ:** Определи, касается ли вопрос информации из <knowledge_base>. Если да — используй её как основной источник фактов.\n"
+            "2. **Связность:** Используй <chat_memory>, чтобы ответ логично продолжал текущую беседу и учитывал то, о чем вы уже говорили.\n"
+            "3. **Стиль:** Отвечай на русском языке, кратко, сохраняя характер своего персонажа. Обращайся к пользователю 'Искатель' или 'Путник'. Не выдумывай новых эпитетов.\n"
+            "4. **Приоритет:** Если информация в базе знаний противоречит истории сообщений, приоритет отдается базе знаний.\n\n"
+            f"Вопрос пользователя: {query_text}"
         )
         response = await Settings.llm.acomplete(refine_prompt)
-        return str(response)
+        final_response = str(response)
+        
+        # Consolidated Log
+        self._log_interaction(
+            query=query_text,
+            agent1_prompt=agent1_prompt,
+            agent1_response=rag_response,
+            agent2_prompt=refine_prompt,
+            agent2_response=final_response
+        )
+        
+        return final_response
 
     async def generate_summary(self, prev_summary: str, messages: List[str]):
         msgs_str = "\n".join(messages)
-        prompt = (
-            f"Тебе дано краткое содержание предыдущей части беседы: {prev_summary if prev_summary else 'отсутствует'}\n"
-            f"И следующие сообщения из чата:\n{msgs_str}\n\n"
-            "Твоя задача: Составь новое краткое содержание, объединив старые и новые сообщения. "
-            "Опиши только самые важные аспекты разговора. "
-            "Максимальная длина: 4 предложения. "
-            "Отвечай на русском языке."
-        )
+        prompt = f"""
+Текущее краткое содержание беседы:
+{prev_summary if prev_summary else "отсутствует"}
+
+Новые сообщения:
+{msgs_str}
+
+Задача:
+Обнови краткое содержание беседы.
+
+Правила:
+- Сохраняй только долгосрочно важную информацию.
+- Удаляй детали, временные обсуждения и повторения.
+- Если новая информация заменяет старую — обнови её, а не добавляй.
+- Старайся сокращать текст при каждом обновлении.
+- Сохраняй только цели пользователя, важный контекст и выводы.
+
+Ответ только на русском.
+"""
         response = await Settings.llm.acomplete(prompt)
-        return str(response).strip()
+        text_response = str(response).strip()
+        
+        # Log the summary interaction
+        log_block = (
+            f"TIMESTAMP: {datetime.now().isoformat()}\n"
+            f"--- SUMMARY PROMPT ---\n{prompt}\n"
+            f"{'-'*40}\n"
+            f"--- SUMMARY RESPONSE ---\n{text_response}\n"
+        )
+        self._write_to_rolling_log(log_block, log_path="cache/summaries_logs.txt", max_entries=10)
+        
+        return text_response
 
 def main():
     import asyncio

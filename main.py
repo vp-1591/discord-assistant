@@ -16,18 +16,20 @@ class aclient(discord.Client):
         self.assistant = None
         self._assistant_loading = False  # guard against concurrent on_ready calls during build
         self.summaries_path = "cache/summaries.json"
-        self.summaries = self._load_summaries()
+        self.history_path = "cache/history.json"
+        self.summaries = self._load_json(self.summaries_path)
+        self.history = self._load_json(self.history_path)
 
-    def _load_summaries(self):
-        if os.path.exists(self.summaries_path):
-            with open(self.summaries_path, "r", encoding="utf-8") as f:
+    def _load_json(self, path):
+        if os.path.exists(path):
+            with open(path, "r", encoding="utf-8") as f:
                 return json.load(f)
         return {}
 
-    def _save_summaries(self):
+    def _save_json(self, path, data):
         os.makedirs("cache", exist_ok=True)
-        with open(self.summaries_path, "w", encoding="utf-8") as f:
-            json.dump(self.summaries, f, ensure_ascii=False, indent=4)
+        with open(path, "w", encoding="utf-8") as f:
+            json.dump(data, f, ensure_ascii=False, indent=4)
 
     async def setup_assistant(self):
         if self.assistant is None and not self._assistant_loading:
@@ -91,17 +93,24 @@ async def on_message(message):
         print(f"💬 Mentions detected. Query: {query}")
         
         async with channel.typing():
-            # 1. Get recent interaction history (find up to 5 previous messages, as we will add 2 more)
-            previous_relevant = []
-            async for msg in channel.history(limit=50):
-                if msg.id == message.id: continue
-                if msg.author.id == self_id or client.user.mentioned_in(msg):
-                    author = msg.author.display_name
-                    content = resolve_mentions(msg)
-                    previous_relevant.insert(0, f"{author}: {content}")
-                    if len(previous_relevant) >= 5: break # Only need 5 to see if we hit 6+ later
-
             channel_id = str(channel.id)
+            
+            # 1. Get recent interaction history (Internal preservation)
+            if channel_id not in client.history:
+                # Bootstrap once from Discord if local history is empty
+                print(f"📥 Bootstrapping history for channel {channel_id}...")
+                bootstrapped = []
+                async for msg in channel.history(limit=50):
+                    if msg.id == message.id: continue
+                    if msg.author.id == self_id or client.user.mentioned_in(msg):
+                        author = msg.author.display_name
+                        content = resolve_mentions(msg)
+                        bootstrapped.insert(0, f"{author}: {content}")
+                        if len(bootstrapped) >= 5: break
+                client.history[channel_id] = bootstrapped
+                client._save_json(client.history_path, client.history)
+
+            previous_relevant = client.history.get(channel_id, [])
             current_summary = client.summaries.get(channel_id)
             
             # 2. Run RAG Query
@@ -112,30 +121,32 @@ async def on_message(message):
                 query_text=query,
                 rag_response=str(rag_response),
                 history=previous_relevant,
-                summary=current_summary
+                summary=current_summary,
+                agent1_prompt=getattr(rag_response, 'agent1_prompt', "")
             )
 
         # 4. Send response
         sent_msg = await message.reply(final_response)
 
-        # 5. Post-Response Processing: Update Summary if needed
-        # Combine history with the transaction that just finished
+        # 5. Post-Response Processing: Update History and Summary
         user_interaction = f"{message.author.display_name}: {query}"
         bot_interaction = f"{client.user.display_name}: {final_response}"
         
-        all_relevant = previous_relevant + [user_interaction, bot_interaction]
+        # Add current transaction to internal history
+        client.history[channel_id] = previous_relevant + [user_interaction, bot_interaction]
         
-        if len(all_relevant) >= 6:
+        if len(client.history[channel_id]) >= 6:
             # We compress the 4 oldest messages and keep the 2 newest
-            to_summarize = all_relevant[:4]
-            # No need to explicitly 'keep' the 2 newest in a variable here, 
-            # because on the NEXT query, the history fetch will find them in history(limit=50)
+            to_summarize = client.history[channel_id][:4]
+            client.history[channel_id] = client.history[channel_id][4:]
             
             print(f"📝 Post-response: Summarizing 4 messages for channel {channel_id}...")
             new_summary = await client.assistant.generate_summary(current_summary, to_summarize)
             client.summaries[channel_id] = new_summary
-            client._save_summaries()
+            client._save_json(client.summaries_path, client.summaries)
             print(f"✅ Summary updated for {channel_id}")
+            
+        client._save_json(client.history_path, client.history)
         return
 
     # if admin(Itadara) writes !export

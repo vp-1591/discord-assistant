@@ -37,7 +37,7 @@ flowchart TD
         subgraph Retrievers["Retrieval"]
             VEC_RET["Vector Retriever, top_k=50"]
             BM25["BM25 Retriever, top_k=50, Russian stemmer"]
-            FUSION["QueryFusionRetriever, Reciprocal Rerank, top 30"]
+            FUSION["QueryFusionRetriever, Reciprocal Rerank, top 50"]
         end
 
         RERANKER["FlagEmbeddingReranker, bge-reranker-v2-m3, top 10"]
@@ -115,12 +115,14 @@ sequenceDiagram
     Bot->>Bot: Load channel summary
     Bot->>RAG: aquery(question)
     RAG->>Fusion: aretrieve(question)
-    Fusion->>Ollama: embed(question) bge-m3
-    Ollama-->>Fusion: query vector
-    Fusion->>Fusion: Vector search top 50 + BM25 top 50
-    Fusion->>Fusion: Reciprocal rerank, top 30
-    Fusion-->>RAG: 30 nodes
-    RAG->>Reranker: postprocess_nodes(30 nodes)
+    par Parallel Retrieval
+        Fusion->>Ollama: vector_retriever: embed(question) bge-m3
+        Ollama-->>Fusion: vector
+        Fusion->>Fusion: BM25 search (Local CPU)
+    end
+    Fusion->>Fusion: RRF Re-rank (Top 50)
+    Fusion-->>RAG: 50 nodes
+    RAG->>Reranker: postprocess_nodes(50 nodes)
     Reranker-->>RAG: top 10 nodes
     RAG->>Ollama: asynthesize() mistral
     Ollama-->>RAG: RAG response Agent 1

@@ -4,8 +4,8 @@ A powerful Discord bot that uses **Retrieval-Augmented Generation (RAG)** to ans
 
 ## ✨ Features
 
--   **Hybrid Search**: Combines semantic vector search (`bge-m3`) with keyword-based retrieval (BM25) for maximum accuracy.
--   **Reranking**: Uses `BAAI/bge-reranker-v2-m3` to polish results before generating answers.
+-   **Hybrid Search**: Combines semantic vector search (`bge-m3`) with keyword-based retrieval (BM25). Merges 100 deep-candidates and narrows down to the top 50 via Reciprocal Rank Fusion.
+-   **Reranking**: Uses `BAAI/bge-reranker-v2-m3` to semantically rank the top 50 results down to the most relevant 10.
 -   **Conversational Memory**: Automatically maintains a rolling summary of recent channel interactions to stay within context.
 -   **Identity Resolution**: Intelligently resolves Discord user and role mentions to their display names, even for users who have since left the server.
 -   **Persona-Driven**: Responds as the "Head of Archive" (Глава Архива) with a wise, archaic tone in Russian.

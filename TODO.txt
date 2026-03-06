@@ -1,3 +1,3 @@
-Fix context mixing - model thinks message history is one of the retrieved docs
+Keep only 20 last queries logs FIFO
 Make AI write down details about users via tool usage
 Make AI use tools to get info about users
