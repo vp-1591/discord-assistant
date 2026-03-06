@@ -55,11 +55,13 @@ class aclient(discord.Client):
                 else:
                     print("📦 Loading existing index (skipping identity scan).")
 
-                print("🤖 Initializing RAG Assistant (This may take a while if rebuilding)...")
+                # Get the bot's nickname from the first guild (fallback to global name)
+                bot_name = self.guilds[0].me.display_name if self.guilds else self.user.display_name
+                print(f"🤖 Initializing RAG Assistant as '{bot_name}' (This may take a while if rebuilding)...")
 
                 # Use to_thread to prevent blocking the heartbeat during heavy indexing
-                self.assistant = await asyncio.to_thread(RAGAssistant, id_map=id_map)
-                print("✅ RAG Assistant ready.")
+                self.assistant = await asyncio.to_thread(RAGAssistant, id_map=id_map, name=bot_name)
+                print(f"✅ RAG Assistant ready as '{bot_name}'.")
             finally:
                 self._assistant_loading = False  # always release the lock
 
@@ -117,20 +119,23 @@ async def on_message(message):
             rag_response = await client.assistant.aquery(query)
             
             # 3. Agent 2: Synthesis with history, summary and persona
+            bot_nickname = message.guild.me.display_name if message.guild else client.user.display_name
             final_response = await client.assistant.generate_refined_response(
                 query_text=query,
                 rag_response=str(rag_response),
                 history=previous_relevant,
                 summary=current_summary,
-                agent1_prompt=getattr(rag_response, 'agent1_prompt', "")
+                agent1_prompt=getattr(rag_response, 'agent1_prompt', ""),
+                bot_name=bot_nickname
             )
 
         # 4. Send response
         sent_msg = await message.reply(final_response)
 
-        # 5. Post-Response Processing: Update History and Summary
+        # Add current transaction to internal history using server-specific nickname
+        # (bot_nickname is already defined above in our shared scope)
         user_interaction = f"{message.author.display_name}: {query}"
-        bot_interaction = f"{client.user.display_name}: {final_response}"
+        bot_interaction = f"{bot_nickname}: {final_response}"
         
         # Add current transaction to internal history
         client.history[channel_id] = previous_relevant + [user_interaction, bot_interaction]

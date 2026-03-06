@@ -141,12 +141,16 @@ def load_nodes_from_json(directory: str, id_map: dict) -> List[TextNode]:
 
 class RAGAssistant:
 
-    def __init__(self, id_map: dict = None):
+    def __init__(self, id_map: dict = None, name: str = "Глава Архива"):
         self.id_map = id_map or {}
+        self.name = name  # Default name
         self.index = self._load_index()
         self.fusion_retriever, self.reranker, self.query_engine = self._setup_query_engine()
-        self.persona_prompt = (
-            "Ты — мудрый Глава Архива. "
+
+    def _get_persona_prompt(self, name: str = None) -> str:
+        current_name = name or self.name
+        return (
+            f"Ты — мудрый {current_name}. "
             "Твоя задача — давать ответы, опираясь на пыльные летописи (knowledge_base) и беседу (conversation_summary, chat_memory). "
             "Твоя речь должна быть степенной, слегка архаичной и исполненной достоинства. "
             "Обращайся к вопрошающему как к 'искателю истин' или 'путник'. "
@@ -215,7 +219,7 @@ class RAGAssistant:
         current_date = datetime.now().strftime("%Y-%m-%d")
         self.qa_prompt_tmpl = PromptTemplate(
             f"# ИНСТРУКЦИЯ ПО АНАЛИЗУ ЛОГОВ\n"
-            f"**Ты — поисковая система Архива. Твоя цель — найти в логах информацию, которая поможет Главе Архива ответить на вопрос.**\n"
+            f"**Ты — поисковая система Архива. Твоя цель — найти в логах информацию, которая поможет {self.name} ответить на вопросы.**\n"
             f"**Сегодняшняя дата:** {current_date}\n\n"
             
             "## КОНТЕКСТ (Фрагменты истории Discord)\n"
@@ -315,12 +319,12 @@ class RAGAssistant:
         return response
 
 
-    async def generate_refined_response(self, query_text: str, rag_response: str, history: List[str], summary: str = None, agent1_prompt: str = ""):
+    async def generate_refined_response(self, query_text: str, rag_response: str, history: List[str], summary: str = None, agent1_prompt: str = "", bot_name: str = None):
         history_str = "\n".join(history)
-        summary_block = f"Краткое содержание предыдущей беседы: {summary}\n\n" if summary else ""
+        persona = self._get_persona_prompt(bot_name)
         
         refine_prompt = (
-            f"## ROLE\n{self.persona_prompt}\n\n"
+            f"## ROLE\n{persona}\n\n"
             "## CONTEXT_DATA\n"
             
             f"<knowledge_base>\n"

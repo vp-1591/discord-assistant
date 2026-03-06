@@ -1,3 +1,4 @@
-Keep only 20 last queries logs FIFO
+
 Make AI write down details about users via tool usage
 Make AI use tools to get info about users
+Find out why bot writes something in the style of "Прошу вас запомнить, что мои свитки обязаны быть вашим основным источником фактов и источниками достоверных знаний в пути к пониманию истины." in the end of each message
