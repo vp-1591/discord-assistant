@@ -108,7 +108,7 @@ async def on_message(message):
                         author = msg.author.display_name
                         content = resolve_mentions(msg)
                         bootstrapped.insert(0, f"{author}: {content}")
-                        if len(bootstrapped) >= 5: break
+                        if len(bootstrapped) >= 6: break
                 client.history[channel_id] = bootstrapped
                 client._save_json(client.history_path, client.history)
 
@@ -145,12 +145,12 @@ async def on_message(message):
         # Add current transaction to internal history
         client.history[channel_id] = previous_relevant + [user_interaction, bot_interaction]
         
-        if len(client.history[channel_id]) >= 6:
-            # We compress the 4 oldest messages and keep the 2 newest
-            to_summarize = client.history[channel_id][:4]
-            client.history[channel_id] = client.history[channel_id][4:]
+        if len(client.history[channel_id]) >= 8:
+            # We compress the 2 oldest messages and keep the 6 newest
+            to_summarize = client.history[channel_id][:2]
+            client.history[channel_id] = client.history[channel_id][2:]
             
-            print(f"📝 Post-response: Summarizing 4 messages for channel {channel_id}...")
+            print(f"📝 Post-response: Summarizing 2 messages for channel {channel_id}...")
             try:
                 new_summary = await client.assistant.generate_summary(current_summary, to_summarize)
                 client.summaries[channel_id] = new_summary
