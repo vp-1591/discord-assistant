@@ -115,19 +115,24 @@ async def on_message(message):
             previous_relevant = client.history.get(channel_id, [])
             current_summary = client.summaries.get(channel_id)
             
-            # 2. Run RAG Query
-            rag_response = await client.assistant.aquery(query)
-            
-            # 3. Agent 2: Synthesis with history, summary and persona
-            bot_nickname = message.guild.me.display_name if message.guild else client.user.display_name
-            final_response = await client.assistant.generate_refined_response(
-                query_text=query,
-                rag_response=str(rag_response),
-                history=previous_relevant,
-                summary=current_summary,
-                agent1_prompt=getattr(rag_response, 'agent1_prompt', ""),
-                bot_name=bot_nickname
-            )
+            try:
+                # 2. Run RAG Query
+                rag_response = await client.assistant.aquery(query)
+                
+                # 3. Agent 2: Synthesis with history, summary and persona
+                bot_nickname = message.guild.me.display_name if message.guild else client.user.display_name
+                final_response = await client.assistant.generate_refined_response(
+                    query_text=query,
+                    rag_response=str(rag_response),
+                    history=previous_relevant,
+                    summary=current_summary,
+                    agent1_prompt=getattr(rag_response, 'agent1_prompt', ""),
+                    bot_name=bot_nickname
+                )
+            except Exception as e:
+                print(f"❌ Error during RAG processing: {e}")
+                # Use a thematic error message
+                final_response = "⚠️ [System Error] Ошибка обработки запроса. Попробуйте позже."
 
         # 4. Send response
         sent_msg = await message.reply(final_response)
@@ -146,10 +151,13 @@ async def on_message(message):
             client.history[channel_id] = client.history[channel_id][4:]
             
             print(f"📝 Post-response: Summarizing 4 messages for channel {channel_id}...")
-            new_summary = await client.assistant.generate_summary(current_summary, to_summarize)
-            client.summaries[channel_id] = new_summary
-            client._save_json(client.summaries_path, client.summaries)
-            print(f"✅ Summary updated for {channel_id}")
+            try:
+                new_summary = await client.assistant.generate_summary(current_summary, to_summarize)
+                client.summaries[channel_id] = new_summary
+                client._save_json(client.summaries_path, client.summaries)
+                print(f"✅ Summary updated for {channel_id}")
+            except Exception as e:
+                print(f"⚠️ Warning: Failed to update summary: {e}")
             
         client._save_json(client.history_path, client.history)
         return
