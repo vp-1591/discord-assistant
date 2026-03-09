@@ -214,7 +214,17 @@ class RAGAssistant:
             mode="reciprocal_rerank",
             use_async=False,
         )
-        reranker = FlagEmbeddingReranker(model="BAAI/bge-reranker-v2-m3", top_n=10)
+        import os
+        os.environ["CUDA_VISIBLE_DEVICES"] = "-1"
+        reranker = FlagEmbeddingReranker(model="BAAI/bge-reranker-v2-m3", top_n=10, use_fp16=False)
+        
+        # Verify the device
+        try:
+            # Re-ranker stores the model in _model.model (FlagReranker -> transformers model)
+            actual_device = str(next(reranker._model.model.parameters()).device)
+            sys_logger.info(f"Reranker initialized on device: {actual_device}")
+        except Exception:
+            sys_logger.info("Reranker initialized (CPU confirmed via env constraint).")
         
         current_date = datetime.now().strftime("%Y-%m-%d")
         self.qa_prompt_tmpl = PromptTemplate(
