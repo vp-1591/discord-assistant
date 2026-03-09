@@ -150,3 +150,34 @@ flowchart LR
     F --> E
     E --> G["channel.json saved, deleted user names preserved"]
 ```
+
+## Opinion system
+
+```mermaid
+graph TD
+    %% Entry Point
+    U[User Message] --> A15[Agent 1.5: Entity Recognition]
+    
+    %% Synchronous Path (Immediate Response)
+    subgraph "Fast Path (Sync)"
+        A15 -->|Extract User IDs| DB_OP[Fetch opinions.json]
+        A15 -->|Search Queries| A1[Agent 1: RAG Fact Finder]
+        DB_OP --> A2[Agent 2: Synthesis & Persona]
+        A1 -->|Ground Truth| A2
+        A2 -->|Response to User| DIS[Discord User]
+    end
+
+    %% Asynchronous Path (Background Processing)
+    subgraph "Background Path (The Auditor)"
+        A2 -.->|The Performance| A3[Agent 3: Opinion Manager]
+        A1 -.->|The Receipts| A3
+        SUM[Summarizer] -.->|Factual Cleanup| A3
+        A3 -->|Update Tone & History| DB_OP
+    end
+
+    %% Data Sources
+    subgraph "Storage"
+        KB[(Vector DB: Scrolls)] -.-> A1
+        JSON[("opinions.json")] <--> DB_OP
+    end
+```

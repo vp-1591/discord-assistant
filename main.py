@@ -6,6 +6,8 @@ from export_chat import export_chat_to_json, resolve_mentions
 import asyncio
 
 from run_llama_index import RAGAssistant
+from logger_setup import sys_logger, chat_logger
+from opinion_manager import OpinionManager
 
 load_dotenv()
 
@@ -19,6 +21,7 @@ class aclient(discord.Client):
         self.history_path = "cache/history.json"
         self.summaries = self._load_json(self.summaries_path)
         self.history = self._load_json(self.history_path)
+        self.opinions = OpinionManager()
 
     def _load_json(self, path):
         if os.path.exists(path):
@@ -70,10 +73,10 @@ client = aclient()
 
 @client.event
 async def on_ready():
-    print("Connecting...")
+    sys_logger.info("Connecting...")
     await client.setup_assistant()
     await client.wait_until_ready()
-    print(f"Connected as {client.user}")
+    sys_logger.info(f"Connected as {client.user}")
 
 @client.event
 async def on_message(message):
@@ -92,7 +95,7 @@ async def on_message(message):
         if not query:
             query = "Привет!" # Default query if just mention
 
-        print(f"💬 Mentions detected. Query: {query}")
+        sys_logger.info(f"Mentions detected. Query: {query}")
         
         async with channel.typing():
             channel_id = str(channel.id)
@@ -100,7 +103,7 @@ async def on_message(message):
             # 1. Get recent interaction history (Internal preservation)
             if channel_id not in client.history:
                 # Bootstrap once from Discord if local history is empty
-                print(f"📥 Bootstrapping history for channel {channel_id}...")
+                sys_logger.info(f"Bootstrapping history for channel {channel_id}...")
                 bootstrapped = []
                 async for msg in channel.history(limit=50):
                     if msg.id == message.id: continue
@@ -119,6 +122,21 @@ async def on_message(message):
                 # 2. Run RAG Query
                 rag_response = await client.assistant.aquery(query)
                 
+                # Opinion Management: Get User Profile
+                user_name = message.author.display_name
+                user_id = message.author.id
+                user_profile_data = client.opinions.get_user_profile(user_id)
+                user_profile_str = ""
+                if user_profile_data:
+                    user_profile_str = f'<user_profile name="{user_name}">\nStance: {user_profile_data.get("head_of_archive_stance")}\nHistory: {user_profile_data.get("interaction_history")}\n</user_profile>'
+                
+                # Opinion Management: Find Targets via Fuzzy Match
+                targets = client.opinions.find_targets(query)
+                target_profiles_str = ""
+                for t_id, t_data in targets:
+                    if str(t_id) != str(user_id):  # Don't add user as a target of themselves
+                        target_profiles_str += f'<target_profile name="{t_data.get("name")}">\nStance: {t_data.get("head_of_archive_stance")}\nHistory: {t_data.get("interaction_history")}\n</target_profile>\n'
+
                 # 3. Agent 2: Synthesis with history, summary and persona
                 bot_nickname = message.guild.me.display_name if message.guild else client.user.display_name
                 final_response = await client.assistant.generate_refined_response(
@@ -127,10 +145,12 @@ async def on_message(message):
                     history=previous_relevant,
                     summary=current_summary,
                     agent1_prompt=getattr(rag_response, 'agent1_prompt', ""),
-                    bot_name=bot_nickname
+                    bot_name=bot_nickname,
+                    user_profile_str=user_profile_str,
+                    target_profiles_str=target_profiles_str
                 )
             except Exception as e:
-                print(f"❌ Error during RAG processing: {e}")
+                sys_logger.error(f"Error during RAG processing: {e}")
                 # Use a thematic error message
                 final_response = "⚠️ [System Error] Ошибка обработки запроса. Попробуйте позже."
 
@@ -142,6 +162,30 @@ async def on_message(message):
         user_interaction = f"{message.author.display_name}: {query}"
         bot_interaction = f"{bot_nickname}: {final_response}"
         
+        chat_logger.info(f"User [{user_interaction}] -> Bot [{bot_interaction}]")
+        
+        # Async Task for Agent 3 (Social Chronicler)
+        async def run_auditor():
+            try:
+                # Ensure we have rag_response if not error
+                rag_str = str(rag_response) if 'rag_response' in locals() else "Сбои в матрице."
+                op_data = await client.assistant.evaluate_interaction(
+                    agent1_facts=rag_str,
+                    agent2_response=final_response,
+                    user_query=query,
+                    user_name=message.author.display_name
+                )
+                await client.opinions.update_user_opinion(
+                    user_id=message.author.id,
+                    name=message.author.display_name,
+                    stance=op_data["stance"],
+                    interaction=op_data["history"]
+                )
+            except Exception as e:
+                sys_logger.error(f"Agent 3 task failed: {e}")
+                
+        asyncio.create_task(run_auditor())
+        
         # Add current transaction to internal history
         client.history[channel_id] = previous_relevant + [user_interaction, bot_interaction]
         
@@ -150,21 +194,21 @@ async def on_message(message):
             to_summarize = client.history[channel_id][:2]
             client.history[channel_id] = client.history[channel_id][2:]
             
-            print(f"📝 Post-response: Summarizing 2 messages for channel {channel_id}...")
+            sys_logger.info(f"Post-response: Summarizing 2 messages for channel {channel_id}...")
             try:
                 new_summary = await client.assistant.generate_summary(current_summary, to_summarize)
                 client.summaries[channel_id] = new_summary
                 client._save_json(client.summaries_path, client.summaries)
-                print(f"✅ Summary updated for {channel_id}")
+                sys_logger.info(f"Summary updated for {channel_id}")
             except Exception as e:
-                print(f"⚠️ Warning: Failed to update summary: {e}")
+                sys_logger.warning(f"Failed to update summary: {e}")
             
         client._save_json(client.history_path, client.history)
         return
 
     # if admin(Itadara) writes !export
     if message.content.startswith("!export") and str(message.author.id) == "470892009440149506": 
-        print("Exporting chat...")
+        sys_logger.info("Exporting chat...")
         await export_chat_to_json(channel, skip_id=message.id)
         return
 

@@ -6,3 +6,4 @@ llama_index_storage/
 __pycache__/
 messages_txt/
 temp-cache/
+logs/

@@ -15,6 +15,8 @@ from llama_index.postprocessor.flag_embedding_reranker import FlagEmbeddingReran
 from llama_index.llms.ollama import Ollama
 from llama_index.core.query_engine import RetrieverQueryEngine
 
+from logger_setup import sys_logger, trace_logger, chat_logger
+
 # --- 0. CONFIG ---
 PERSIST_DIR = "./llama_index_storage"
 FORCE_REBUILD = False
@@ -171,7 +173,7 @@ class RAGAssistant:
                 node.excluded_llm_metadata_keys = []
                 node.metadata_template = "{key}: {value}"
                 node.text_template = "Metadata: {metadata_str}\nContent: {content}"
-            print(f"📄 Building index from {len(nodes)} nodes...")
+            sys_logger.info(f"Building index from {len(nodes)} nodes...")
             # Temporarily keep bge-m3 warm during bulk embedding to avoid cold-start per batch
             build_embed_model = OllamaEmbedding(
                 model_name="bge-m3", 
@@ -187,7 +189,7 @@ class RAGAssistant:
             finally:
                 # Revert index to use the global embed_model with keep_alive=0 for inference
                 index._embed_model = Settings.embed_model
-                print("🧹 Embedding model keep_alive reset to 0 (VRAM freed for Mistral)")
+                sys_logger.info("Embedding model keep_alive reset to 0 (VRAM freed).")
         else:
             storage_context = StorageContext.from_defaults(persist_dir=PERSIST_DIR)
             index = load_index_from_storage(storage_context)
@@ -197,7 +199,7 @@ class RAGAssistant:
 
     def _setup_query_engine(self):
         nodes = self._nodes  # use nodes cached by _load_index, not docstore (which strips embeddings)
-        print(f"⚙️ Setting up query engine with {len(nodes)} nodes...")
+        sys_logger.info(f"Setting up query engine with {len(nodes)} nodes...")
         vector_retriever = self.index.as_retriever(similarity_top_k=50)
         bm25_retriever = BM25Retriever.from_defaults(
             nodes=nodes, 
@@ -243,46 +245,11 @@ class RAGAssistant:
             response_mode="compact",
         )
         query_engine.update_prompts({"response_synthesizer:text_qa_template": self.qa_prompt_tmpl})
-        print("✅ Query engine ready.")
+        sys_logger.info("Query engine ready.")
         return fusion_retriever, reranker, query_engine
 
-    def _write_to_rolling_log(self, content: str, log_path: str = "cache/logs.txt", max_entries: int = 20):
-        os.makedirs(os.path.dirname(log_path), exist_ok=True)
-        
-        separator = "=" * 80
-        entries = []
-        if os.path.exists(log_path):
-            with open(log_path, "r", encoding="utf-8") as f:
-                raw = f.read()
-                entries = [e.strip() for e in raw.split(separator) if e.strip()]
-        
-        # Add new content
-        entries.append(content.strip())
-        
-        # Keep only latest
-        entries = entries[-max_entries:]
-        
-        with open(log_path, "w", encoding="utf-8") as f:
-            for e in entries:
-                f.write(f"\n{separator}\n{e}\n")
-
-    def _log_interaction(self, query: str, agent1_prompt: str, agent1_response: str, agent2_prompt: str, agent2_response: str):
-        log_block = (
-            f"TIMESTAMP: {datetime.now().isoformat()}\n"
-            f"QUERY: {query}\n"
-            f"{'-'*80}\n"
-            f"--- AGENT 1 (RAG) PROMPT ---\n{agent1_prompt}\n"
-            f"{'-'*40}\n"
-            f"--- AGENT 1 RESPONSE ---\n{agent1_response}\n"
-            f"{'-'*80}\n"
-            f"--- AGENT 2 (SYNTHESIS) PROMPT ---\n{agent2_prompt}\n"
-            f"{'-'*40}\n"
-            f"--- AGENT 2 RESPONSE ---\n{agent2_response}\n"
-        )
-        self._write_to_rolling_log(log_block)
-
     async def aquery(self, query_text: str):
-        print(f"🔍 Processing RAG Pipeline for: {query_text}")
+        sys_logger.info(f"Processing RAG Pipeline for: {query_text}")
         
         # Initial RAG - Use async version
         initial_nodes = await self.fusion_retriever.aretrieve(query_text)
@@ -317,7 +284,7 @@ class RAGAssistant:
         return response
 
 
-    async def generate_refined_response(self, query_text: str, rag_response: str, history: List[str], summary: str = None, agent1_prompt: str = "", bot_name: str = None):
+    async def generate_refined_response(self, query_text: str, rag_response: str, history: List[str], summary: str = None, agent1_prompt: str = "", bot_name: str = None, user_profile_str: str = "", target_profiles_str: str = ""):
         history_str = "\n".join(history)
         persona = self._get_persona_prompt(bot_name)
         
@@ -337,26 +304,31 @@ class RAGAssistant:
             f"{history_str}\n"
             f"</chat_memory>\n\n"
             
+            f"{user_profile_str}\n"
+            f"{target_profiles_str}\n"
+
             "--- \n"
             "## TASK\n"
             "1. **Анализ:** Определи, касается ли вопрос информации из <knowledge_base>. Если да — используй её как основной источник фактов.\n"
             "2. **Связность:** Используй <chat_memory>, чтобы ответ логично продолжал текущую беседу\n"
-            "3. **Стиль:** Отвечай на русском языке, кратко, сохраняя характер своего персонажа. Обращайся к пользователю 'Искатель' или 'Путник'.\n"
-            "4. **Приоритет:** <knowledge_base> — истина. <conversation_summary> и <chat_memory> — контекст. При противоречии верь <knowledge_base>.\n"
-            "5. **Ограничения:** СТРОГО ЗАПРЕЩЕНО использовать любые финальные фразы, афоризмы, выводы о важности знаний или напутствия.\n\n"
+            "3. **Отношения:** Учитывай теги профилей пользователей (если они предоставлены) для выбора тональности ответа (насколько ты дружелюбен, подозрителен или почтителен). НЕ цитируй свое отношение к ним напрямую.\n"
+            "4. **Стиль:** Отвечай на русском языке, кратко, сохраняя характер своего персонажа. Обращайся к пользователю 'Искатель' или 'Путник'.\n"
+            "5. **Приоритет:** <knowledge_base> — истина. <conversation_summary> и <chat_memory> — контекст. При противоречии верь <knowledge_base>.\n"
+            "6. **Ограничения:** СТРОГО ЗАПРЕЩЕНО использовать любые финальные фразы, афоризмы, выводы о важности знаний или напутствия.\n\n"
             f"Вопрос пользователя: {query_text}"
         )
         response = await Settings.llm.acomplete(refine_prompt)
         final_response = str(response)
         
-        # Consolidated Log
-        self._log_interaction(
-            query=query_text,
-            agent1_prompt=agent1_prompt,
-            agent1_response=rag_response,
-            agent2_prompt=refine_prompt,
-            agent2_response=final_response
+        # Log Interaction Traces
+        log_block = (
+            f"QUERY: {query_text}\n"
+            f"--- AGENT 1 (RAG) PROMPT ---\n{agent1_prompt}\n"
+            f"--- AGENT 1 RESPONSE ---\n{rag_response}\n"
+            f"--- AGENT 2 (SYNTHESIS) PROMPT ---\n{refine_prompt}\n"
+            f"--- AGENT 2 RESPONSE ---\n{final_response}\n"
         )
+        trace_logger.info(log_block)
         
         return final_response
 
@@ -385,16 +357,67 @@ class RAGAssistant:
         response = await Settings.llm.acomplete(prompt)
         text_response = str(response).strip()
         
-        # Log the summary interaction
-        log_block = (
-            f"TIMESTAMP: {datetime.now().isoformat()}\n"
-            f"--- SUMMARY PROMPT ---\n{prompt}\n"
-            f"{'-'*40}\n"
-            f"--- SUMMARY RESPONSE ---\n{text_response}\n"
-        )
-        self._write_to_rolling_log(log_block, log_path="cache/summaries_logs.txt", max_entries=10)
+        trace_logger.info(f"--- SUMMARY PROMPT ---\n{prompt}\n--- SUMMARY RESPONSE ---\n{text_response}\n")
         
         return text_response
+
+    async def evaluate_interaction(self, agent1_facts: str, agent2_response: str, user_query: str, user_name: str) -> dict:
+        """
+        Agent 3 (The Social Chronicler).
+        Evaluates the interaction and outputs a JSON containing 'stance' and 'history'.
+        """
+        prompt = f"""
+Ты — Глава Архива, мудрый и степенный хранитель древних тайн. 
+Сейчас ты выступаешь в роли летописца собственных чувств после беседы с пользователем по имени {user_name}.
+
+ДАННЫЕ ДЛЯ АНАЛИЗА:
+1. Запрос пользователя: {user_query}
+2. Твой ответ пользователю: {agent2_response}
+3. Найденные факты из свитков (контекст): {agent1_facts}
+
+ЗАДАЧА:
+Определи, как этот разговор повлиял на твое отношение к {user_name}.
+- Обнови свое внутреннее отношение (stance) и краткую историю ваших последних встреч (history).
+
+ПРАВИЛА ОФОРМЛЕНИЯ:
+- Поле "stance": Описывает твое текущее внутреннее состояние и отношение к {user_name}.
+- Поле "history": Описывает СУТЬ произошедшего в ТРЕТЬЕМ ЛИЦЕ (например: "Путник спрашивал о...", "Мы обсуждали..."). Избегай прямой речи и обращения "Я сказал тебе".
+- Поля не должны превышать 3 предложения каждое.
+- Ты меняешь мнение ТОЛЬКО о пользователе {user_name}.
+
+ВЕРНИ СТРОГО JSON ФОРМАТ, оформленный в блоке кода ```json ... ```. Никакого другого текста до или после.
+
+ПРИМЕР ОТВЕТА:
+```json
+{{
+  "stance": "Этот путник проявляет должный трепет перед древними знаниями. Я благосклонен к его исканиям.",
+  "history": "Путник интересовался судьбой Макса. Глава Архива поведал ему то, что сохранили свитки, не взирая на дерзость вопросов."
+}}
+```
+"""
+        response = await Settings.llm.acomplete(prompt)
+        raw_text = str(response).strip()
+        
+        trace_logger.info(f"--- AGENT 3 (AUDITOR) PROMPT ---\n{prompt}\n--- AGENT 3 OUTPUT ---\n{raw_text}\n")
+        
+        # Robust JSON extraction
+        json_match = re.search(r'```json\s*(.*?)\s*```', raw_text, re.DOTALL | re.IGNORECASE)
+        try:
+            if json_match:
+                data = json.loads(json_match.group(1))
+            else:
+                # Fallback: maybe it just returned json without markdown tags
+                data = json.loads(raw_text)
+            
+            stance = data.get("stance", "Путник, который общался со мной.")
+            history = data.get("history", "Мы обменялись словами.")
+            return {"stance": stance, "history": history}
+        except json.JSONDecodeError as e:
+            sys_logger.error(f"Failed to parse Agent 3 JSON output. Error: {e}\nRaw output: {raw_text}")
+            return {
+                "stance": "Странные помехи мешают мне понять этого путника.",
+                "history": "Беседа была окутана туманом."
+            }
 
 def main():
     import asyncio
