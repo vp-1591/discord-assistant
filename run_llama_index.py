@@ -371,16 +371,25 @@ class RAGAssistant:
         
         return text_response
 
-    async def evaluate_interaction(self, agent1_facts: str, agent2_response: str, user_query: str, user_name: str) -> dict:
+    async def evaluate_interaction(self, agent1_facts: str, agent2_response: str, user_query: str, user_name: str, current_profile: dict = None) -> dict:
         """
         Agent 3 (The Social Chronicler).
         Evaluates the interaction and outputs a JSON containing 'stance' and 'history'.
+        Now takes current_profile to allow for evolving memory.
         """
+        existing_context = ""
+        if current_profile:
+            existing_context = (
+                f"\n## ТЕКУЩЕЕ ОТНОШЕНИЕ К {user_name}\n"
+                f"Stance: {current_profile.get('head_of_archive_stance', 'Неизвестно')}\n"
+                f"History: {current_profile.get('interaction_history', 'Нет записей')}\n"
+            )
+
         prompt = f"""
 Ты — Глава Архива, мудрый и степенный хранитель древних тайн. 
 Сейчас ты выступаешь в роли летописца собственных чувств после беседы с пользователем по имени {user_name}.
-
-ДАННЫЕ ДЛЯ АНАЛИЗА:
+{existing_context}
+ДАННЫЕ ДЛЯ АНАЛИЗА НОВОЙ ВСТРЕЧИ:
 1. Запрос пользователя: {user_query}
 2. Твой ответ пользователю: {agent2_response}
 3. Найденные факты из свитков (контекст): {agent1_facts}
@@ -388,6 +397,7 @@ class RAGAssistant:
 ЗАДАЧА:
 Определи, как этот разговор повлиял на твое отношение к {user_name}.
 - Обнови свое внутреннее отношение (stance) и краткую историю ваших последних встреч (history).
+- **ВАЖНО:** Учитывай свое текущее отношение и дополняй его, а не начинай с чистого листа. Твоя память должна эволюционировать.
 
 ПРАВИЛА ОФОРМЛЕНИЯ:
 - Поле "stance": Описывает твое текущее внутреннее состояние и отношение к {user_name}.
@@ -396,14 +406,6 @@ class RAGAssistant:
 - Ты меняешь мнение ТОЛЬКО о пользователе {user_name}.
 
 ВЕРНИ СТРОГО JSON ФОРМАТ, оформленный в блоке кода ```json ... ```. Никакого другого текста до или после.
-
-ПРИМЕР ОТВЕТА:
-```json
-{{
-  "stance": "Этот путник проявляет должный трепет перед древними знаниями. Я благосклонен к его исканиям.",
-  "history": "Путник интересовался судьбой Макса. Глава Архива поведал ему то, что сохранили свитки, не взирая на дерзость вопросов."
-}}
-```
 """
         response = await Settings.llm.acomplete(prompt)
         raw_text = str(response).strip()

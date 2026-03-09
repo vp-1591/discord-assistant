@@ -167,7 +167,8 @@ async def on_message(message):
                     agent1_facts=rag_str,
                     agent2_response=final_response,
                     user_query=query,
-                    user_name=message.author.display_name
+                    user_name=message.author.display_name,
+                    current_profile=user_profile_data
                 )
                 await client.opinions.update_user_opinion(
                     user_id=message.author.id,
