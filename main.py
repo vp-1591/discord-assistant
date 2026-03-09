@@ -102,17 +102,9 @@ async def on_message(message):
             
             # 1. Get recent interaction history (Internal preservation)
             if channel_id not in client.history:
-                # Bootstrap once from Discord if local history is empty
-                sys_logger.info(f"Bootstrapping history for channel {channel_id}...")
-                bootstrapped = []
-                async for msg in channel.history(limit=50):
-                    if msg.id == message.id: continue
-                    if msg.author.id == self_id or client.user.mentioned_in(msg):
-                        author = msg.author.display_name
-                        content = resolve_mentions(msg)
-                        bootstrapped.insert(0, f"{author}: {content}")
-                        if len(bootstrapped) >= 6: break
-                client.history[channel_id] = bootstrapped
+                # Rely strictly on local history. Bootstrapping from Discord is removed.
+                sys_logger.info(f"Initialized empty local history for channel {channel_id}.")
+                client.history[channel_id] = []
                 client._save_json(client.history_path, client.history)
 
             previous_relevant = client.history.get(channel_id, [])
@@ -159,7 +151,9 @@ async def on_message(message):
 
         # Add current transaction to internal history using server-specific nickname
         # (bot_nickname is already defined above in our shared scope)
+        # Format user interaction
         user_interaction = f"{message.author.display_name}: {query}"
+        # Format bot interaction
         bot_interaction = f"{bot_nickname}: {final_response}"
         
         chat_logger.info(f"User [{user_interaction}] -> Bot [{bot_interaction}]")
@@ -186,15 +180,20 @@ async def on_message(message):
                 
         asyncio.create_task(run_auditor())
         
+        # Truncate strings before adding to history to prevent context bloat
+        TRUNCATE_LIMIT = 700
+        truncated_user = user_interaction if len(user_interaction) <= TRUNCATE_LIMIT else user_interaction[:TRUNCATE_LIMIT] + " [...]"
+        truncated_bot = bot_interaction if len(bot_interaction) <= TRUNCATE_LIMIT else bot_interaction[:TRUNCATE_LIMIT] + " [...]"
+
         # Add current transaction to internal history
-        client.history[channel_id] = previous_relevant + [user_interaction, bot_interaction]
+        client.history[channel_id] = previous_relevant + [truncated_user, truncated_bot]
         
-        if len(client.history[channel_id]) >= 8:
-            # We compress the 2 oldest messages and keep the 6 newest
-            to_summarize = client.history[channel_id][:2]
-            client.history[channel_id] = client.history[channel_id][2:]
+        if len(client.history[channel_id]) >= 12:
+            # We compress the 8 oldest messages and keep the 4 newest
+            to_summarize = client.history[channel_id][:8]
+            client.history[channel_id] = client.history[channel_id][8:]
             
-            sys_logger.info(f"Post-response: Summarizing 2 messages for channel {channel_id}...")
+            sys_logger.info(f"Post-response: Summarizing {len(to_summarize)} messages for channel {channel_id}...")
             try:
                 new_summary = await client.assistant.generate_summary(current_summary, to_summarize)
                 client.summaries[channel_id] = new_summary
