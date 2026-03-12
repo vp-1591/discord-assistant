@@ -1,6 +1,4 @@
-Truncate all history messages (except current user query) to 500 characters to reduce context bloat.
 Make the codebase SoC compliant by separating retrieval, agents, and memory logic into dedicated modules.
-Implement Opinion Fetching and Opinion Writing as Tool Calls to ensure the LLM actively requests data, removing passive XML injection.
 Implement conditional RAG by making it a Tool Call for Agent2, keeping Agent1 inside the RAG tool to summarize retrieved nodes.
 Implement Users Aliases system.
 Discord message response context for LLM(how to implement without duplicating/overloading context?)

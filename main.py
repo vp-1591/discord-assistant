@@ -63,7 +63,12 @@ class aclient(discord.Client):
                 print(f"🤖 Initializing RAG Assistant as '{bot_name}' (This may take a while if rebuilding)...")
 
                 # Use to_thread to prevent blocking the heartbeat during heavy indexing
-                self.assistant = await asyncio.to_thread(RAGAssistant, id_map=id_map, name=bot_name)
+                self.assistant = await asyncio.to_thread(
+                    RAGAssistant,
+                    id_map=id_map,
+                    name=bot_name,
+                    opinion_manager=self.opinions,
+                )
                 print(f"✅ RAG Assistant ready as '{bot_name}'.")
             finally:
                 self._assistant_loading = False  # always release the lock
@@ -113,23 +118,10 @@ async def on_message(message):
             try:
                 # 2. Run RAG Query
                 rag_response = await client.assistant.aquery(query)
-                
-                # Opinion Management: Get User Profile
+
+                # 3. Agent 2: Synthesis via ReActAgent (opinion tools called on-demand)
                 user_name = message.author.display_name
                 user_id = message.author.id
-                user_profile_data = client.opinions.get_user_profile(user_id)
-                user_profile_str = ""
-                if user_profile_data:
-                    user_profile_str = f'<user_profile name="{user_name}">\nStance: {user_profile_data.get("head_of_archive_stance")}\nHistory: {user_profile_data.get("interaction_history")}\n</user_profile>'
-                
-                # Opinion Management: Find Targets via Fuzzy Match
-                targets = client.opinions.find_targets(query)
-                target_profiles_str = ""
-                for t_id, t_data in targets:
-                    if str(t_id) != str(user_id):  # Don't add user as a target of themselves
-                        target_profiles_str += f'<target_profile name="{t_data.get("name")}">\nStance: {t_data.get("head_of_archive_stance")}\nHistory: {t_data.get("interaction_history")}\n</target_profile>\n'
-
-                # 3. Agent 2: Synthesis with history, summary and persona
                 bot_nickname = message.guild.me.display_name if message.guild else client.user.display_name
                 final_response = await client.assistant.generate_refined_response(
                     query_text=query,
@@ -138,8 +130,8 @@ async def on_message(message):
                     summary=current_summary,
                     agent1_prompt=getattr(rag_response, 'agent1_prompt', ""),
                     bot_name=bot_nickname,
-                    user_profile_str=user_profile_str,
-                    target_profiles_str=target_profiles_str
+                    author_id=str(user_id),
+                    author_name=user_name,
                 )
             except Exception as e:
                 sys_logger.error(f"Error during RAG processing: {e}")
@@ -157,29 +149,6 @@ async def on_message(message):
         bot_interaction = f"{bot_nickname}: {final_response}"
         
         chat_logger.info(f"User [{user_interaction}] -> Bot [{bot_interaction}]")
-        
-        # Async Task for Agent 3 (Social Chronicler)
-        async def run_auditor():
-            try:
-                # Ensure we have rag_response if not error
-                rag_str = str(rag_response) if 'rag_response' in locals() else "Сбои в матрице."
-                op_data = await client.assistant.evaluate_interaction(
-                    agent1_facts=rag_str,
-                    agent2_response=final_response,
-                    user_query=query,
-                    user_name=message.author.display_name,
-                    current_profile=user_profile_data
-                )
-                await client.opinions.update_user_opinion(
-                    user_id=message.author.id,
-                    name=message.author.display_name,
-                    stance=op_data["stance"],
-                    interaction=op_data["history"]
-                )
-            except Exception as e:
-                sys_logger.error(f"Agent 3 task failed: {e}")
-                
-        asyncio.create_task(run_auditor())
         
         # Truncate strings before adding to history to prevent context bloat
         TRUNCATE_LIMIT = 700

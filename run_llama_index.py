@@ -1,7 +1,8 @@
 import os
 import json
 import re
-from typing import List
+import asyncio
+from typing import List, Optional, TYPE_CHECKING
 from datetime import datetime
 from collections import defaultdict
 import Stemmer
@@ -14,6 +15,17 @@ from llama_index.retrievers.bm25 import BM25Retriever
 from llama_index.postprocessor.flag_embedding_reranker import FlagEmbeddingReranker
 from llama_index.llms.ollama import Ollama
 from llama_index.core.query_engine import RetrieverQueryEngine
+from llama_index.core.tools import FunctionTool, ToolOutput, ToolSelection
+from llama_index.core.agent.react import ReActChatFormatter, ReActOutputParser
+from llama_index.core.agent.react.types import ActionReasoningStep, ObservationReasoningStep
+from llama_index.core.memory import ChatMemoryBuffer
+from llama_index.core.llms import ChatMessage
+from llama_index.core.workflow import (
+    Context, Event, Workflow, StartEvent, StopEvent, step
+)
+
+if TYPE_CHECKING:
+    from opinion_manager import OpinionManager
 
 from logger_setup import sys_logger, trace_logger, chat_logger
 
@@ -34,6 +46,7 @@ Settings.llm = Ollama(
     request_timeout=300.0, 
     keep_alive=0,
     context_window=8192,
+    additional_kwargs={"stop": ["Observation:", "Observation\n"]},
 )
 Settings.embed_batch_size = 10  # smaller batches = less chance of Ollama dropping the connection
 
@@ -141,11 +154,129 @@ def load_nodes_from_json(directory: str, id_map: dict) -> List[TextNode]:
             nodes.append(TextNode(text=current_accumulated.strip(), metadata=metadata))
     return nodes
 
+# --- 3. ReAct AGENT WORKFLOW (llama-index 0.14+ compatible) ---
+class _PrepEvent(Event):
+    pass
+
+class _InputEvent(Event):
+    input: list
+
+class _ToolCallEvent(Event):
+    tool_calls: list
+
+class _ReActAgentWorkflow(Workflow):
+    """
+    A minimal ReAct agent built with llama_index.core.workflow,
+    following the pattern from the official LlamaIndex 0.14 docs.
+    """
+    def __init__(self, llm, tools: list, system_prompt: str = "", **kwargs):
+        super().__init__(**kwargs)
+        self.llm = llm
+        self.tools = tools
+        self.formatter = ReActChatFormatter.from_defaults(context=system_prompt)
+        self.output_parser = ReActOutputParser()
+        self._tools_by_name = {t.metadata.get_name(): t for t in tools}
+
+    @step
+    async def new_user_msg(self, ctx: Context, ev: StartEvent) -> _PrepEvent:
+        memory = await ctx.store.get("memory", default=None)
+        if not memory:
+            memory = ChatMemoryBuffer.from_defaults(llm=self.llm)
+        user_msg = ChatMessage(role="user", content=ev.input)
+        memory.put(user_msg)
+        await ctx.store.set("memory", memory)
+        await ctx.store.set("current_reasoning", [])
+        return _PrepEvent()
+
+    @step
+    async def prepare_chat_history(self, ctx: Context, ev: _PrepEvent) -> _InputEvent:
+        memory = await ctx.store.get("memory")
+        chat_history = memory.get()
+        current_reasoning = await ctx.store.get("current_reasoning", default=[])
+        llm_input = self.formatter.format(
+            self.tools, chat_history, current_reasoning=current_reasoning
+        )
+        return _InputEvent(input=llm_input)
+
+    @step
+    async def handle_llm_input(
+        self, ctx: Context, ev: _InputEvent
+    ) -> "_ToolCallEvent | StopEvent":
+        chat_history = ev.input
+        current_reasoning = await ctx.store.get("current_reasoning", default=[])
+        memory = await ctx.store.get("memory")
+
+        response = await self.llm.achat(chat_history)
+        raw_content = response.message.content
+        trace_logger.info(f"--- ReAct LLM Output ---\n{raw_content}\n")
+        
+        try:
+            reasoning_step = self.output_parser.parse(raw_content)
+            current_reasoning.append(reasoning_step)
+            if reasoning_step.is_done:
+                memory.put(ChatMessage(role="assistant", content=reasoning_step.response))
+                await ctx.store.set("memory", memory)
+                await ctx.store.set("current_reasoning", current_reasoning)
+                return StopEvent(result={"response": reasoning_step.response})
+            elif isinstance(reasoning_step, ActionReasoningStep):
+                await ctx.store.set("current_reasoning", current_reasoning)
+                return _ToolCallEvent(
+                    tool_calls=[
+                        ToolSelection(
+                            tool_id="fake",
+                            tool_name=reasoning_step.action,
+                            tool_kwargs=reasoning_step.action_input,
+                        )
+                    ]
+                )
+        except Exception as e:
+            msg = f"Parse error in ReAct reasoning: {e}"
+            trace_logger.warning(msg)
+            current_reasoning.append(
+                ObservationReasoningStep(observation=msg)
+            )
+        await ctx.store.set("current_reasoning", current_reasoning)
+        return _PrepEvent()
+
+    @step
+    async def handle_tool_calls(self, ctx: Context, ev: _ToolCallEvent) -> _PrepEvent:
+        current_reasoning = await ctx.store.get("current_reasoning", default=[])
+        for tool_call in ev.tool_calls:
+            tool = self._tools_by_name.get(tool_call.tool_name)
+            if not tool:
+                msg = f"Tool '{tool_call.tool_name}' not found."
+                trace_logger.error(msg)
+                current_reasoning.append(
+                    ObservationReasoningStep(observation=msg)
+                )
+                continue
+            
+            trace_logger.info(f"--- ReAct Action ---\nTool: {tool_call.tool_name}\nArgs: {tool_call.tool_kwargs}\n")
+            try:
+                tool_output = tool(**tool_call.tool_kwargs)
+                observation = tool_output.content
+                trace_logger.info(f"--- ReAct Observation ---\n{observation}\n")
+                current_reasoning.append(
+                    ObservationReasoningStep(observation=observation)
+                )
+            except Exception as e:
+                msg = f"Error calling tool '{tool_call.tool_name}': {e}"
+                trace_logger.error(msg)
+                current_reasoning.append(
+                    ObservationReasoningStep(observation=msg)
+                )
+        await ctx.store.set("current_reasoning", current_reasoning)
+        return _PrepEvent()
+
+
+# --- 4. RAGAssistant ---
+
 class RAGAssistant:
 
-    def __init__(self, id_map: dict = None, name: str = "Глава Архива"):
+    def __init__(self, id_map: dict = None, name: str = "Глава Архива", opinion_manager: "OpinionManager" = None):
         self.id_map = id_map or {}
         self.name = name  # Default name
+        self.opinion_manager = opinion_manager  # Injected so tools can access it
         self.index = self._load_index()
         self.fusion_retriever, self.reranker, self.query_engine = self._setup_query_engine()
 
@@ -294,52 +425,146 @@ class RAGAssistant:
         return response
 
 
-    async def generate_refined_response(self, query_text: str, rag_response: str, history: List[str], summary: str = None, agent1_prompt: str = "", bot_name: str = None, user_profile_str: str = "", target_profiles_str: str = ""):
+    def _build_opinion_tools(self, author_id: str, author_name: str, query_text: str) -> list:
+        """
+        Builds the opinion tool set bound to the current user and interaction context.
+        This is called fresh for every request so closures capture the correct user.
+        """
+        om = self.opinion_manager
+
+        def fetch_user_opinion(user_display_name: str) -> str:
+            """
+            Retrieve your internal feelings and memories about a DIFFERENT Discord user (someone else).
+            Do NOT use this for the user you are currently talking to (the seeker).
+            Returns a JSON string of your thoughts or a message if nothing is found.
+            """
+            if om is None:
+                return "Opinion system is not available."
+            
+            # Explicitly block fetching the current author to reinforce third-party usage
+            if user_display_name.lower() == author_name.lower():
+                return f"Instruction: You already HAVE your stance on {author_name} in your context. Use it. This tool is only for other users."
+
+            matches = om.find_targets(user_display_name, threshold=0.6)
+            profile = matches[0][1] if matches else None
+
+            if not profile:
+                return f"No memories found for '{user_display_name}'."
+            return json.dumps(profile, ensure_ascii=False)
+
+        def update_user_opinion(current_stance: str, new_stance: str, history_note: str) -> str:
+            """
+            Update your internal feelings about the seeker you are currently speaking with.
+            'current_stance': Must match what you currently feel (as provided in your context).
+            'new_stance': Your updated internal attitude towards this seeker.
+            'history_note': A brief summary of this interaction.
+            """
+            if om is None:
+                return "Opinion system is not available."
+            
+            profile = om.get_user_profile(author_id)
+            actual_stance = profile.get("head_of_archive_stance") if profile else "None"
+            
+            if current_stance.strip() != str(actual_stance).strip():
+                return (
+                    f"ERROR: Protocol violation. Your 'current_stance' does not match your internal reality. "
+                    f"Use the stance provided in your context before proposing an update."
+                )
+
+            loop = asyncio.get_event_loop()
+            asyncio.run_coroutine_threadsafe(
+                om.update_user_opinion(
+                    user_id=author_id,
+                    name=author_name,
+                    stance=new_stance,
+                    interaction=history_note,
+                ),
+                loop,
+            )
+            sys_logger.info(f"Opinion update scheduled for {author_name} via tool call.")
+            return f"Success: Your internal thoughts about {author_name} have been updated."
+
+        return [
+            FunctionTool.from_defaults(fn=fetch_user_opinion),
+            FunctionTool.from_defaults(fn=update_user_opinion),
+        ]
+
+    async def generate_refined_response(
+        self,
+        query_text: str,
+        rag_response: str,
+        history: List[str],
+        summary: str = None,
+        agent1_prompt: str = "",
+        bot_name: str = None,
+        author_id: str = "",
+        author_name: str = "",
+    ):
         history_str = "\n".join(history)
         persona = self._get_persona_prompt(bot_name)
         
-        refine_prompt = (
-            f"## ROLE\n{persona}\n\n"
-            "## CONTEXT_DATA\n"
-            
-            f"<knowledge_base>\n"
-            f"{rag_response}\n"
-            f"</knowledge_base>\n\n"
-            
-            f"<conversation_summary>\n"
-            f"{summary if summary else 'История пуста.'}\n"
-            f"</conversation_summary>\n\n"
-            
-            f"<chat_memory>\n"
-            f"{history_str}\n"
-            f"</chat_memory>\n\n"
-            
-            f"{user_profile_str}\n"
-            f"{target_profiles_str}\n"
+        # Inject the current author's opinion directly into the prompt
+        author_profile = "None"
+        if self.opinion_manager:
+            profile_data = self.opinion_manager.get_user_profile(author_id)
+            if profile_data:
+                author_profile = json.dumps(profile_data, ensure_ascii=False)
 
-            "--- \n"
+        system_prompt = (
+            f"## ROLE\n{persona}\n\n"
+            "## TOOLS\n"
+            "You have access to two tools:\n"
+            "- **fetch_user_opinion**: Retrieve your stored feelings about OTHER users. Use it when they are mentioned.\n"
+            "- **update_user_opinion**: Update your internal feelings about the CURRENT seeker. "
+            "Call it whenever their behavior meaningfully changes your attitude.\n\n"
+            "## CONTEXT\n"
+            f"<knowledge_base>\n{rag_response}\n</knowledge_base>\n\n"
+            f"### YOUR INTERNAL STANCE ON THE SEEKER\n{author_profile}\n\n"
+            f"<conversation_summary>\n{summary if summary else 'История пуста.'}\n</conversation_summary>\n\n"
+            f"<chat_memory>\n{history_str}\n</chat_memory>\n\n"
             "## TASK\n"
-            "1. **Анализ:** Определи, касается ли вопрос информации из <knowledge_base>. Если да — используй её как основной источник фактов.\n"
-            "2. **Связность:** Используй <chat_memory>, чтобы ответ логично продолжал текущую беседу\n"
-            "3. **Отношения:** Учитывай теги профилей пользователей (если они предоставлены) для выбора тональности ответа (насколько ты дружелюбен, подозрителен или почтителен). НЕ цитируй свое отношение к ним напрямую.\n"
-            "4. **Стиль:** Отвечай на русском языке, кратко, сохраняя характер своего персонажа. Обращайся к пользователю 'Искатель' или 'Путник'.\n"
-            "5. **Приоритет:** <knowledge_base> — истина. <conversation_summary> и <chat_memory> — контекст. При противоречии верь <knowledge_base>.\n"
-            "6. **Ограничения:** СТРОГО ЗАПРЕЩЕНО использовать любые финальные фразы, афоризмы, выводы о важности знаний или напутствия.\n\n"
-            f"Вопрос пользователя: {query_text}"
+            f"1. **Analysis:** Review <knowledge_base> and YOUR INTERNAL STANCE ON THE SEEKER. The seeker is current user: {author_name}.\n"
+            "2. **Continuity:** Use <chat_memory> to stay relevant.\n"
+            "3. **Relations:** If third parties are mentioned, use fetch_user_opinion. For the seeker, use YOUR INTERNAL STANCE ON THE SEEKER to determine your tone.\n"
+            "4. **Style:** Reply in Russian, concisely, in character. Address the user as 'Искатель' или 'Путник'.\n"
+            "5. **Constraints:** STRICTLY FORBIDDEN to end with aphorisms or send-offs.\n"
+            f"6. **STATE UPDATE:** If this interaction changed your mind about the seeker, call `update_user_opinion` BEFORE your final Answer. Mandatory protocol. Current user: {author_name}.\n"
         )
-        response = await Settings.llm.acomplete(refine_prompt)
-        final_response = str(response)
-        
-        # Log Interaction Traces
+
+        tools = self._build_opinion_tools(
+            author_id=author_id,
+            author_name=author_name,
+            query_text=query_text,
+        )
+
+        # Log Input Context BEFORE the agent starts (to keep logs chronological)
         log_block = (
             f"QUERY: {query_text}\n"
             f"--- AGENT 1 (RAG) PROMPT ---\n{agent1_prompt}\n"
             f"--- AGENT 1 RESPONSE ---\n{rag_response}\n"
-            f"--- AGENT 2 (SYNTHESIS) PROMPT ---\n{refine_prompt}\n"
-            f"--- AGENT 2 RESPONSE ---\n{final_response}\n"
+            f"--- AGENT 2 (ReAct) SYSTEM PROMPT ---\n{system_prompt}\n"
         )
         trace_logger.info(log_block)
+
+        agent = _ReActAgentWorkflow(
+            llm=Settings.llm,
+            tools=tools,
+            system_prompt=system_prompt,
+            timeout=180,
+            verbose=False,
+        )
+
+        # Run the agent natively since we are already in an async context
+        agent_response = await agent.run(input=query_text)
         
+        # The workflow response is a dict with a 'response' key
+        if isinstance(agent_response, dict) and 'response' in agent_response:
+            final_response = str(agent_response['response']).strip()
+        else:
+            final_response = str(agent_response).strip()
+
+        trace_logger.info(f"--- FINAL AGENT RESPONSE ---\n{final_response}\n{'='*50}")
+
         return final_response
 
     async def generate_summary(self, prev_summary: str, messages: List[str]):
@@ -371,65 +596,9 @@ class RAGAssistant:
         
         return text_response
 
-    async def evaluate_interaction(self, agent1_facts: str, agent2_response: str, user_query: str, user_name: str, current_profile: dict = None) -> dict:
-        """
-        Agent 3 (The Social Chronicler).
-        Evaluates the interaction and outputs a JSON containing 'stance' and 'history'.
-        Now takes current_profile to allow for evolving memory.
-        """
-        existing_context = ""
-        if current_profile:
-            existing_context = (
-                f"\n## ТЕКУЩЕЕ ОТНОШЕНИЕ К {user_name}\n"
-                f"Stance: {current_profile.get('head_of_archive_stance', 'Неизвестно')}\n"
-                f"History: {current_profile.get('interaction_history', 'Нет записей')}\n"
-            )
-
-        prompt = f"""
-Ты — Глава Архива, мудрый и степенный хранитель древних тайн. 
-Сейчас ты выступаешь в роли летописца собственных чувств после беседы с пользователем по имени {user_name}.
-{existing_context}
-ДАННЫЕ ДЛЯ АНАЛИЗА НОВОЙ ВСТРЕЧИ:
-1. Запрос пользователя: {user_query}
-2. Твой ответ пользователю: {agent2_response}
-3. Найденные факты из свитков (контекст): {agent1_facts}
-
-ЗАДАЧА:
-Определи, как этот разговор повлиял на твое отношение к {user_name}.
-- Обнови свое внутреннее отношение (stance) и краткую историю ваших последних встреч (history).
-- **ВАЖНО:** Учитывай свое текущее отношение и дополняй его, а не начинай с чистого листа. Твоя память должна эволюционировать.
-
-ПРАВИЛА ОФОРМЛЕНИЯ:
-- Поле "stance": Описывает твое текущее внутреннее состояние и отношение к {user_name}.
-- Поле "history": Описывает СУТЬ произошедшего в ТРЕТЬЕМ ЛИЦЕ (например: "Путник спрашивал о...", "Мы обсуждали..."). Избегай прямой речи и обращения "Я сказал тебе".
-- Поля не должны превышать 3 предложения каждое.
-- Ты меняешь мнение ТОЛЬКО о пользователе {user_name}.
-
-ВЕРНИ СТРОГО JSON ФОРМАТ, оформленный в блоке кода ```json ... ```. Никакого другого текста до или после.
-"""
-        response = await Settings.llm.acomplete(prompt)
-        raw_text = str(response).strip()
-        
-        trace_logger.info(f"--- AGENT 3 (AUDITOR) PROMPT ---\n{prompt}\n--- AGENT 3 OUTPUT ---\n{raw_text}\n")
-        
-        # Robust JSON extraction
-        json_match = re.search(r'```json\s*(.*?)\s*```', raw_text, re.DOTALL | re.IGNORECASE)
-        try:
-            if json_match:
-                data = json.loads(json_match.group(1))
-            else:
-                # Fallback: maybe it just returned json without markdown tags
-                data = json.loads(raw_text)
-            
-            stance = data.get("stance", "Путник, который общался со мной.")
-            history = data.get("history", "Мы обменялись словами.")
-            return {"stance": stance, "history": history}
-        except json.JSONDecodeError as e:
-            sys_logger.error(f"Failed to parse Agent 3 JSON output. Error: {e}\nRaw output: {raw_text}")
-            return {
-                "stance": "Странные помехи мешают мне понять этого путника.",
-                "history": "Беседа была окутана туманом."
-            }
+    # Agent 3 (evaluate_interaction) has been removed.
+    # Opinion updates are now handled on-demand by the ReActAgent in generate_refined_response
+    # via the update_user_opinion tool, which only fires when the LLM judges it necessary.
 
 def main():
     import asyncio
