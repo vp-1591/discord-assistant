@@ -116,19 +116,14 @@ async def on_message(message):
             current_summary = client.summaries.get(channel_id)
             
             try:
-                # 2. Run RAG Query
-                rag_response = await client.assistant.aquery(query)
-
-                # 3. Agent 2: Synthesis via ReActAgent (opinion tools called on-demand)
+                # 2. Agent 2: Synthesis via ReActAgent (opinion tools and RAG called on-demand)
                 user_name = message.author.display_name
                 user_id = message.author.id
                 bot_nickname = message.guild.me.display_name if message.guild else client.user.display_name
                 final_response = await client.assistant.generate_refined_response(
                     query_text=query,
-                    rag_response=str(rag_response),
                     history=previous_relevant,
                     summary=current_summary,
-                    agent1_prompt=getattr(rag_response, 'agent1_prompt', ""),
                     bot_name=bot_nickname,
                     author_id=str(user_id),
                     author_name=user_name,

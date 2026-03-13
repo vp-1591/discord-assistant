@@ -33,6 +33,56 @@ from logger_setup import sys_logger, trace_logger, chat_logger
 PERSIST_DIR = "./llama_index_storage"
 FORCE_REBUILD = False
 
+# --- 0.1 CUSTOM REACT TEMPLATE ---
+# We use the template from header_template.md to ensure stability while removing excessive boilerplate.
+CUSTOM_REACT_HEADER = """
+You are designed to help with a variety of tasks, from answering questions to providing summaries to other types of analyses.
+
+## Tools
+
+You have access to a wide variety of tools. You are responsible for using the tools in any sequence you deem appropriate to complete the task at hand.
+This may require breaking the task into subtasks and using different tools to complete each subtask.
+
+You have access to the following tools:
+{tool_desc}
+{context}
+
+## Output Format
+
+Please answer in the same language as the question and use the following format:
+
+```
+Thought: The current language of the user is: (user's language). I need to use a tool to help me answer the question.
+Action: tool name (one of {tool_names}) if using a tool.
+Action Input: the input to the tool, in a JSON format representing the kwargs (e.g. {{"input": "hello world", "num_beams": 5}})
+```
+
+Please ALWAYS start with a Thought.
+
+NEVER surround your response with markdown code markers. You may use code markers within your response if you need to.
+
+Please use a valid JSON format for the Action Input. Do NOT do this {{'input': 'hello world', 'num_beams': 5}}. If you include the "Action:" line, then you MUST include the "Action Input:" line too, even if the tool does not need kwargs, in that case you MUST use "Action Input: {{}}".
+
+If this format is used, the tool will respond in the following format:
+
+```
+Observation: tool response
+```
+
+You should keep repeating the above format till you have enough information to answer the question without using any more tools. At that point, you MUST respond in one of the following two formats:
+
+```
+Thought: I can answer without using any more tools. I'll use the user's language to answer
+Answer: [your answer here (In the same language as the user's question)]
+```
+
+```
+Thought: I cannot answer the question with the provided tools.
+Answer: [your answer here (In the same language as the user's question)]
+```
+
+"""
+
 # --- 1. SETTINGS CONFIGURATION ---
 Settings.embed_model = OllamaEmbedding(
     model_name="bge-m3", 
@@ -173,7 +223,9 @@ class _ReActAgentWorkflow(Workflow):
         super().__init__(**kwargs)
         self.llm = llm
         self.tools = tools
-        self.formatter = ReActChatFormatter.from_defaults(context=system_prompt)
+        # We use our custom header to bypass library boilerplate
+        self.formatter = ReActChatFormatter(system_header=CUSTOM_REACT_HEADER)
+        self.system_prompt = system_prompt 
         self.output_parser = ReActOutputParser()
         self._tools_by_name = {t.metadata.get_name(): t for t in tools}
 
@@ -193,9 +245,23 @@ class _ReActAgentWorkflow(Workflow):
         memory = await ctx.store.get("memory")
         chat_history = memory.get()
         current_reasoning = await ctx.store.get("current_reasoning", default=[])
+        
+        # ReActChatFormatter uses a fixed set of keys for formatting.
+        # It expects 'context' to be part of the object state, not passed to format().
+        self.formatter.context = self.system_prompt
+        
         llm_input = self.formatter.format(
-            self.tools, chat_history, current_reasoning=current_reasoning
+            self.tools, 
+            chat_history, 
+            current_reasoning=current_reasoning
         )
+        # Log a readable version of the messages sent to the LLM
+        readable_input = ""
+        for m in llm_input:
+            role = m.role.value.upper() if hasattr(m.role, 'value') else str(m.role).upper()
+            readable_input += f"[{role}]:\n{m.content}\n\n"
+        trace_logger.info(f"--- FULL REACT LLM INPUT ---\n{readable_input}\n")
+            
         return _InputEvent(input=llm_input)
 
     @step
@@ -253,7 +319,7 @@ class _ReActAgentWorkflow(Workflow):
             
             trace_logger.info(f"--- ReAct Action ---\nTool: {tool_call.tool_name}\nArgs: {tool_call.tool_kwargs}\n")
             try:
-                tool_output = tool(**tool_call.tool_kwargs)
+                tool_output = await tool.acall(**tool_call.tool_kwargs)
                 observation = tool_output.content
                 trace_logger.info(f"--- ReAct Observation ---\n{observation}\n")
                 current_reasoning.append(
@@ -285,8 +351,7 @@ class RAGAssistant:
         return (
         f"Ты — мудрый {current_name}. "
         "Твоя речь степенная, архаичная и исполнена достоинства. "
-        "Ты воспринимаешь предоставленные данные как священные манускрипты и летописи. "
-        "Обращаешься к собеседнику как к 'искателю истин' или 'путник'. "
+        "Ты обращаешься к собеседнику как к 'искателю истин' или 'путник'. "
         "Вместо современной терминологии используешь образы: 'мои свитки', 'предания', 'записи в манускриптах'."
     )
 
@@ -359,9 +424,9 @@ class RAGAssistant:
         
         current_date = datetime.now().strftime("%Y-%m-%d")
         self.qa_prompt_tmpl = PromptTemplate(
-            f"# ИНСТРУКЦИЯ ПО АНАЛИЗУ ЛОГОВ\n"
-            f"**Ты — поисковая система Архива. Твоя цель — найти в логах информацию, которая поможет {self.name} ответить на вопросы.**\n"
-            f"**Сегодняшняя дата:** {current_date}\n\n"
+            f"# ИНСТРУКЦИЯ ДЛЯ ХРАНИТЕЛЯ ЗНАНИЙ\n"
+            f"**Твоя цель — подготовить для {self.name} точную выжимку из летописей.**\n"
+            f"**Сегодня:** {current_date}\n\n"
             
             "## КОНТЕКСТ (Фрагменты истории Discord)\n"
             "Ниже приведены записи из базы знаний. Каждый фрагмент содержит метаданные и содержание.\n"
@@ -369,15 +434,15 @@ class RAGAssistant:
             "{context_str}\n"
             "--- \n\n"
             
-            "## ЗАДАНИЕ\n"
-            "Используя только предоставленные выше записи, ответь на вопрос:\n"
+            "## ЗАПРОС\n"
             "> **{query_str}**\n\n"
             
-            "### ТРЕБОВАНИЯ К ОТВЕТУ:\n"
-            "1. **Точность субъектов:** Четко разделяй, кто совершил действие, а кто о нем рассказывает.\n"
-            "2. **Хронология:** Сравнивай даты в метаданных, если это важно для ответа.\n"
-            "3. **Отсутствие данных:** Если в записях нет прямого ответа, напиши: 'В летописях об этом не сказано'.\n"
-            "4. **Стиль:** Фактологический, сухой, без домыслов.\n\n"
+            "### ТРЕБОВАНИЯ К ВЫЖИМКЕ:\n"
+            "1. **Точность субъектов:** Четко указывай, кто совершил действие, а кто о нем рассказывает.\n"
+            "2. **Контекст:** Кратко опиши суть ситуации, если она ясна из фрагмента.\n"
+            "3. **Хронология:** Сравнивай даты в метаданных, если это важно для ответа.\n"
+            "4. **Отсутствие данных:** Если информации нет, напиши: 'В архиве об этом не сказано'.\n"
+            "5. **Стиль:** Структурированный, фактологический, удобный для быстрого изучения.\n\n"
         )
 
         query_engine = RetrieverQueryEngine.from_args(
@@ -415,22 +480,27 @@ class RAGAssistant:
             nodes=reranked_nodes
         )
         
-        # We attach the agent1_prompt to the response object temporarily so main.py can log it later 
-        # or we log it here if we had agent2 prompt. 
-        # Actually, let's just return both for consolidated logging if needed, 
-        # but the request asks for specific steps.
-        
-        # Add property to response for easier retrieval
-        response.agent1_prompt = agent1_prompt
+        # Log the internal RAG prompt and response for tracing
+        trace_logger.info(f"--- AGENT 1 (RAG) PROMPT ---\n{agent1_prompt}\n")
+        trace_logger.info(f"--- AGENT 1 RESPONSE ---\n{str(response)}\n")
+
         return response
 
 
-    def _build_opinion_tools(self, author_id: str, author_name: str, query_text: str) -> list:
+    def _build_tools(self, author_id: str, author_name: str, query_text: str) -> list:
         """
-        Builds the opinion tool set bound to the current user and interaction context.
+        Builds the tool set bound to the current user and interaction context.
         This is called fresh for every request so closures capture the correct user.
         """
         om = self.opinion_manager
+
+        async def search_archive(search_query: str) -> str:
+            """
+            Search the records for information about a specific person, entity, or event. 
+            IMPORTANT: Formulate a detailed query including INTENT (e.g., 'Who is X and what are his character traits?' instead of just 'X').
+            """
+            response = await self.aquery(search_query)
+            return str(response)
 
         def fetch_user_opinion(user_display_name: str) -> str:
             """
@@ -485,6 +555,7 @@ class RAGAssistant:
             return f"Success: Your internal thoughts about {author_name} have been updated."
 
         return [
+            FunctionTool.from_defaults(async_fn=search_archive, name="search_archive"),
             FunctionTool.from_defaults(fn=fetch_user_opinion),
             FunctionTool.from_defaults(fn=update_user_opinion),
         ]
@@ -492,10 +563,8 @@ class RAGAssistant:
     async def generate_refined_response(
         self,
         query_text: str,
-        rag_response: str,
         history: List[str],
         summary: str = None,
-        agent1_prompt: str = "",
         bot_name: str = None,
         author_id: str = "",
         author_name: str = "",
@@ -511,46 +580,33 @@ class RAGAssistant:
                 author_profile = json.dumps(profile_data, ensure_ascii=False)
 
         system_prompt = (
+            f"{author_name}\n\n"
             f"## ROLE\n{persona}\n\n"
-            "## TOOLS\n"
-            "You have access to two tools:\n"
-            "- **fetch_user_opinion**: Retrieve your stored feelings about OTHER users. Use it when they are mentioned.\n"
-            "- **update_user_opinion**: Update your internal feelings about the CURRENT seeker. "
-            "Call it whenever their behavior meaningfully changes your attitude.\n\n"
-            "## CONTEXT\n"
-            f"<knowledge_base>\n{rag_response}\n</knowledge_base>\n\n"
-            f"### YOUR INTERNAL STANCE ON THE SEEKER\n{author_profile}\n\n"
+            f"### YOUR INTERNAL STANCE ON THE SEEKER ({author_name})\n{author_profile}\n\n"
             f"<conversation_summary>\n{summary if summary else 'История пуста.'}\n</conversation_summary>\n\n"
             f"<chat_memory>\n{history_str}\n</chat_memory>\n\n"
             "## TASK\n"
-            f"1. **Analysis:** Review <knowledge_base> and YOUR INTERNAL STANCE ON THE SEEKER. The seeker is current user: {author_name}.\n"
-            "2. **Continuity:** Use <chat_memory> to stay relevant.\n"
+            f"**Your main goal is to address this query from {author_name}: '{query_text}'**\n"
+            f"1. **Analysis:** Review YOUR INTERNAL STANCE ON THE SEEKER. The seeker is current user: {author_name}.\n"
+            "2. **Continuity:** Use <chat_memory> to stay relevant. If you lack specific details or historical context required to provide a complete and accurate answer, use `search_archive` to consult the logs.\n"
             "3. **Relations:** If third parties are mentioned, use fetch_user_opinion. For the seeker, use YOUR INTERNAL STANCE ON THE SEEKER to determine your tone.\n"
             "4. **Style:** Reply in Russian, concisely, in character. Address the user as 'Искатель' или 'Путник'.\n"
             "5. **Constraints:** STRICTLY FORBIDDEN to end with aphorisms or send-offs.\n"
             f"6. **STATE UPDATE:** If this interaction changed your mind about the seeker, call `update_user_opinion` BEFORE your final Answer. Mandatory protocol. Current user: {author_name}.\n"
         )
 
-        tools = self._build_opinion_tools(
+        tools = self._build_tools(
             author_id=author_id,
             author_name=author_name,
             query_text=query_text,
         )
 
-        # Log Input Context BEFORE the agent starts (to keep logs chronological)
-        log_block = (
-            f"QUERY: {query_text}\n"
-            f"--- AGENT 1 (RAG) PROMPT ---\n{agent1_prompt}\n"
-            f"--- AGENT 1 RESPONSE ---\n{rag_response}\n"
-            f"--- AGENT 2 (ReAct) SYSTEM PROMPT ---\n{system_prompt}\n"
-        )
-        trace_logger.info(log_block)
 
         agent = _ReActAgentWorkflow(
             llm=Settings.llm,
             tools=tools,
             system_prompt=system_prompt,
-            timeout=180,
+            timeout=300,
             verbose=False,
         )
 
