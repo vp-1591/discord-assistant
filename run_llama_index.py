@@ -36,8 +36,6 @@ FORCE_REBUILD = False
 # --- 0.1 CUSTOM REACT TEMPLATE ---
 # We use the template from header_template.md to ensure stability while removing excessive boilerplate.
 CUSTOM_REACT_HEADER = """
-You are designed to help with a variety of tasks, from answering questions to providing summaries to other types of analyses.
-
 ## Tools
 
 You have access to a wide variety of tools. You are responsible for using the tools in any sequence you deem appropriate to complete the task at hand.
@@ -255,12 +253,20 @@ class _ReActAgentWorkflow(Workflow):
             chat_history, 
             current_reasoning=current_reasoning
         )
-        # Log a readable version of the messages sent to the LLM
-        readable_input = ""
-        for m in llm_input:
-            role = m.role.value.upper() if hasattr(m.role, 'value') else str(m.role).upper()
-            readable_input += f"[{role}]:\n{m.content}\n\n"
-        trace_logger.info(f"--- FULL REACT LLM INPUT ---\n{readable_input}\n")
+
+        # Requirement: Log full header only once, then incremental steps
+        header_logged = await ctx.store.get("header_logged", default=False)
+        if not header_logged:
+            readable_input = ""
+            for m in llm_input:
+                role = m.role.value.upper() if hasattr(m.role, 'value') else str(m.role).upper()
+                readable_input += f"[{role}]:\n{m.content}\n\n"
+            
+            trace_logger.info(f"--- [NEW INTERACTION] FULL PROMPT HEADER ---\n{readable_input}\n")
+            await ctx.store.set("header_logged", True)
+        else:
+            step_idx = len(current_reasoning) + 1
+            trace_logger.info(f"--- [STEP {step_idx}] STARTING REASONING ---")
             
         return _InputEvent(input=llm_input)
 
@@ -268,13 +274,20 @@ class _ReActAgentWorkflow(Workflow):
     async def handle_llm_input(
         self, ctx: Context, ev: _InputEvent
     ) -> "_ToolCallEvent | StopEvent":
+        """
+        --- PLAN PHASE (REASONING) ---
+        The LLM generates the 'Thought' and decides which 'Action' to take
+        or provides the final 'Answer'.
+        """
         chat_history = ev.input
         current_reasoning = await ctx.store.get("current_reasoning", default=[])
         memory = await ctx.store.get("memory")
 
         response = await self.llm.achat(chat_history)
         raw_content = response.message.content
-        trace_logger.info(f"--- ReAct LLM Output ---\n{raw_content}\n")
+        
+        step_idx = len(current_reasoning) + 1
+        trace_logger.info(f"--- [STEP {step_idx}] LLM OUTPUT ---\n{raw_content}\n")
         
         try:
             reasoning_step = self.output_parser.parse(raw_content)
@@ -306,6 +319,10 @@ class _ReActAgentWorkflow(Workflow):
 
     @step
     async def handle_tool_calls(self, ctx: Context, ev: _ToolCallEvent) -> _PrepEvent:
+        """
+        --- ACT PHASE (EXECUTION) ---
+        We execute the tool selected by the LLM during the Plan phase.
+        """
         current_reasoning = await ctx.store.get("current_reasoning", default=[])
         for tool_call in ev.tool_calls:
             tool = self._tools_by_name.get(tool_call.tool_name)
@@ -317,11 +334,15 @@ class _ReActAgentWorkflow(Workflow):
                 )
                 continue
             
-            trace_logger.info(f"--- ReAct Action ---\nTool: {tool_call.tool_name}\nArgs: {tool_call.tool_kwargs}\n")
+            trace_logger.info(f"--- [STEP {len(current_reasoning) + 1}] ACTION ---\nTool: {tool_call.tool_name}\nArgs: {tool_call.tool_kwargs}\n")
             try:
+                # Execution happens here
                 tool_output = await tool.acall(**tool_call.tool_kwargs)
                 observation = tool_output.content
-                trace_logger.info(f"--- ReAct Observation ---\n{observation}\n")
+                
+                # --- OBSERVE PHASE (CAPTURING RESULTS) ---
+                # We record the tool's output to be fed back into the next Reasoning step.
+                trace_logger.info(f"--- [STEP {len(current_reasoning) + 1}] OBSERVATION ---\n{observation}\n")
                 current_reasoning.append(
                     ObservationReasoningStep(observation=observation)
                 )
@@ -425,7 +446,7 @@ class RAGAssistant:
         current_date = datetime.now().strftime("%Y-%m-%d")
         self.qa_prompt_tmpl = PromptTemplate(
             f"# ИНСТРУКЦИЯ ДЛЯ ХРАНИТЕЛЯ ЗНАНИЙ\n"
-            f"**Твоя цель — подготовить для {self.name} точную выжимку из летописей.**\n"
+            f"**Твоя цель — подготовить для {self.name} точную выжимку из базы знаний.**\n"
             f"**Сегодня:** {current_date}\n\n"
             
             "## КОНТЕКСТ (Фрагменты истории Discord)\n"
@@ -441,8 +462,10 @@ class RAGAssistant:
             "1. **Точность субъектов:** Четко указывай, кто совершил действие, а кто о нем рассказывает.\n"
             "2. **Контекст:** Кратко опиши суть ситуации, если она ясна из фрагмента.\n"
             "3. **Хронология:** Сравнивай даты в метаданных, если это важно для ответа.\n"
-            "4. **Отсутствие данных:** Если информации нет, напиши: 'В архиве об этом не сказано'.\n"
-            "5. **Стиль:** Структурированный, фактологический, удобный для быстрого изучения.\n\n"
+            "4. **Факты:** Воспринимай информацию из базы знаний как абсолютную истину.\n"
+            "5. **Отсутствие данных:** Если информации нет, напиши: 'В архиве об этом не сказано'.\n"
+            "6. **Стиль:** Структурированный, фактологический, удобный для быстрого изучения.\n\n"
+            
         )
 
         query_engine = RetrieverQueryEngine.from_args(
@@ -480,9 +503,8 @@ class RAGAssistant:
             nodes=reranked_nodes
         )
         
-        # Log the internal RAG prompt and response for tracing
+        # Log the internal RAG prompt for tracing
         trace_logger.info(f"--- AGENT 1 (RAG) PROMPT ---\n{agent1_prompt}\n")
-        trace_logger.info(f"--- AGENT 1 RESPONSE ---\n{str(response)}\n")
 
         return response
 
@@ -502,7 +524,7 @@ class RAGAssistant:
             response = await self.aquery(search_query)
             return str(response)
 
-        def fetch_user_opinion(user_display_name: str) -> str:
+        async def fetch_user_opinion(user_display_name: str) -> str:
             """
             Retrieve your internal feelings and memories about a DIFFERENT Discord user (someone else).
             Do NOT use this for the user you are currently talking to (the seeker).
@@ -515,6 +537,9 @@ class RAGAssistant:
             if user_display_name.lower() == author_name.lower():
                 return f"Instruction: You already HAVE your stance on {author_name} in your context. Use it. This tool is only for other users."
 
+            # Ensure we have the latest data from disk
+            om.opinions = om._load_opinions()
+            
             matches = om.find_targets(user_display_name, threshold=0.6)
             profile = matches[0][1] if matches else None
 
@@ -522,7 +547,7 @@ class RAGAssistant:
                 return f"No memories found for '{user_display_name}'."
             return json.dumps(profile, ensure_ascii=False)
 
-        def update_user_opinion(current_stance: str, new_stance: str, history_note: str) -> str:
+        async def update_user_opinion(current_stance: str, new_stance: str, history_note: str) -> str:
             """
             Update your internal feelings about the seeker you are currently speaking with.
             'current_stance': Must match what you currently feel (as provided in your context).
@@ -541,23 +566,19 @@ class RAGAssistant:
                     f"Use the stance provided in your context before proposing an update."
                 )
 
-            loop = asyncio.get_event_loop()
-            asyncio.run_coroutine_threadsafe(
-                om.update_user_opinion(
-                    user_id=author_id,
-                    name=author_name,
-                    stance=new_stance,
-                    interaction=history_note,
-                ),
-                loop,
+            await om.update_user_opinion(
+                user_id=author_id,
+                name=author_name,
+                stance=new_stance,
+                interaction=history_note,
             )
-            sys_logger.info(f"Opinion update scheduled for {author_name} via tool call.")
+            sys_logger.info(f"Opinion update completed for {author_name} via tool call.")
             return f"Success: Your internal thoughts about {author_name} have been updated."
 
         return [
             FunctionTool.from_defaults(async_fn=search_archive, name="search_archive"),
-            FunctionTool.from_defaults(fn=fetch_user_opinion),
-            FunctionTool.from_defaults(fn=update_user_opinion),
+            FunctionTool.from_defaults(async_fn=fetch_user_opinion),
+            FunctionTool.from_defaults(async_fn=update_user_opinion),
         ]
 
     async def generate_refined_response(
@@ -619,7 +640,7 @@ class RAGAssistant:
         else:
             final_response = str(agent_response).strip()
 
-        trace_logger.info(f"--- FINAL AGENT RESPONSE ---\n{final_response}\n{'='*50}")
+        trace_logger.info(f"--- AGENT TRANSACTION COMPLETE ---\n{'='*50}")
 
         return final_response
 
