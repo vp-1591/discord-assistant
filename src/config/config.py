@@ -1,0 +1,32 @@
+import os
+from llama_index.core import Settings
+from llama_index.embeddings.ollama import OllamaEmbedding
+from llama_index.llms.ollama import Ollama
+
+# --- FILE PATHS ---
+PERSIST_DIR = "./llama_index_storage"
+SUMMARIES_PATH = "cache/summaries.json"
+HISTORY_PATH = "cache/history.json"
+OPINIONS_PATH = "cache/opinions.json"
+MESSAGES_DIR = "./messages_json"
+
+# --- CONFIG ---
+FORCE_REBUILD = False
+
+# --- LLAMA INDEX SETTINGS ---
+def configure_settings():
+    Settings.embed_model = OllamaEmbedding(
+        model_name="bge-m3", 
+        base_url="http://localhost:11434",
+        request_timeout=600.0,
+        keep_alive=0,
+    )
+
+    Settings.llm = Ollama(
+        model="qwen3:8b", 
+        request_timeout=300.0, 
+        keep_alive=0,
+        context_window=8192,
+        additional_kwargs={"stop": ["Observation:", "Observation\n"]},
+    )
+    Settings.embed_batch_size = 10

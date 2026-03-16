@@ -1,77 +1,49 @@
 import discord
 import os
-import json
 from dotenv import load_dotenv
-from export_chat import export_chat_to_json, resolve_mentions
+from src.data.export_chat import export_chat_to_json, resolve_mentions
 import asyncio
 
-from run_llama_index import RAGAssistant
-from logger_setup import sys_logger, chat_logger
-from opinion_manager import OpinionManager
+from src.core.run_llama_index import RAGAssistant
+from src.utils.logger_setup import sys_logger, chat_logger
+from src.data.opinion_manager import OpinionManager
+from src.data.history_manager import HistoryManager
+from src.config.config import SUMMARIES_PATH, HISTORY_PATH, FORCE_REBUILD, PERSIST_DIR
 
 load_dotenv()
 
 class aclient(discord.Client):
     def __init__(self):
         super().__init__(intents = discord.Intents.all())
-        self.synced = False 
         self.assistant = None
-        self._assistant_loading = False  # guard against concurrent on_ready calls during build
-        self.summaries_path = "cache/summaries.json"
-        self.history_path = "cache/history.json"
-        self.summaries = self._load_json(self.summaries_path)
-        self.history = self._load_json(self.history_path)
+        self._assistant_loading = False
+        self.history_manager = HistoryManager(SUMMARIES_PATH, HISTORY_PATH)
         self.opinions = OpinionManager()
-
-    def _load_json(self, path):
-        if os.path.exists(path):
-            with open(path, "r", encoding="utf-8") as f:
-                return json.load(f)
-        return {}
-
-    def _save_json(self, path, data):
-        os.makedirs("cache", exist_ok=True)
-        with open(path, "w", encoding="utf-8") as f:
-            json.dump(data, f, ensure_ascii=False, indent=4)
 
     async def setup_assistant(self):
         if self.assistant is None and not self._assistant_loading:
             self._assistant_loading = True
             try:
-                from run_llama_index import FORCE_REBUILD, PERSIST_DIR
-
                 id_map = {}
-                # Only scan the server if we are going to rebuild the index
                 if FORCE_REBUILD or not os.path.exists(PERSIST_DIR):
                     print("🤖 Rebuild required. Collecting latest names and roles...")
-                    # Map all users the bot can see
-                    for user in self.users:
-                        id_map[str(user.id)] = user.display_name
-
-                    # Map all roles and guild members
+                    for user in self.users: id_map[str(user.id)] = user.display_name
                     for guild in self.guilds:
-                        for role in guild.roles:
-                            id_map[str(role.id)] = role.name
-                        for member in guild.members:
-                            id_map[str(member.id)] = member.display_name
+                        for role in guild.roles: id_map[str(role.id)] = role.name
+                        for member in guild.members: id_map[str(member.id)] = member.display_name
                     print(f"✅ Map built with {len(id_map)} identities.")
                 else:
                     print("📦 Loading existing index (skipping identity scan).")
 
-                # Get the bot's nickname from the first guild (fallback to global name)
                 bot_name = self.guilds[0].me.display_name if self.guilds else self.user.display_name
-                print(f"🤖 Initializing RAG Assistant as '{bot_name}' (This may take a while if rebuilding)...")
+                print(f"🤖 Initializing RAG Assistant as '{bot_name}'...")
 
-                # Use to_thread to prevent blocking the heartbeat during heavy indexing
                 self.assistant = await asyncio.to_thread(
-                    RAGAssistant,
-                    id_map=id_map,
-                    name=bot_name,
-                    opinion_manager=self.opinions,
+                    RAGAssistant, id_map=id_map, name=bot_name, opinion_manager=self.opinions
                 )
-                print(f"✅ RAG Assistant ready as '{bot_name}'.")
+                print(f"✅ RAG Assistant ready.")
             finally:
-                self._assistant_loading = False  # always release the lock
+                self._assistant_loading = False
 
 self_id = 1208704829665447947
 client = aclient()
@@ -80,100 +52,68 @@ client = aclient()
 async def on_ready():
     sys_logger.info("Connecting...")
     await client.setup_assistant()
-    await client.wait_until_ready()
     sys_logger.info(f"Connected as {client.user}")
 
 @client.event
 async def on_message(message):
     if message.author.id == self_id or message.author.bot: return 
     
-    channel = message.channel
-
-    #if channel.id != 862031269844090880: return #restrict bot only to test channel
-
     # Check if bot is mentioned
     if client.user.mentioned_in(message):
-        # Extract query (remove mention)
-
         query = message.content.replace(f'<@{self_id}>', '').replace(f'<@!{self_id}>', '').strip()
         query = resolve_mentions(message, text=query)
-        if not query:
-            query = "Привет!" # Default query if just mention
+        if not query: query = "Привет!"
 
         sys_logger.info(f"Mentions detected. Query: {query}")
         
-        async with channel.typing():
-            channel_id = str(channel.id)
-            
-            # 1. Get recent interaction history (Internal preservation)
-            if channel_id not in client.history:
-                # Rely strictly on local history. Bootstrapping from Discord is removed.
-                sys_logger.info(f"Initialized empty local history for channel {channel_id}.")
-                client.history[channel_id] = []
-                client._save_json(client.history_path, client.history)
+        channel = message.channel
+        channel_id = str(channel.id)
 
-            previous_relevant = client.history.get(channel_id, [])
-            current_summary = client.summaries.get(channel_id)
+        async with channel.typing():
+            history = client.history_manager.get_history(channel_id)
+            summary = client.history_manager.get_summary(channel_id)
             
             try:
-                # 2. Agent 2: Synthesis via ReActAgent (opinion tools and RAG called on-demand)
-                user_name = message.author.display_name
-                user_id = message.author.id
                 bot_nickname = message.guild.me.display_name if message.guild else client.user.display_name
                 final_response = await client.assistant.generate_refined_response(
                     query_text=query,
-                    history=previous_relevant,
-                    summary=current_summary,
+                    history=history,
+                    summary=summary,
                     bot_name=bot_nickname,
-                    author_id=str(user_id),
-                    author_name=user_name,
+                    author_id=str(message.author.id),
+                    author_name=message.author.display_name,
                 )
             except Exception as e:
                 sys_logger.error(f"Error during RAG processing: {e}")
-                # Use a thematic error message
                 final_response = "⚠️ [System Error] Ошибка обработки запроса. Попробуйте позже."
 
-        # 4. Send response
-        sent_msg = await message.reply(final_response)
+        await message.reply(final_response)
 
-        # Add current transaction to internal history using server-specific nickname
-        # (bot_nickname is already defined above in our shared scope)
-        # Format user interaction
+        # Update history
         user_interaction = f"{message.author.display_name}: {query}"
-        # Format bot interaction
         bot_interaction = f"{bot_nickname}: {final_response}"
-        
         chat_logger.info(f"User [{user_interaction}] -> Bot [{bot_interaction}]")
         
-        # Truncate strings before adding to history to prevent context bloat
-        TRUNCATE_LIMIT = 700
-        truncated_user = user_interaction if len(user_interaction) <= TRUNCATE_LIMIT else user_interaction[:TRUNCATE_LIMIT] + " [...]"
-        truncated_bot = bot_interaction if len(bot_interaction) <= TRUNCATE_LIMIT else bot_interaction[:TRUNCATE_LIMIT] + " [...]"
-
-        # Add current transaction to internal history
-        client.history[channel_id] = previous_relevant + [truncated_user, truncated_bot]
+        truncated_user = HistoryManager.truncate_string(user_interaction)
+        truncated_bot = HistoryManager.truncate_string(bot_interaction)
+        client.history_manager.add_to_history(channel_id, [truncated_user, truncated_bot])
         
-        if len(client.history[channel_id]) >= 12:
-            # We compress the 8 oldest messages and keep the 4 newest
-            to_summarize = client.history[channel_id][:8]
-            client.history[channel_id] = client.history[channel_id][8:]
-            
-            sys_logger.info(f"Post-response: Summarizing {len(to_summarize)} messages for channel {channel_id}...")
+        # Summarization logic
+        to_summarize = client.history_manager.truncate_history(channel_id)
+        if to_summarize:
+            sys_logger.info(f"Post-response: Summarizing for channel {channel_id}...")
             try:
-                new_summary = await client.assistant.generate_summary(current_summary, to_summarize)
-                client.summaries[channel_id] = new_summary
-                client._save_json(client.summaries_path, client.summaries)
+                new_summary = await client.assistant.generate_summary(summary, to_summarize)
+                client.history_manager.update_summary(channel_id, new_summary)
                 sys_logger.info(f"Summary updated for {channel_id}")
             except Exception as e:
                 sys_logger.warning(f"Failed to update summary: {e}")
-            
-        client._save_json(client.history_path, client.history)
         return
 
-    # if admin(Itadara) writes !export
+    # Export command
     if message.content.startswith("!export") and str(message.author.id) == "470892009440149506": 
         sys_logger.info("Exporting chat...")
-        await export_chat_to_json(channel, skip_id=message.id)
+        await export_chat_to_json(message.channel, skip_id=message.id)
         return
 
 client.run(os.getenv('TOKEN'))

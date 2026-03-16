@@ -48,7 +48,7 @@ Create a `.env` file in the root directory:
 TOKEN=your_discord_bot_token_here
 ```
 
-Adjust configuration in `run_llama_index.py` if your Ollama instance is not at `localhost:11434`.
+Adjust settings in `config.py` (e.g., LlamaIndex models, file paths, or Ollama URL).
 
 ### 4. Usage
 
@@ -56,7 +56,7 @@ Adjust configuration in `run_llama_index.py` if your Ollama instance is not at `
 1.  Start the bot: `python main.py` or use `start.bat`
 2.  In Discord, use the command `!export` in the channel you want the bot to "learn" from. (Note: Only configured admin IDs can currently trigger this).
 3.  The bot will save the history to `messages_json/`.
-4.  Restart the bot or set `FORCE_REBUILD = True` in `run_llama_index.py` to index the new data.
+4.  Restart the bot or set `FORCE_REBUILD = True` in `config.py` to index the new data.
 
 #### Interacting
 Simply mention the bot in any channel it has access to:
@@ -64,10 +64,15 @@ Simply mention the bot in any channel it has access to:
 
 ## 📁 Project Structure
 
--   `main.py`: Main bot logic and Discord event handling.
--   `run_llama_index.py`: RAG Assistant implementation (indexing, retrieval, synthesis, social memory evaluation).
--   `opinion_manager.py`: Logic for storing and retrieving user interaction profiles via fuzzy search.
--   `export_chat.py`: Utility module for exporting Discord history to JSON.
--   `messages_json/`: Storage for exported chat files.
--   `llama_index_storage/`: Vector database and index persistence.
--   `cache/`: Local logs, conversation summaries, and user opinions (`opinions.json`).
+-   `main.py`: Entry point and Discord event handling.
+-   `src/core/run_llama_index.py`: RAG Assistant orchestrator.
+-   `src/config/config.py`: Centralized LlamaIndex and file configuration.
+-   `src/config/prompts.py`: System prompts and persona templates.
+-   `src/data/ingestion.py`: Data cleaning and LlamaIndex ingestion logic.
+-   `src/core/agent_core.py`: Custom ReAct agent workflow.
+-   `src/data/history_manager.py`: Manages rolling channel history and summaries.
+-   `src/data/opinion_manager.py`: Fuzzy-matching logic for user stances.
+-   `src/data/export_chat.py`: Utility for exporting Discord history.
+-   `messages_json/`: Exported chat JSON files.
+-   `llama_index_storage/`: Vector database persistence.
+-   `cache/`: Local summaries, history, and user opinions.

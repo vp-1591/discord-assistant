@@ -1,4 +1,7 @@
-Make the codebase SoC compliant by separating retrieval, agents, and memory logic into dedicated modules.
 Implement Users Aliases system. (We need some kind of dictionary that will translate nicknames from the database(and other possible aliases) (llama_index_storage) to IDs and from IDs to the current nickname)
 Discord message response context for LLM(how to implement without duplicating/overloading context?)
-Improve Agent1 summarization to explain in less sentences so that Search results may be saved and reused(mabe make it think before actual summarization?)
+Improve Agent1 summarization to explain in less sentences so that Search results may be saved and reused(maybe make it think before actual summarization?)
+Fix timeout when multiple messages are sent (3 messages caused 3 timeouts)
+Fix opinion fetcher being lower priority than rag search
+Fix multiple messages rewriting message history
+Summarizing agent overwrites facts with each summary
