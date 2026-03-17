@@ -1,7 +1,8 @@
-Implement Users Aliases system. (We need some kind of dictionary that will translate nicknames from the database(and other possible aliases) (llama_index_storage) to IDs and from IDs to the current nickname)
-Discord message response context for LLM(how to implement without duplicating/overloading context?)
-Improve Agent1 summarization to explain in less sentences so that Search results may be saved and reused(maybe make it think before actual summarization?)
+Search results must be saved and reused
 Fix timeout when multiple messages are sent (3 messages caused 3 timeouts)
 Fix opinion fetcher being lower priority than rag search
 Fix multiple messages rewriting message history
 Summarizing agent overwrites facts with each summary
+Implement Users Aliases system. (We need some kind of dictionary that will translate nicknames from the database(and other possible aliases) (llama_index_storage) to IDs and from IDs to the current nickname)
+Discord message response context for LLM(how to implement without duplicating/overloading context?)
+Production ready RAG(using LLM summarized chunks and aggregation tools)

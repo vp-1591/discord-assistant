@@ -1,5 +1,6 @@
 import json
 import asyncio
+import re
 from typing import List, Optional, TYPE_CHECKING
 from datetime import datetime
 
@@ -95,8 +96,15 @@ class RAGAssistant:
         om = self.opinion_manager
 
         async def search_archive(search_query: str) -> str:
-            response = await self.aquery(search_query)
-            return str(response)
+            response_str = str(await self.aquery(search_query))
+            
+            # Extract and log internal reasoning before stripping
+            thoughts = re.findall(r"<thought>(.*?)</thought>", response_str, flags=re.DOTALL)
+            for i, thought in enumerate(thoughts):
+                trace_logger.info(f"--- AGENT 1 INTERNAL THOUGHT [{i+1}] ---\n{thought.strip()}\n")
+            
+            # Remove <thought> blocks to provide only the relevant summary to Agent 2
+            return re.sub(r"<thought>.*?</thought>", "", response_str, flags=re.DOTALL).strip()
 
         async def fetch_user_opinion(user_display_name: str) -> str:
             if om is None: return "Opinion system is not available."
