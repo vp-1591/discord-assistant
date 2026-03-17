@@ -17,14 +17,16 @@ if TYPE_CHECKING:
     from src.data.opinion_manager import OpinionManager
 
 from src.utils.logger_setup import sys_logger, trace_logger
-from src.config.config import configure_settings
+from src.config.config import configure_settings, RAG_CACHE_PATH
 from src.config.prompts import (
     get_qa_prompt_tmpl, SUMMARY_PROMPT_TEMPLATE, 
     get_persona_prompt, get_system_prompt,
-    SEARCH_ARCHIVE_DESC, FETCH_USER_OPINION_DESC, UPDATE_USER_OPINION_DESC
+    SEARCH_ARCHIVE_DESC, FETCH_USER_OPINION_DESC, UPDATE_USER_OPINION_DESC,
+    PEEK_RECENT_SEARCHES_DESC, PULL_CACHED_RESULT_DESC
 )
 from src.data.ingestion import load_or_build_index
 from src.core.agent_core import ReActAgentWorkflow
+from src.core.rag_cache import RAGCache
 
 # Initialize global settings
 configure_settings()
@@ -34,6 +36,7 @@ class RAGAssistant:
         self.id_map = id_map or {}
         self.name = name
         self.opinion_manager = opinion_manager
+        self.rag_cache = RAGCache(persist_path=RAG_CACHE_PATH, capacity=5)
         self.index, self._nodes = load_or_build_index(self.id_map)
         self.fusion_retriever, self.reranker, self.query_engine = self._setup_query_engine()
 
@@ -104,7 +107,18 @@ class RAGAssistant:
                 trace_logger.info(f"--- AGENT 1 INTERNAL THOUGHT [{i+1}] ---\n{thought.strip()}\n")
             
             # Remove <thought> blocks to provide only the relevant summary to Agent 2
-            return re.sub(r"<thought>.*?</thought>", "", response_str, flags=re.DOTALL).strip()
+            clean_response = re.sub(r"<thought>.*?</thought>", "", response_str, flags=re.DOTALL).strip()
+            
+            # Store in cache
+            self.rag_cache.store(search_query, clean_response)
+            
+            return clean_response
+
+        async def peek_recent_searches() -> list:
+            return self.rag_cache.get_recent_queries()
+
+        async def pull_cached_result(result_id: int) -> str:
+            return self.rag_cache.get_result_by_id(result_id)
 
         async def fetch_user_opinion(user_display_name: str) -> str:
             if om is None: return "Opinion system is not available."
@@ -132,6 +146,16 @@ class RAGAssistant:
                 async_fn=search_archive, 
                 name="search_archive",
                 description=SEARCH_ARCHIVE_DESC
+            ),
+            FunctionTool.from_defaults(
+                async_fn=peek_recent_searches,
+                name="peek_recent_searches",
+                description=PEEK_RECENT_SEARCHES_DESC
+            ),
+            FunctionTool.from_defaults(
+                async_fn=pull_cached_result,
+                name="pull_cached_result",
+                description=PULL_CACHED_RESULT_DESC
             ),
             FunctionTool.from_defaults(
                 async_fn=fetch_user_opinion,

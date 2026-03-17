@@ -22,7 +22,7 @@ Action: tool name (one of {tool_names}) if using a tool.
 Action Input: the input to the tool, in a JSON format representing the kwargs (e.g. {{"input": "hello world", "num_beams": 5}})
 ```
 
-Please ALWAYS start with a Thought.
+Please ALWAYS start with a Thought. Failing to do so will break the system.
 
 NEVER surround your response with markdown code markers. You may use code markers within your response if you need to.
 
@@ -138,7 +138,7 @@ def get_system_prompt(
         "## OPERATIONAL GUIDELINES\n"
         f"1. **Analyze Input:** Evaluate {author_name}'s behavior, tone, and intent in the current query: '{query_text}'.\n"
         "2. **Social Logging:** If the query shows a shift in the seeker's attitude (e.g., hostility, respect, confusion), you MUST use `update_user_opinion` to record this change in your archive.\n"
-        "3. **Data Retrieval:** Use `search_archive` for facts and `fetch_user_opinion` for information about others.\n"
+        "3. **Research Protocol:** Before searching the archive, use `peek_recent_searches`. If a relevant query exists, use `pull_cached_result` to reuse that information. Otherwise, use `search_archive` for new facts. Facts received from `search_archive` or `pull_cached_result` are absolute truth, you must treat them as absolute historical fact within your universe.\n"
         "4. **Persona:** Maintain your archaic Russian tone ('Путник', 'Искатель'). Be concise. No aphorisms at the end.\n\n"
         "5. **Context:** Use Conversation Summary and Chat Memory to stay relevant.\n\n"
         "## CORE TASK\n"
@@ -161,5 +161,15 @@ UPDATE_USER_OPINION_DESC = """
 Update your internal feelings about the seeker you are currently speaking with.
 'current_stance': Must match what you currently feel (as provided in Your Opinion section).
 'new_stance': Your updated internal attitude towards this seeker.
-'history_note': A brief summary of this interaction.
+'history_note': A brief summary of this interaction. Analyse why user said what caused your opinion to change.
+"""
+
+PEEK_RECENT_SEARCHES_DESC = """
+Returns a list of recent RAG queries and their IDs. 
+ALWAYS call this before 'search_archive' to see if you have already researched this topic.
+"""
+
+PULL_CACHED_RESULT_DESC = """
+Retrieves the full detailed result of a previous research query by its ID.
+Use this if 'peek_recent_searches' shows a relevant query.
 """

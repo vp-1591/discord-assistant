@@ -1,4 +1,3 @@
-Search results must be saved and reused
 Fix timeout when multiple messages are sent (3 messages caused 3 timeouts)
 Fix opinion fetcher being lower priority than rag search
 Fix multiple messages rewriting message history

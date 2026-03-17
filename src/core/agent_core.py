@@ -88,6 +88,12 @@ class ReActAgentWorkflow(Workflow):
         response = await self.llm.achat(chat_history)
         raw_content = response.message.content
         
+        # Robustness fix: LlamaIndex ReAct parser MUST have a "Thought:" line.
+        # If the LLM skips it and jumps straight to "Action:", we prepend a default thought.
+        if raw_content.strip().startswith("Action:") and "Thought:" not in raw_content:
+            raw_content = f"Thought: I need to use a tool to fulfill the request.\n{raw_content}"
+            trace_logger.info(f"--- [ROBUSTNESS FIX] PREPENDED MISSING THOUGHT ---")
+
         step_idx = len(current_reasoning) + 1
         trace_logger.info(f"--- [STEP {step_idx}] LLM OUTPUT ---\n{raw_content}\n")
         

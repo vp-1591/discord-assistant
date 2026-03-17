@@ -9,6 +9,7 @@ SUMMARIES_PATH = "cache/summaries.json"
 HISTORY_PATH = "cache/history.json"
 OPINIONS_PATH = "cache/opinions.json"
 MESSAGES_DIR = "./messages_json"
+RAG_CACHE_PATH = "cache/rag_cache.json"
 
 # --- CONFIG ---
 FORCE_REBUILD = False
