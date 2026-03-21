@@ -19,6 +19,8 @@ class aclient(discord.Client):
         self._assistant_loading = False
         self.history_manager = HistoryManager(SUMMARIES_PATH, HISTORY_PATH)
         self.opinions = OpinionManager()
+        self.message_queue = asyncio.Queue()
+        self.processing_task = None
 
     async def setup_assistant(self):
         if self.assistant is None and not self._assistant_loading:
@@ -42,24 +44,25 @@ class aclient(discord.Client):
                     RAGAssistant, id_map=id_map, name=bot_name, opinion_manager=self.opinions
                 )
                 print(f"✅ RAG Assistant ready.")
+                
+                if self.processing_task is None:
+                    self.processing_task = asyncio.create_task(self.process_message_queue())
+                    print("✅ Message queue processor started.")
             finally:
                 self._assistant_loading = False
 
-self_id = 1208704829665447947
-client = aclient()
+    async def process_message_queue(self):
+        """Continuously pulls messages from the queue and processes them sequentially."""
+        while True:
+            message = await self.message_queue.get()
+            try:
+                await self._handle_message_internal(message)
+            except Exception as e:
+                sys_logger.error(f"Error processing message from queue: {e}")
+            finally:
+                self.message_queue.task_done()
 
-@client.event
-async def on_ready():
-    sys_logger.info("Connecting...")
-    await client.setup_assistant()
-    sys_logger.info(f"Connected as {client.user}")
-
-@client.event
-async def on_message(message):
-    if message.author.id == self_id or message.author.bot: return 
-    
-    # Check if bot is mentioned
-    if client.user.mentioned_in(message):
+    async def _handle_message_internal(self, message):
         query = message.content.replace(f'<@{self_id}>', '').replace(f'<@!{self_id}>', '').strip()
         query = resolve_mentions(message, text=query)
         if not query: query = "Привет!"
@@ -70,12 +73,12 @@ async def on_message(message):
         channel_id = str(channel.id)
 
         async with channel.typing():
-            history = client.history_manager.get_history(channel_id)
-            summary = client.history_manager.get_summary(channel_id)
+            history = self.history_manager.get_history(channel_id)
+            summary = self.history_manager.get_summary(channel_id)
             
             try:
-                bot_nickname = message.guild.me.display_name if message.guild else client.user.display_name
-                final_response = await client.assistant.generate_refined_response(
+                bot_nickname = message.guild.me.display_name if message.guild else self.user.display_name
+                final_response = await self.assistant.generate_refined_response(
                     query_text=query,
                     history=history,
                     summary=summary,
@@ -96,24 +99,41 @@ async def on_message(message):
         
         truncated_user = HistoryManager.truncate_string(user_interaction)
         truncated_bot = HistoryManager.truncate_string(bot_interaction)
-        client.history_manager.add_to_history(channel_id, [truncated_user, truncated_bot])
+        self.history_manager.add_to_history(channel_id, [truncated_user, truncated_bot])
         
         # Summarization logic
-        to_summarize = client.history_manager.truncate_history(channel_id)
+        to_summarize = self.history_manager.truncate_history(channel_id)
         if to_summarize:
             sys_logger.info(f"Post-response: Summarizing for channel {channel_id}...")
             try:
-                new_summary = await client.assistant.generate_summary(summary, to_summarize)
-                client.history_manager.update_summary(channel_id, new_summary)
+                new_summary = await self.assistant.generate_summary(summary, to_summarize)
+                self.history_manager.update_summary(channel_id, new_summary)
                 sys_logger.info(f"Summary updated for {channel_id}")
             except Exception as e:
                 sys_logger.warning(f"Failed to update summary: {e}")
-        return
+
+self_id = 1208704829665447947
+client = aclient()
+
+@client.event
+async def on_ready():
+    sys_logger.info("Connecting...")
+    await client.setup_assistant()
+    sys_logger.info(f"Connected as {client.user}")
+
+@client.event
+async def on_message(message):
+    if message.author.id == self_id or message.author.bot: return 
 
     # Export command
     if message.content.startswith("!export") and str(message.author.id) == "470892009440149506": 
         sys_logger.info("Exporting chat...")
         await export_chat_to_json(message.channel, skip_id=message.id)
         return
+    
+    # Check if bot is mentioned
+    if client.user.mentioned_in(message):
+        await client.message_queue.put(message)
+        sys_logger.info(f"Message added to queue. Queue size: {client.message_queue.qsize()}")
 
 client.run(os.getenv('TOKEN'))
