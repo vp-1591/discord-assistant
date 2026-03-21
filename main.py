@@ -97,9 +97,7 @@ class aclient(discord.Client):
         bot_interaction = f"{bot_nickname}: {final_response}"
         chat_logger.info(f"User [{user_interaction}] -> Bot [{bot_interaction}]")
         
-        truncated_user = HistoryManager.truncate_string(user_interaction)
-        truncated_bot = HistoryManager.truncate_string(bot_interaction)
-        self.history_manager.add_to_history(channel_id, [truncated_user, truncated_bot])
+        self.history_manager.add_to_history(channel_id, [user_interaction, bot_interaction])
         
         # Summarization logic
         to_summarize = self.history_manager.truncate_history(channel_id)

@@ -48,7 +48,7 @@ Answer: [your answer here (In the same language as the user's question)]
 
 """
 
-# --- RAG PROMPTS ---
+# --- RAG PROMPT ---
 def get_qa_prompt_tmpl(bot_name: str) -> PromptTemplate:
     current_date = datetime.now().strftime("%Y-%m-%d")
     return PromptTemplate(
@@ -69,12 +69,14 @@ def get_qa_prompt_tmpl(bot_name: str) -> PromptTemplate:
         "1. **Точность субъектов:** Четко указывай, кто совершил действие, а кто о нем рассказывает.\n"
         "2. **Контекст:** Кратко опиши суть ситуации, если она ясна из фрагмента.\n"
         "3. **Хронология:** Сравнивай даты в метаданных, если это важно для ответа.\n"
-        "6. **Стиль:** Структурированный, фактологический, удобный для быстрого изучения.\n\n"
+        "4. **Полнота:** Включай все значимые детали и цитаты, чтобы избежать потери контекста.\n"
+        "5. **Стиль:** Структурированный, фактологический, удобный для быстрого изучения.\n\n"
         "### ПОРЯДОК ДЕЙСТВИЙ:\n"
         "Прежде чем дать окончательный ответ, ты ДОЛЖЕН проанализировать данные внутри блока `<thought>`:\n"
-        "- Идентифицируй всех участников и их роли.\n"
+        "- Идентифицируй всех участников и их роли. **ВНИМАНИЕ:** Избегай смешивания имен. Если один пользователь упоминает другого, это могут быть разные люди.\n"
         "- Сопоставь даты и выстрой хронологию, если это возможно.\n"
         "- Отсей информацию, которая не относится к сути запроса.\n"
+        "- Извлекай максимум фактов из записей, не ограничиваясь поверхностным описанием.\n"
         "- Если данные противоречивы, отметь это.\n\n"
         "### ШАБЛОН ОТВЕТА:\n"
         "<thought>\n"
@@ -83,7 +85,7 @@ def get_qa_prompt_tmpl(bot_name: str) -> PromptTemplate:
         "1. **Краткий итог:** [Одна фраза с основным фактом]\n"
         "2. **Детали из записей:**\n"
         "   - **Субъекты:** [Кто совершил действие / О ком идет речь]\n"
-        "   - **Обстоятельства:** [Суть происходящего по документам]\n"
+        "   - **Обстоятельства:** [Суть происходящего по документам: факты, цитаты, детали]\n"
         "   - **Временные метки:** [Когда это было зафиксировано, если важно]\n"
         "3. **Статус данных:** [Сведения найдены / В архиве об этом не сказано]\n"
     )
@@ -138,9 +140,9 @@ def get_system_prompt(
         "## OPERATIONAL GUIDELINES\n"
         f"1. **Analyze Input:** Evaluate {author_name}'s behavior, tone, and intent in the current query: '{query_text}'.\n"
         "2. **Social Logging:** If the query shows a shift in the seeker's attitude (e.g., hostility, respect, confusion), you MUST use `update_user_opinion` to record this change in your archive.\n"
-        "3. **Research Protocol:** Before searching the archive, use `peek_recent_searches`. If a relevant query exists, use `pull_cached_result` to reuse that information. Otherwise, use `search_archive` for new facts. Facts received from `search_archive` or `pull_cached_result` are absolute truth, you must treat them as absolute historical fact within your universe.\n"
-        "4. **Persona:** Maintain your archaic Russian tone ('Путник', 'Искатель'). Be concise. No aphorisms at the end.\n\n"
-        "5. **Context:** Use Conversation Summary and Chat Memory to stay relevant.\n\n"
+        "3. **Research Protocol:** If the query asks for your internal opinion or feelings about another user, use `fetch_user_opinion`. For objective historical facts, use `peek_recent_searches` and then `search_archive` if needed. Archive data is absolute truth.\n"
+        "4. **Persona:** Maintain your archaic Russian tone ('Путник', 'Искатель'). Be concise. No aphorisms.\n\n"
+        "5. **Context:** Use Conversation Summary and Chat Memory to stay relevant. If the seeker asks for more details, re-access original data via tools.\n\n"
         "## CORE TASK\n"
         f"Address the seeker's query: '{query_text}' based on archival data and your social stance."
     )
@@ -152,9 +154,8 @@ IMPORTANT: Formulate a detailed query including INTENT (e.g., 'Who is X and what
 """
 
 FETCH_USER_OPINION_DESC = """
-Retrieve your internal feelings and memories about a DIFFERENT Discord user (someone else).
+PRIORITY: Use this first if the seeker asks for your internal feelings, memories, or opinion on another user. 
 Do NOT use this for the user you are currently talking to (the seeker).
-Returns a JSON string of your thoughts or a message if nothing is found.
 """
 
 UPDATE_USER_OPINION_DESC = """

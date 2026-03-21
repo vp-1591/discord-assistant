@@ -61,9 +61,3 @@ class HistoryManager:
 
     def save_summaries(self):
         self._save_json(self.summaries_path, self.summaries)
-
-    @staticmethod
-    def truncate_string(text: str, limit: int = 700) -> str:
-        if len(text) <= limit:
-            return text
-        return text[:limit] + " [...]"
