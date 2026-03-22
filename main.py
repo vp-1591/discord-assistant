@@ -46,8 +46,7 @@ class aclient(discord.Client):
                 print(f"✅ RAG Assistant ready.")
                 
                 if self.processing_task is None:
-                    self.processing_task = asyncio.create_task(self.process_message_queue())
-                    print("✅ Message queue processor started.")
+                    self.processing_task = asyncio.create_task(self.process_message_queue())# Message queue processor
             finally:
                 self._assistant_loading = False
 
@@ -76,6 +75,15 @@ class aclient(discord.Client):
             history = self.history_manager.get_history(channel_id)
             summary = self.history_manager.get_summary(channel_id)
             
+            replied_to_msg = None
+            if message.reference and message.reference.message_id:
+                try:
+                    ref_msg = await channel.fetch_message(message.reference.message_id)
+                    replied_to_msg = f"{ref_msg.author.display_name}: {ref_msg.content}"
+                    sys_logger.info(f"Replied-to message found: {replied_to_msg}")
+                except Exception as e:
+                    sys_logger.warning(f"Could not fetch referenced message: {e}")
+
             try:
                 bot_nickname = message.guild.me.display_name if message.guild else self.user.display_name
                 final_response = await self.assistant.generate_refined_response(
@@ -85,6 +93,7 @@ class aclient(discord.Client):
                     bot_name=bot_nickname,
                     author_id=str(message.author.id),
                     author_name=message.author.display_name,
+                    replied_to_msg=replied_to_msg
                 )
             except Exception as e:
                 sys_logger.error(f"Error during RAG processing: {e}")

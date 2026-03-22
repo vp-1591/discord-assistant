@@ -1,3 +1,2 @@
 Implement Users Aliases system. (We need some kind of dictionary that will translate nicknames from the database(and other possible aliases) (llama_index_storage) to IDs and from IDs to the current nickname)
-Discord message response context for LLM(how to implement without duplicating/overloading context?)
 Production ready RAG(using LLM summarized chunks and aggregation tools)

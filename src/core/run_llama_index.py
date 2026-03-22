@@ -169,7 +169,8 @@ class RAGAssistant:
 
     async def generate_refined_response(
         self, query_text: str, history: List[str], summary: str = None, 
-        bot_name: str = None, author_id: str = "", author_name: str = ""
+        bot_name: str = None, author_id: str = "", author_name: str = "",
+        replied_to_msg: str = None
     ):
         history_str = "\n".join(history)
         persona = get_persona_prompt(bot_name or self.name)
@@ -186,7 +187,8 @@ class RAGAssistant:
             author_profile=author_profile,
             summary=summary,
             history_str=history_str,
-            query_text=query_text
+            query_text=query_text,
+            replied_to_msg=replied_to_msg
         )
 
         tools = self._build_tools(author_id=author_id, author_name=author_name)

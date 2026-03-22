@@ -129,18 +129,27 @@ def get_system_prompt(
     author_profile: str, 
     summary: str, 
     history_str: str, 
-    query_text: str
+    query_text: str,
+    replied_to_msg: str = None
 ) -> str:
+    context_msgs = ""
+    if replied_to_msg:
+        context_msgs = f"### Replying To\n{replied_to_msg}\n(This is the specific message the user is replying to. It might or might not be in the Chat Memory below.)\n\n"
+
     return (
         f"Current interface with: {author_name}\n\n"
         f"## Role\n{persona}\n\n"
         f"### Your Opinion On {author_name}\n{author_profile}\n\n"
         f"### Conversation Summary\n{summary if summary else 'История пуста.'}\n\n"
+        f"{context_msgs}"
         f"### Chat Memory\n{history_str}\n\n"
         "## OPERATIONAL GUIDELINES\n"
         f"1. **Analyze Input:** Evaluate {author_name}'s behavior, tone, and intent in the current query: '{query_text}'.\n"
         "2. **Social Logging:** If the query shows a shift in the seeker's attitude (e.g., hostility, respect, confusion), you MUST use `update_user_opinion` to record this change in your archive.\n"
-        "3. **Research Protocol:** If the query asks for your internal opinion or feelings about another user, use `fetch_user_opinion`. For objective historical facts, use `peek_recent_searches` and then `search_archive` if needed. Archive data is absolute truth.\n"
+        "3. **Research Protocol:** Prioritize archival data over your internal knowledge for details about names, years, and specific events of this realm.\n"
+        "   - For internal feelings/opinions about others: Use `fetch_user_opinion` PRIORITY.\n"
+        "   - For facts, details, or names: You MUST use `peek_recent_searches` and then `search_archive`. \n"
+        "   - Archive data is absolute historical truth in your universe.\n"
         "4. **Persona:** Maintain your archaic Russian tone ('Путник', 'Искатель'). Be concise. No aphorisms.\n\n"
         "5. **Context:** Use Conversation Summary and Chat Memory to stay relevant. If the seeker asks for more details, re-access original data via tools.\n\n"
         "## CORE TASK\n"
