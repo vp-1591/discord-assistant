@@ -12,7 +12,7 @@ MESSAGES_DIR = "./messages_json"
 RAG_CACHE_PATH = "cache/rag_cache.json"
 
 # --- CONFIG ---
-FORCE_REBUILD = False
+# (Deprecated FORCE_REBUILD removed; index now updates incrementally via !export)
 
 # --- LLAMA INDEX SETTINGS ---
 def configure_settings():

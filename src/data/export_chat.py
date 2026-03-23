@@ -21,37 +21,58 @@ def resolve_mentions(message, text=None):
 
 async def export_chat_to_json(channel, skip_id=None):
     """
-    Fetches message history from a Discord channel and exports it to a JSON file.
+    Fetches message history from a Discord channel incrementally and exports it to a JSON file.
+    Saves in chunks to survive interruptions.
     
-    args:
-        channel: The Discord channel object (must have history attribute).
-        skip_id: The ID of a message to exclude from the export.
+    Returns:
+        int: The number of new messages successfully exported.
     """
     print(f"Starting JSON export from channel: {channel.name} ({channel.id})...")
     
-    messages_data = []
+    os.makedirs("messages_json", exist_ok=True)
+    output_filename = os.path.join("messages_json", f"{channel.name}.json")
     
+    existing_messages = []
+    last_message_obj = None
+    
+    # Check for existing export to find the last message ID
+    if os.path.exists(output_filename):
+        try:
+            with open(output_filename, 'r', encoding='utf-8') as f:
+                existing_messages = json.load(f)
+                if existing_messages:
+                    last_msg_data = existing_messages[-1]
+                    try:
+                        last_message_obj = await channel.fetch_message(int(last_msg_data['message_id']))
+                        print(f"Found existing export. Resuming after message ID: {last_message_obj.id}")
+                    except discord.NotFound:
+                        print("Warning: Last message in JSON was deleted from Discord. Exporting all.")
+                        last_message_obj = None
+        except Exception as e:
+            print(f"Warning: Could not read existing export ({e}). Starting fresh.")
+            existing_messages = []
+
+    new_messages_data = []
+    total_new_exported = 0
+    save_chunk_size = 2000
+
     try:
-        # Using oldest_first=True ensures chronological order
-        async for message in channel.history(limit=None, oldest_first=True):
-            # Skip the trigger message if skip_id is provided
+        # Fetch only messages after the last known message
+        async for message in channel.history(limit=None, oldest_first=True, after=last_message_obj):
             if skip_id and message.id == skip_id:
                 continue
                 
-            # Skip messages from bots or without content
             if message.author.bot or not message.content:
                 continue
             
-            # Extract fields and format timestamp
             timestamp = message.created_at.strftime('%Y-%m-%dT%H:%M:%S')
             
-            # Create a lookup for this specific message's entities
             known_in_msg = {str(m.id): m.display_name for m in message.mentions}
             for r in message.role_mentions:
                 known_in_msg[str(r.id)] = r.name
             known_in_msg[str(message.author.id)] = message.author.display_name
 
-            messages_data.append({
+            new_messages_data.append({
                 "message_id": str(message.id),
                 "timestamp": timestamp,
                 "channel": channel.name,
@@ -60,32 +81,28 @@ async def export_chat_to_json(channel, skip_id=None):
                 "last_known_names": known_in_msg
             })
             
-            if len(messages_data) % 2000 == 0:
-                 print(f"Processed {len(messages_data)} messages...")
+            # Save chunk to disk to survive interruptions
+            if len(new_messages_data) >= save_chunk_size:
+                existing_messages.extend(new_messages_data)
+                with open(output_filename, 'w', encoding='utf-8') as f:
+                    json.dump(existing_messages, f, ensure_ascii=False, indent=2)
+                
+                total_new_exported += len(new_messages_data)
+                print(f"Saved chunk of {len(new_messages_data)} messages. Total new: {total_new_exported}...")
+                new_messages_data = []
 
-        os.makedirs("messages_json", exist_ok=True)
-        output_filename = os.path.join("messages_json", f"{channel.name}.json")
-
-        # Merge with old export to preserve names of deleted users
-        if os.path.exists(output_filename):
-            try:
-                with open(output_filename, 'r', encoding='utf-8') as f:
-                    old_data = {msg['message_id']: msg for msg in json.load(f) if 'message_id' in msg}
-                for msg in messages_data:
-                    old_msg = old_data.get(msg['message_id'])
-                    if old_msg:
-                        # Old names are the base; new names override them
-                        merged = {**old_msg.get('last_known_names', {}), **msg['last_known_names']}
-                        msg['last_known_names'] = merged
-            except Exception as e:
-                print(f"Warning: Could not merge old export ({e}), overwriting.")
-
-        with open(output_filename, 'w', encoding='utf-8') as f:
-            json.dump(messages_data, f, ensure_ascii=False, indent=2)
+        # Save remaining messages
+        if new_messages_data:
+            existing_messages.extend(new_messages_data)
+            with open(output_filename, 'w', encoding='utf-8') as f:
+                json.dump(existing_messages, f, ensure_ascii=False, indent=2)
+            total_new_exported += len(new_messages_data)
             
         print(f"\nExport complete.")
-        print(f"Total messages exported: {len(messages_data)}")
-        print(f"Saved to {output_filename}")
+        print(f"New messages exported: {total_new_exported}")
+        print(f"Total messages in archive: {len(existing_messages)}")
+        return total_new_exported
         
     except Exception as e:
-        print(f"An error occurred during JSON export: {e}")
+        print(f"An error occurred during JSON export (saved progress safely): {e}")
+        return total_new_exported

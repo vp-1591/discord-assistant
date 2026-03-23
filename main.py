@@ -4,13 +4,23 @@ from dotenv import load_dotenv
 from src.data.export_chat import export_chat_to_json, resolve_mentions
 import asyncio
 
+import sys
 from src.core.run_llama_index import RAGAssistant
 from src.utils.logger_setup import sys_logger, chat_logger
 from src.data.opinion_manager import OpinionManager
 from src.data.history_manager import HistoryManager
-from src.config.config import SUMMARIES_PATH, HISTORY_PATH, FORCE_REBUILD, PERSIST_DIR
+from src.config.config import SUMMARIES_PATH, HISTORY_PATH, PERSIST_DIR
 
 load_dotenv()
+
+# Global exception handler to ensure all errors go to system.log
+def handle_exception(exc_type, exc_value, exc_traceback):
+    if issubclass(exc_type, KeyboardInterrupt):
+        sys.__excepthook__(exc_type, exc_value, exc_traceback)
+        return
+    sys_logger.critical("Uncaught exception:", exc_info=(exc_type, exc_value, exc_traceback))
+
+sys.excepthook = handle_exception
 
 class aclient(discord.Client):
     def __init__(self):
@@ -27,7 +37,7 @@ class aclient(discord.Client):
             self._assistant_loading = True
             try:
                 id_map = {}
-                if FORCE_REBUILD or not os.path.exists(PERSIST_DIR):
+                if not os.path.exists(PERSIST_DIR):
                     print("🤖 Rebuild required. Collecting latest names and roles...")
                     for user in self.users: id_map[str(user.id)] = user.display_name
                     for guild in self.guilds:
@@ -135,10 +145,16 @@ async def on_message(message):
     # Export command
     if message.content.startswith("!export") and str(message.author.id) == "470892009440149506": 
         sys_logger.info("Exporting chat...")
-        await export_chat_to_json(message.channel, skip_id=message.id)
+        new_msgs_count = await export_chat_to_json(message.channel, skip_id=message.id)
+        
+        if new_msgs_count > 0 and client.assistant is not None:
+             sys_logger.info(f"Triggering Vector DB update for {new_msgs_count} new messages...")
+             nodes_added = await asyncio.to_thread(client.assistant.update_index)
+             sys_logger.info(f"Vector DB Update Complete. Inserted {nodes_added} new chunked nodes.")
+        else:
+             sys_logger.info("Export finished. No new messages found for indexing.")
+             
         return
-    
-    # Check if bot is mentioned
     if client.user.mentioned_in(message):
         await client.message_queue.put(message)
         sys_logger.info(f"Message added to queue. Queue size: {client.message_queue.qsize()}")
