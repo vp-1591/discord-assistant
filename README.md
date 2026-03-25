@@ -10,7 +10,8 @@ A powerful Discord bot that uses **Retrieval-Augmented Generation (RAG)** to ans
 -   **Identity Resolution**: Intelligently resolves Discord user and role mentions to their display names, even for users who have since left the server.
 -   **Persona-Driven**: Responds as the "Head of Archive" (Глава Архива) with a wise, archaic tone in Russian.
 -   **Social Memory (Opinion System)**: Analyzes interactions asynchronously to form and recall "opinions" and stances on users, tailoring future responses based on past interactions.
--   **Easy Data Ingestion**: Simple `!export` command to crawl channel history and prepare it for indexing.
+-   **RAG Cache**: Implements an LRU cache system to store and quickly recall recent search queries, minimizing repetitive database retrievals and improving conversational continuity.
+-   **Live Data Ingestion & Progress Tracking**: Simple `!export` command to crawl channel history that automatically injects new messages into the vector index with progress bars in the console.
 
 ## 🛠️ Tech Stack
 
@@ -56,7 +57,7 @@ Adjust settings in `config.py` (e.g., LlamaIndex models, file paths, or Ollama U
 1.  Start the bot: `python main.py` or use `start.bat`
 2.  In Discord, use the command `!export` in the channel you want the bot to "learn" from. (Note: Only configured admin IDs can currently trigger this).
 3.  The bot will save the history to `messages_json/`.
-4.  Restart the bot or set `FORCE_REBUILD = True` in `config.py` to index the new data.
+4.  The bot will automatically detect new messages and incrementally live-update the vector database (showing progress bars in the console).
 
 #### Interacting
 Simply mention the bot in any channel it has access to:
@@ -73,6 +74,7 @@ Simply mention the bot in any channel it has access to:
 -   `src/data/history_manager.py`: Manages rolling channel history and summaries.
 -   `src/data/opinion_manager.py`: Fuzzy-matching logic for user stances.
 -   `src/data/export_chat.py`: Utility for exporting Discord history.
+-   `src/core/rag_cache.py`: Provides LRU cache for recent queries to reduce LLM overhead.
 -   `messages_json/`: Exported chat JSON files.
 -   `llama_index_storage/`: Vector database persistence.
--   `cache/`: Local summaries, history, and user opinions.
+-   `cache/`: Local summaries, history, user opinions, and RAG cache.

@@ -1,3 +1,2 @@
 Implement Users Aliases system. (We need some kind of dictionary that will translate nicknames from the database(and other possible aliases) (llama_index_storage) to IDs and from IDs to the current nickname)
 Production ready RAG(using LLM summarized chunks(which means we won't need Agent1 and we still can have access to original messages chunks) and aggregation tools)
-update docs

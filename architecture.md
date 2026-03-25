@@ -3,71 +3,93 @@
 ## 1. Unified System Overview & Data Flow
 
 This chart represents the modular architecture, encompassing configuration, data ingestion, retrieval logic, and the messaging pipeline.
-
 ```mermaid
 flowchart TD
-    subgraph Discord["Discord API"]
-        D_MSG["User Message (bot mention)"]
-        D_EXPORT["Admin !export command"]
-        D_REPLY["Bot Reply"]
+    %% Define Styling
+    classDef discord fill:#5865F2,stroke:#fff,stroke-width:2px,color:#fff;
+    classDef app fill:#2B2D31,stroke:#00E5FF,stroke-width:2px,color:#fff;
+    classDef logic fill:#1E1F22,stroke:#43B581,stroke-width:2px,color:#fff;
+    classDef storage fill:#202225,stroke:#FAA61A,stroke-width:2px,color:#fff;
+    classDef ai fill:#2f3136,stroke:#F04747,stroke-width:2px,color:#fff;
+
+    %% 1. Interface
+    subgraph Discord ["1. Discord Interface"]
+        direction LR
+        D_EXPORT("Admin !export"):::discord
+        D_MSG("User @Mention"):::discord
+        D_REPLY("Bot Reply"):::discord
     end
 
-    subgraph App["Core Application"]
-        MAIN["main.py (aclient)"]
-        HIST["src/data/history_manager.py"]
-        CONFIG["src/config/config.py"]
-        PROMPTS["src/config/prompts.py"]
+    %% 2. Entry & Routing
+    subgraph Routing ["2. Orchestration"]
+        MAIN{"Message Router<br/>(main.py)"}:::app
     end
 
-    subgraph Logic["Business Logic"]
-        RAG_A["src/core/run_llama_index.py (RAGAssistant)"]
-        AGENT_C["src/core/agent_core.py (ReActAgentWorkflow)"]
-        INGEST["src/data/ingestion.py"]
-        OP_M["src/data/opinion_manager.py"]
+    %% 3. Main Logic Trees
+    subgraph Engine ["3. Core Functional Engine"]
+        
+        subgraph Pipeline ["Data Ingestion Pipeline"]
+            direction TB
+            EXPORT_FN["Chat Exporter<br/>(export_chat.py)"]:::logic
+            INGEST["Data Vectorizer<br/>(ingestion.py)"]:::logic
+        end
+
+        subgraph Cognition ["Cognitive AI"]
+            direction TB
+            RAG_A{"Semantic RAG<br/>(run_llama_index.py)"}:::logic
+            AGENT_C("ReAct Agent<br/>(agent_core.py)"):::logic
+        end
+
+        subgraph Context ["Context Managers"]
+            direction TB
+            HIST["Chat History<br/>(history_manager.py)"]:::logic
+            OP_M["Social Opinions<br/>(opinion_manager.py)"]:::logic
+            RAG_C["Search Cache<br/>(rag_cache.py)"]:::logic
+        end
     end
 
-    subgraph Storage["Storage & Cache"]
-        JSON_FILES["messages_json/channel.json"]
-        SAVED_IDX["llama_index_storage/"]
-        OP_DB["cache/opinions.json"]
-        SUM_DB["cache/summaries.json"]
-        HIST_DB["cache/history.json"]
+    %% 4. Data Layer
+    subgraph Storage ["4. Storage & State"]
+        direction LR
+        SAVED_IDX[("Vector Index<br/>(llama_index/)")]:::storage
+        JSON_FILES[("Raw Chats<br/>(messages_json/)")]:::storage
+        
+        OP_DB[("opinions.json")]:::storage
+        SUM_DB[("summaries.json")]:::storage
+        HIST_DB[("history.json")]:::storage
+        RAG_CACHE_DB[("rag_cache.json")]:::storage
     end
 
-    subgraph Ollama["Ollama (localhost:11434)"]
-        EMBED_MODEL["bge-m3 (Embedding)"]
-        LLM_MODEL["qwen3:8b (LLM)"]
+    %% 5. Services
+    subgraph Services ["5. External Models"]
+        OLLAMA[["Local Ollama<br/>(qwen3:8b / bge-m3)"]]:::ai
     end
 
-    %% Startup Flow
-    MAIN --> CONFIG
-    MAIN --> HIST
-    MAIN --> RAG_A
-    RAG_A --> INGEST
-    INGEST --> SAVED_IDX
-    INGEST --> JSON_FILES
+    %% --- Connection Flow ---
 
-    %% Message Flow
-    D_MSG --> MAIN
-    MAIN --> HIST
+    D_MSG ---> MAIN
+    MAIN <--> Context
+    MAIN ---> RAG_A
+    RAG_A ---> D_REPLY
+
+    D_EXPORT ---> EXPORT_FN
+    EXPORT_FN --->|Writes| JSON_FILES
+    INGEST -.->|Reads| JSON_FILES
+    INGEST --->|Updates| SAVED_IDX
+
+    RAG_A <--> RAG_C
+    RAG_A ---> AGENT_C
+    RAG_A -.->|"Triggers live update"| INGEST
+
+    %% Context I/O
     HIST <--> HIST_DB
-    MAIN --> OP_M
-    OP_M <--> OP_DB
-    
-    MAIN --> RAG_A
-    RAG_A --> PROMPTS
-    RAG_A --> AGENT_C
-    AGENT_C --> LLM_MODEL
-    
-    RAG_A --> D_REPLY
-    
-    %% Background Work
-    RAG_A -.-> HIST
     HIST -.-> SUM_DB
+    OP_M <--> OP_DB
+    RAG_C <--> RAG_CACHE_DB
 
-    %% Export Flow
-    D_EXPORT --> EXPORT_FN["src/data/export_chat.py"]
-    EXPORT_FN --> JSON_FILES
+    %% Inference
+    AGENT_C <==>|"Synthesis"| OLLAMA
+    INGEST <==>|"Embeddings"| OLLAMA
 ```
 
 ## 2. Component Responsibilities
@@ -79,6 +101,7 @@ flowchart TD
 - **src/data/history_manager.py**: Logic for loading, saving, and truncating channel-specific history and summaries.
 - **src/core/agent_core.py**: The custom ReAct agent workflow implementation.
 - **src/core/run_llama_index.py**: Orchestrates RAG (Agent 1) and Refined Response (Agent 2) synthesis.
+- **src/core/rag_cache.py**: Implements the LRU cache (RAGCache) to store and retrieve recent search results, improving efficiency for follow-up questions.
 - **src/data/opinion_manager.py**: Manages long-term user profiles and stances.
 
 ## 3. Sequence Diagram (Messaging)
@@ -103,7 +126,7 @@ sequenceDiagram
     loop ReAct Loop
         Agent->>Ollama: chat (Reasoning)
         Ollama-->>Agent: Thought/Action
-        Agent->>Agent: Execute Tool (Archive/Opinion)
+        Agent->>Agent: Execute Tool (Archive/Opinion/Cache)
     end
     
     Agent-->>RAG: Final Answer
