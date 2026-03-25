@@ -12,6 +12,7 @@ A powerful Discord bot that uses **Retrieval-Augmented Generation (RAG)** to ans
 -   **Social Memory (Opinion System)**: Analyzes interactions asynchronously to form and recall "opinions" and stances on users, tailoring future responses based on past interactions.
 -   **RAG Cache**: Implements an LRU cache system to store and quickly recall recent search queries, minimizing repetitive database retrievals and improving conversational continuity.
 -   **Live Data Ingestion & Progress Tracking**: Simple `!export` command to crawl channel history that automatically injects new messages into the vector index with progress bars in the console.
+-   **Sequential Message Processing**: Implements an asynchronous worker queue to process requests one-by-one, ensuring LLM stability and preventing local VRAM spikes.
 
 ## 🛠️ Tech Stack
 

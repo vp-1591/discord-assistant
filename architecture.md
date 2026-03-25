@@ -21,12 +21,12 @@ flowchart TD
     end
 
     %% 2. Entry & Routing
-    subgraph Routing ["2. Orchestration"]
-        MAIN{"Message Router<br/>(main.py)"}:::app
+    subgraph Routing ["2. App Hosting"]
+        MAIN{"Bot Interface &<br/>Worker Queue (main.py)"}:::app
     end
 
     %% 3. Main Logic Trees
-    subgraph Engine ["3. Core Functional Engine"]
+    subgraph Engine ["3. Intelligence Layer"]
         
         subgraph Pipeline ["Data Ingestion Pipeline"]
             direction TB
@@ -36,7 +36,7 @@ flowchart TD
 
         subgraph Cognition ["Cognitive AI"]
             direction TB
-            RAG_A{"Semantic RAG<br/>(run_llama_index.py)"}:::logic
+            RAG_A{"Assistant Core<br/>(run_llama_index.py)"}:::logic
             AGENT_C("ReAct Agent<br/>(agent_core.py)"):::logic
         end
 
@@ -94,13 +94,13 @@ flowchart TD
 
 ## 2. Component Responsibilities
 
-- **main.py**: Entry point, Discord client, event handling, and high-level orchestration.
+- **main.py (Bot Interface)**: Entry point and Discord client. Manages an **asynchronous worker queue** to process user messages sequentially, ensuring LLM stability and protecting local hardware from memory spikes.
 - **src/config/config.py**: Centralized configuration, LlamaIndex settings, and file paths.
 - **src/config/prompts.py**: Long prompt strings, system templates, and persona definitions.
 - **src/data/ingestion.py**: Data cleaning, mention resolution, and LlamaIndex vector store management.
 - **src/data/history_manager.py**: Logic for loading, saving, and truncating channel-specific history and summaries.
 - **src/core/agent_core.py**: The custom ReAct agent workflow implementation.
-- **src/core/run_llama_index.py**: Orchestrates RAG (Agent 1) and Refined Response (Agent 2) synthesis.
+- **src/core/run_llama_index.py (Assistant Core)**: The "brain" of the bot. Orchestrates RAG (Agent 1) and Refined Response (Agent 2) synthesis using a ReAct workflow.
 - **src/core/rag_cache.py**: Implements the LRU cache (RAGCache) to store and retrieve recent search results, improving efficiency for follow-up questions.
 - **src/data/opinion_manager.py**: Manages long-term user profiles and stances.
 
@@ -109,19 +109,19 @@ flowchart TD
 ```mermaid
 sequenceDiagram
     actor User
-    participant Main as main.py
+    participant Interface as main.py
     participant Hist as src/data/history_manager.py
-    participant RAG as src/core/run_llama_index.py
+    participant Core as src/core/run_llama_index.py
     participant Agent as src/core/agent_core.py
     participant Ollama
 
-    User->>Main: @Bot message
-    Main->>Hist: get_history()
-    Hist-->>Main: history list
-    Main->>Main: Fetch Opnions
+    User->>Interface: @Bot message
+    Interface->>Hist: get_history()
+    Hist-->>Interface: history list
     
-    Main->>RAG: generate_refined_response()
-    RAG->>Agent: workflow.run()
+    Interface->>Core: generate_refined_response()
+    Core->>Core: Fetch User Opinion
+    Core->>Agent: workflow.run()
     
     loop ReAct Loop
         Agent->>Ollama: chat (Reasoning)
@@ -129,13 +129,14 @@ sequenceDiagram
         Agent->>Agent: Execute Tool (Archive/Opinion/Cache)
     end
     
-    Agent-->>RAG: Final Answer
-    RAG-->>Main: final_response
-    Main->>User: reply
+    Agent-->>Core: Final Answer
+    Core-->>Interface: final_response
+    Interface->>User: reply
     
-    Main->>Hist: add_to_history()
-    Main->>RAG: generate_summary() (if needed)
-    RAG->>Ollama: Summarize
-    Ollama-->>RAG: Summary
-    RAG->>Hist: update_summary()
+    Interface->>Hist: add_to_history()
+    Interface->>Core: generate_summary() (if needed)
+    Core->>Ollama: Summarize
+    Ollama-->>Core: Summary
+    Core-->>Interface: new_summary
+    Interface->>Hist: update_summary()
 ```
