@@ -12,7 +12,7 @@ MESSAGES_DIR = "./messages_json"
 RAG_CACHE_PATH = "cache/rag_cache.json"
 
 # --- CONFIG ---
-# (Deprecated FORCE_REBUILD removed; index now updates incrementally via !export)
+ADMIN_IDS = ["470892009440149506"]  # Add authorized Discord user IDs here
 
 # --- LLAMA INDEX SETTINGS ---
 def configure_settings():

@@ -8,7 +8,7 @@ A powerful Discord bot that uses **Retrieval-Augmented Generation (RAG)** to ans
 -   **Reranking**: Uses `BAAI/bge-reranker-v2-m3` to semantically rank the top 50 results down to the most relevant 10.
 -   **Conversational Memory**: Automatically maintains a rolling summary of recent channel interactions to stay within context.
 -   **Identity Resolution**: Intelligently resolves Discord user and role mentions to their display names, even for users who have since left the server.
--   **Persona-Driven**: Responds as the "Head of Archive" (Глава Архива) with a wise, archaic tone in Russian.
+-   **Persona-Driven**: Responds as the "Head of Archive" (Глава Архива) with a wise, archaic tone in Russian (easily customizable in `src/config/prompts.py`).
 -   **Social Memory (Opinion System)**: Analyzes interactions asynchronously to form and recall "opinions" and stances on users, tailoring future responses based on past interactions.
 -   **RAG Cache**: Implements an LRU cache system to store and quickly recall recent search queries, minimizing repetitive database retrievals and improving conversational continuity.
 -   **Live Data Ingestion & Progress Tracking**: Simple `!export` command to crawl channel history that automatically injects new messages into the vector index with progress bars in the console.
@@ -19,7 +19,7 @@ A powerful Discord bot that uses **Retrieval-Augmented Generation (RAG)** to ans
 -   **Discord.py**: Bot framework.
 -   **LlamaIndex**: RAG orchestration and data indexing.
 -   **Ollama**: Local hosting for LLM (`qwen3:8b`) and Embedding models (`bge-m3`).
--   **BM25 Retreiver**: For robust keyword matching in Russian.
+-   **BM25 Retreiver**: For robust keyword matching.
 
 ## 🚀 Getting Started
 
@@ -56,13 +56,13 @@ Adjust settings in `config.py` (e.g., LlamaIndex models, file paths, or Ollama U
 
 #### First Run & Data Export
 1.  Start the bot: `python main.py` or use `start.bat`
-2.  In Discord, use the command `!export` in the channel you want the bot to "learn" from. (Note: Only configured admin IDs can currently trigger this).
+2.  In Discord, use the command `!export` in the channel you want the bot to "learn" from. (Note: Only IDs listed in `ADMIN_IDS` within `src/config/config.py` can trigger this).
 3.  The bot will save the history to `messages_json/`.
 4.  The bot will automatically detect new messages and incrementally live-update the vector database (showing progress bars in the console).
 
 #### Interacting
 Simply mention the bot in any channel it has access to:
-`@ArchiveHead Что мы обсуждали на прошлой неделе?`
+`@BotName Что мы обсуждали на прошлой неделе?`
 
 ## 📁 Project Structure
 

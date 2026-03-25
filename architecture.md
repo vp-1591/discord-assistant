@@ -68,9 +68,10 @@ flowchart TD
     %% --- Connection Flow ---
 
     D_MSG ---> MAIN
+    %% Main Dialog Flow
     MAIN <--> Context
     MAIN ---> RAG_A
-    RAG_A ---> D_REPLY
+    MAIN ---> D_REPLY
 
     D_EXPORT ---> EXPORT_FN
     EXPORT_FN --->|Writes| JSON_FILES

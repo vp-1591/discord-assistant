@@ -9,7 +9,7 @@ from src.core.run_llama_index import RAGAssistant
 from src.utils.logger_setup import sys_logger, chat_logger
 from src.data.opinion_manager import OpinionManager
 from src.data.history_manager import HistoryManager
-from src.config.config import SUMMARIES_PATH, HISTORY_PATH, PERSIST_DIR
+from src.config.config import SUMMARIES_PATH, HISTORY_PATH, PERSIST_DIR, ADMIN_IDS
 
 load_dotenv()
 
@@ -143,7 +143,7 @@ async def on_message(message):
     if message.author.id == self_id or message.author.bot: return 
 
     # Export command
-    if message.content.startswith("!export") and str(message.author.id) == "470892009440149506": 
+    if message.content.startswith("!export") and str(message.author.id) in ADMIN_IDS: 
         sys_logger.info("Exporting chat...")
         new_msgs_count = await export_chat_to_json(message.channel, skip_id=message.id)
         
