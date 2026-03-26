@@ -149,8 +149,8 @@ async def on_message(message):
         
         if new_msgs_count > 0 and client.assistant is not None:
              sys_logger.info(f"Triggering Vector DB update for {new_msgs_count} new messages...")
-             nodes_added = await asyncio.to_thread(client.assistant.update_index)
-             sys_logger.info(f"Vector DB Update Complete. Inserted {nodes_added} new chunked nodes.")
+             nodes_added = await client.assistant.update_index()
+             sys_logger.info(f"Vector DB Update Complete. Inserted {nodes_added} new summary nodes.")
         else:
              sys_logger.info("Export finished. No new messages found for indexing.")
              

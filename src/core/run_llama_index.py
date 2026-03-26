@@ -40,10 +40,10 @@ class RAGAssistant:
         self.index, self._nodes = load_or_build_index(self.id_map)
         self.fusion_retriever, self.reranker, self.query_engine = self._setup_query_engine()
 
-    def update_index(self):
+    async def update_index(self):
         """Dynamically fetches new messages, inserts them into the DB, and live-reloads the query engine."""
         sys_logger.info("Initiating live index update...")
-        new_nodes = insert_new_nodes(self.index, self.id_map)
+        new_nodes = await insert_new_nodes(self.index, self.id_map)
         
         if new_nodes:
             self._nodes.extend(new_nodes)
@@ -51,6 +51,7 @@ class RAGAssistant:
             self.fusion_retriever, self.reranker, self.query_engine = self._setup_query_engine()
             return len(new_nodes)
         return 0
+
 
     def _setup_query_engine(self):
         sys_logger.info(f"Setting up query engine with {len(self._nodes)} nodes...")

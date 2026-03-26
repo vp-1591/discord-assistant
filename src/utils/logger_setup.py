@@ -48,11 +48,24 @@ def setup_logger():
     chat_logger.setLevel(logging.INFO)
     chat_logger.addHandler(chat_handler)
 
-    return sys_logger, trace_logger, chat_logger
+    # 4. Indexing & Summarization (exact prompts and Ollama responses)
+    indexing_handler = RotatingFileHandler(
+        os.path.join(log_dir, "indexing_summarization.log"),
+        maxBytes=10*1024*1024,  # 10MB
+        backupCount=2,
+        encoding="utf-8"
+    )
+    indexing_handler.setFormatter(formatter)
+
+    indexing_logger = logging.getLogger("indexing")
+    indexing_logger.setLevel(logging.INFO)
+    indexing_logger.addHandler(indexing_handler)
+
+    return sys_logger, trace_logger, chat_logger, indexing_logger
 
 # Optional: suppress some verbose third-party logging if needed
 logging.getLogger("llama_index").setLevel(logging.WARNING)
 logging.getLogger("discord").setLevel(logging.INFO)
 
 # Run once at import and export loggers
-sys_logger, trace_logger, chat_logger = setup_logger()
+sys_logger, trace_logger, chat_logger, indexing_logger = setup_logger()
