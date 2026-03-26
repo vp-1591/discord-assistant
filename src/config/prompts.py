@@ -132,11 +132,13 @@ def get_system_prompt(
     query_text: str,
     replied_to_msg: str = None
 ) -> str:
+    current_date = datetime.now().strftime("%Y-%m-%d")
     context_msgs = ""
     if replied_to_msg:
         context_msgs = f"### Replying To\n{replied_to_msg}\n(This is the specific message the user is replying to. It might or might not be in the Chat Memory below.)\n\n"
 
     return (
+        f"Today is: {current_date}\n\n"
         f"Current interface with: {author_name}\n\n"
         f"## Role\n{persona}\n\n"
         f"### Your Opinion On {author_name}\n{author_profile}\n\n"
