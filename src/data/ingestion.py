@@ -35,25 +35,7 @@ from llama_index.embeddings.ollama import OllamaEmbedding
 from src.config.config import PERSIST_DIR, MESSAGES_DIR, MAX_CHUNK_SIZE
 from src.utils.logger_setup import sys_logger, indexing_logger
 from src.data.models import SessionLocal, Message
-
-# ---------------------------------------------------------------------------
-# Prompt template for Ollama summarisation
-# ---------------------------------------------------------------------------
-_SUMMARY_PROMPT = """\
-Ты — система создания индексов для RAG-базы Discord-переписки. \
-Твоя задача — написать краткое, информативное резюме фрагмента чат-истории, \
-которое будет использоваться для семантического поиска.
-
-Требования:
-- Сохрани все имена участников, даты, топонимы, термины и ключевые факты.
-- Пиши на том языке, на котором написан фрагмент (преимущественно русский).
-- Резюме должно быть связным, 3–6 предложений.
-- Не добавляй вводных фраз типа «В данном фрагменте...».
-
-Фрагмент переписки:
-{chunk_text}
-
-Резюме:"""
+from src.config.prompts import INGESTION_SUMMARY_PROMPT
 
 
 # ---------------------------------------------------------------------------
@@ -98,7 +80,10 @@ def _read_and_group_messages(id_map: dict) -> Tuple[dict, set, set]:
         return {}, processed_msg_ids, set()
 
     link_pattern = re.compile(r'^https?://[^\s]+$')
-    code_pattern = re.compile(r'^[A-Za-z]{3}-[A-Za-z]{4}$')
+    # Whole-message filters: pure URL or pure invite/lobby code
+    code_pattern = re.compile(r'^[A-Za-z0-9]{3,6}-[A-Za-z0-9]{4,6}$')
+    # Inline replacement: lobby/invite codes embedded in longer text
+    inline_code_pattern = re.compile(r'\b[A-Za-z0-9]{3,6}-[A-Za-z0-9]{4,6}\b')
 
     groups: dict = defaultdict(list)
     newly_seen_ids: set = set()
@@ -131,9 +116,11 @@ def _read_and_group_messages(id_map: dict) -> Tuple[dict, set, set]:
 
                 newly_seen_ids.add(msg_id)
 
-                # Skip pure links, invite codes, and exact duplicates
+                # Skip pure links and pure invite/lobby codes
                 if link_pattern.search(text) or code_pattern.search(text):
                     continue
+                # Replace embedded codes within longer messages
+                text = inline_code_pattern.sub("[code]", text)
                 if author_name == last_user and text == last_msg:
                     continue
 

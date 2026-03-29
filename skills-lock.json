@@ -1,0 +1,15 @@
+{
+  "version": 1,
+  "skills": {
+    "find-skills": {
+      "source": "vercel-labs/skills",
+      "sourceType": "github",
+      "computedHash": "645b891da1edbae76ab79c7b088d4e73397464f8396edaf773c0e01971ce75d6"
+    },
+    "prompt-engineering": {
+      "source": "davila7/claude-code-templates",
+      "sourceType": "github",
+      "computedHash": "c4d5b6a2e49423e586aed0d5e198b8c452fd2b56a82ee02d2fa66ae60f099556"
+    }
+  }
+}
