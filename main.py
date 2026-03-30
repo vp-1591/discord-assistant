@@ -1,4 +1,5 @@
 import discord
+from discord import app_commands
 import os
 from dotenv import load_dotenv
 from src.data.export_chat import export_chat_to_json, resolve_mentions
@@ -25,6 +26,7 @@ sys.excepthook = handle_exception
 class aclient(discord.Client):
     def __init__(self):
         super().__init__(intents = discord.Intents.all())
+        self.tree = app_commands.CommandTree(self)
         self.assistant = None
         self._assistant_loading = False
         self.history_manager = HistoryManager(SUMMARIES_PATH, HISTORY_PATH)
@@ -136,25 +138,32 @@ client = aclient()
 async def on_ready():
     sys_logger.info("Connecting...")
     await client.setup_assistant()
-    sys_logger.info(f"Connected as {client.user}")
+    await client.tree.sync()
+    sys_logger.info(f"Connected as {client.user} - App Commands Synced")
+
+@client.tree.command(name="export", description="Export and ingest chat history to the Vector DB")
+async def export_cmd(interaction: discord.Interaction):
+    if str(interaction.user.id) not in ADMIN_IDS:
+        await interaction.response.send_message("❌ Permission denied. You must be an admin.", ephemeral=True)
+        return
+
+    await interaction.response.send_message("⏳ Export and ingestion started... Check console logs.", ephemeral=True)
+    
+    sys_logger.info(f"User {interaction.user.display_name} triggered /export command.")
+    new_msgs_count = await export_chat_to_json(interaction.channel, skip_id=None)
+    
+    if client.assistant is not None:
+         sys_logger.info(f"Triggering Vector DB update for {new_msgs_count} new messages...")
+         nodes_added = await client.assistant.update_index()
+         sys_logger.info(f"Vector DB Update Complete. Inserted {nodes_added} new summary nodes.")
+    else:
+         sys_logger.info("Export finished. No new messages found for indexing.")
 
 @client.event
 async def on_message(message):
     if message.author.id == self_id or message.author.bot: return 
 
-    # Export command
-    if message.content.startswith("!export") and str(message.author.id) in ADMIN_IDS: 
-        sys_logger.info("Exporting chat...")
-        new_msgs_count = await export_chat_to_json(message.channel, skip_id=message.id)
-        
-        if new_msgs_count > 0 and client.assistant is not None:
-             sys_logger.info(f"Triggering Vector DB update for {new_msgs_count} new messages...")
-             nodes_added = await client.assistant.update_index()
-             sys_logger.info(f"Vector DB Update Complete. Inserted {nodes_added} new summary nodes.")
-        else:
-             sys_logger.info("Export finished. No new messages found for indexing.")
-             
-        return
+    # Process Mentions
     if client.user.mentioned_in(message):
         await client.message_queue.put(message)
         sys_logger.info(f"Message added to queue. Queue size: {client.message_queue.qsize()}")

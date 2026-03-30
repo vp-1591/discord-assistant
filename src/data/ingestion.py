@@ -32,11 +32,13 @@ from llama_index.core.node_parser import SentenceSplitter
 from llama_index.core import VectorStoreIndex, StorageContext, load_index_from_storage
 from llama_index.embeddings.ollama import OllamaEmbedding
 
-from src.config.config import PERSIST_DIR, MESSAGES_DIR, MAX_CHUNK_SIZE
+from src.config.config import PERSIST_DIR, MESSAGES_DIR, LLM_CONTEXT_WINDOW
 from src.utils.logger_setup import sys_logger, indexing_logger
 from src.data.models import SessionLocal, Message
 from src.config.prompts import INGESTION_SUMMARY_PROMPT
 
+MAX_TEST_CHUNK_SIZE = int(LLM_CONTEXT_WINDOW * 0.25)
+MIN_TOKEN_BYPASS = 100
 
 # ---------------------------------------------------------------------------
 # Mention resolution
@@ -49,8 +51,9 @@ def resolve_all_mentions(text: str, live_map: dict, fallback_map: dict) -> str:
     def replace_match(match):
         entity_id = match.group(2)
         if entity_id in live_map:
-            return live_map[entity_id]
-        return fallback_map.get(entity_id, match.group(0))
+            return f"@{live_map[entity_id]}"
+        name = fallback_map.get(entity_id)
+        return f"@{name}" if name else match.group(0)
 
     return pattern.sub(replace_match, text)
 
@@ -79,16 +82,32 @@ def _read_and_group_messages(id_map: dict) -> Tuple[dict, set, set]:
     if not os.path.exists(MESSAGES_DIR):
         return {}, processed_msg_ids, set()
 
-    link_pattern = re.compile(r'^https?://[^\s]+$')
-    # Whole-message filters: pure URL or pure invite/lobby code
-    code_pattern = re.compile(r'^[A-Za-z0-9]{3,6}-[A-Za-z0-9]{4,6}$')
-    # Inline replacement: lobby/invite codes embedded in longer text
-    inline_code_pattern = re.compile(r'\b[A-Za-z0-9]{3,6}-[A-Za-z0-9]{4,6}\b')
+    _link_pattern = re.compile(r'https?://\S+')
+    _inline_code_pattern = re.compile(r'\b(?=.*\d)[A-Za-z0-9]{3,6}-[A-Za-z0-9]{3,6}\b')
+    _noise_pattern = re.compile(
+        r'-*[a-fA-F0-9]{32,128}-*|'
+        r'-*[a-fA-F0-9]{8,12}-*|'
+        r'-+[a-fA-F0-9]{4,12}-+|'
+        r'[a-fA-F0-9]{8}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{12}'
+    )
 
     groups: dict = defaultdict(list)
     newly_seen_ids: set = set()
 
     json_files = [f for f in os.listdir(MESSAGES_DIR) if f.endswith(".json")]
+
+    # Pass 1: Build a global map of the absolute newest names from all JSON files
+    fallback_map: dict = {}
+    for filename in tqdm(json_files, desc="🔖 Building name map"):
+        path = os.path.join(MESSAGES_DIR, filename)
+        try:
+            with open(path, "r", encoding="utf-8") as f:
+                data = json.load(f)
+            if isinstance(data, list):
+                for msg in data:
+                    fallback_map.update(msg.get("last_known_names", {}))
+        except Exception:
+            pass
 
     for filename in tqdm(json_files, desc="📂 Reading JSON history"):
         path = os.path.join(MESSAGES_DIR, filename)
@@ -109,18 +128,19 @@ def _read_and_group_messages(id_map: dict) -> Tuple[dict, set, set]:
 
                 raw_text = str(msg.get("message", "")).strip()
                 user_id = str(msg.get("user_id", "Unknown"))
-                fallback_names = msg.get("last_known_names", {})
 
-                text = resolve_all_mentions(raw_text, id_map, fallback_names)
-                author_name = id_map.get(user_id, fallback_names.get(user_id, "Unknown"))
+                text = resolve_all_mentions(raw_text, id_map, fallback_map)
+                author_name = id_map.get(user_id, fallback_map.get(user_id, "Unknown"))
 
                 newly_seen_ids.add(msg_id)
 
-                # Skip pure links and pure invite/lobby codes
-                if link_pattern.search(text) or code_pattern.search(text):
+                text = _link_pattern.sub("", text)
+                text = _inline_code_pattern.sub("", text)
+                text = _noise_pattern.sub("", text)
+                text = text.strip()
+                if not text:
                     continue
-                # Replace embedded codes within longer messages
-                text = inline_code_pattern.sub("[code]", text)
+                
                 if author_name == last_user and text == last_msg:
                     continue
 
@@ -161,10 +181,8 @@ def _build_raw_chunks(groups: dict) -> List[dict]:
         }
     """
     splitter = SentenceSplitter(
-        chunk_size=MAX_CHUNK_SIZE,
-        chunk_overlap=200,
-        # Use char-level splitting as a fallback for multilingual (Russian) text
-        paragraph_separator="\n\n",
+        chunk_size=MAX_TEST_CHUNK_SIZE,
+        chunk_overlap=100,
     )
 
     chunks = []
@@ -172,6 +190,7 @@ def _build_raw_chunks(groups: dict) -> List[dict]:
     for (channel, date), messages in tqdm(groups.items(), desc="✂️  Chunking by date"):
         # Build full concatenated text for this (channel, date) group
         full_text = "\n".join(f"{m['user']}: {m['text']}" for m in messages)
+        is_small = len(full_text.split()) < MIN_TOKEN_BYPASS
 
         # SentenceSplitter operates on Documents; use get_nodes_from_documents
         # or the lower-level split_text method
@@ -189,6 +208,7 @@ def _build_raw_chunks(groups: dict) -> List[dict]:
                 "date": date,
                 "channel": channel,
                 "messages": messages,
+                "bypass": is_small,
             })
 
     return chunks
@@ -232,7 +252,7 @@ def _save_messages_to_sqlite(chunk: dict) -> None:
 # Step 5b: async sequential Ollama summarisation
 # ---------------------------------------------------------------------------
 
-async def _summarise_chunks(chunks: List[dict]) -> List[TextNode]:
+async def _summarise_chunks(chunks: List[dict], pbar=None) -> List[TextNode]:
     """
     Process chunks strictly one-by-one (sequential, not concurrent) to
     avoid Ollama OOM.  Uses acomplete() so the discord.py event loop stays
@@ -241,51 +261,72 @@ async def _summarise_chunks(chunks: List[dict]) -> List[TextNode]:
     Returns a list of TextNodes ready for vector-store insertion.
     """
     nodes: List[TextNode] = []
+    
+    # Set low temperature for factual RAG summaries
+    original_temperature = getattr(Settings.llm, "temperature", None)
+    Settings.llm.temperature = 0.1
 
-    for chunk in atqdm(chunks, desc="🤖 Summarising with Ollama"):
-        chunk_id = chunk["chunk_id"]
-        prompt = _SUMMARY_PROMPT.format(chunk_text=chunk["text"])
+    try:
+        for chunk in chunks:
+            chunk_id = chunk["chunk_id"]
+            
+            if chunk.get("bypass"):
+                summary = chunk["text"]
+                indexing_logger.info(
+                    f"[CHUNK {chunk_id}] channel={chunk['channel']} date={chunk['date']}\n"
+                    f"⚡ [BYPASS ACTIVE]: This chunk was skipped by the LLM and stored as RAW text.\n"
+                    f"--- RAW TEXT ---\n{summary}\n{'='*60}"
+                )
+            else:
+                prompt = INGESTION_SUMMARY_PROMPT.format(chunk=chunk["text"])
 
-        # Log the exact prompt
-        indexing_logger.info(
-            f"[CHUNK {chunk_id}] channel={chunk['channel']} date={chunk['date']}\n"
-            f"--- PROMPT ---\n{prompt}\n"
-        )
+                # Log the exact prompt
+                indexing_logger.info(
+                    f"[CHUNK {chunk_id}] channel={chunk['channel']} date={chunk['date']}\n"
+                    f"--- PROMPT ---\n{prompt}\n"
+                )
 
-        try:
-            response = await Settings.llm.acomplete(prompt)
-            summary = str(response).strip()
-        except Exception as e:
-            sys_logger.error(f"Ollama error on chunk {chunk_id}: {e}")
-            # Fall back to storing the raw chunk so we don't lose data
-            summary = chunk["text"]
+                try:
+                    response = await Settings.llm.acomplete(prompt)
+                    summary = str(response).strip()
+                except Exception as e:
+                    sys_logger.error(f"Ollama error on chunk {chunk_id}: {e}")
+                    # Fall back to storing the raw chunk so we don't lose data
+                    summary = chunk["text"]
 
-        # Log the exact response
-        indexing_logger.info(f"[CHUNK {chunk_id}] --- SUMMARY ---\n{summary}\n{'='*60}")
+                # Log the exact response
+                indexing_logger.info(f"[CHUNK {chunk_id}] --- SUMMARY ---\n{summary}\n{'='*60}")
 
-        # Persist raw messages to SQLite (with chunk_id as the FK-equivalent)
-        _save_messages_to_sqlite(chunk)
+            # Persist raw messages to SQLite (with chunk_id as the FK-equivalent)
+            _save_messages_to_sqlite(chunk)
 
-        # Build the vector-store node: embed the summary, link back via chunk_id
-        node = TextNode(
-            text=summary,
-            id_=chunk_id,
-            metadata={
-                "source_chunk_id": chunk_id,
-                "date": chunk["date"],
-                "channel": chunk["channel"],
-            },
-        )
-        # Embedding only uses the summary text + date/channel metadata.
-        # source_chunk_id is not semantically useful for embedding.
-        node.excluded_embed_metadata_keys = ["source_chunk_id"]
-        # LLM (retrieval synthesiser) sees everything including source_chunk_id
-        # so the agent can later fetch raw messages from SQLite by that ID.
-        node.excluded_llm_metadata_keys = []
-        node.metadata_template = "{key}: {value}"
-        node.text_template = "Metadata: {metadata_str}\nContent: {content}"
+            # Build the vector-store node: embed the summary, link back via chunk_id
+            node = TextNode(
+                text=summary,
+                id_=chunk_id,
+                metadata={
+                    "source_chunk_id": chunk_id,
+                    "date": chunk["date"],
+                    "channel": chunk["channel"],
+                },
+            )
+            # Embedding only uses the summary text + date/channel metadata.
+            node.excluded_embed_metadata_keys = ["source_chunk_id"]
+            node.excluded_llm_metadata_keys = []
+            node.metadata_template = "{key}: {value}"
+            node.text_template = "Metadata: {metadata_str}\nContent: {content}"
 
-        nodes.append(node)
+            nodes.append(node)
+            
+            if pbar is not None:
+                pbar.update(1)
+
+    finally:
+        if original_temperature is not None:
+            Settings.llm.temperature = original_temperature
+        else:
+            # We don't restore what didn't exist, but typically there's a default. Let's ensure a fallback just in case or delete the attr
+            delattr(Settings.llm, "temperature")
 
     return nodes
 
@@ -294,24 +335,19 @@ async def _summarise_chunks(chunks: List[dict]) -> List[TextNode]:
 # Public async helpers consumed by run_llama_index.py
 # ---------------------------------------------------------------------------
 
-async def get_unprocessed_nodes(id_map: dict) -> Tuple[List[TextNode], set]:
+async def get_raw_chunks(id_map: dict) -> Tuple[List[dict], set]:
     """
-    Full pipeline: read → group → chunk → summarise → return (nodes, updated_ids).
-    Must be awaited; runs Ollama calls sequentially.
+    Returns chunks and the initially loaded processed IDs.
+    Does NOT summarise.
     """
-    groups, processed_msg_ids, newly_seen_ids = _read_and_group_messages(id_map)
+    groups, processed_msg_ids, _ = _read_and_group_messages(id_map)
 
     if not groups:
         return [], processed_msg_ids
 
     sys_logger.info(f"Grouped into {len(groups)} (channel, date) buckets. Building chunks…")
     chunks = _build_raw_chunks(groups)
-    sys_logger.info(f"Created {len(chunks)} chunks. Starting Ollama summarisation…")
-
-    nodes = await _summarise_chunks(chunks)
-
-    updated_processed_ids = processed_msg_ids.union(newly_seen_ids)
-    return nodes, updated_processed_ids
+    return chunks, processed_msg_ids
 
 
 # ---------------------------------------------------------------------------
@@ -326,12 +362,7 @@ def load_or_build_index(id_map: dict):
     os.makedirs("cache", exist_ok=True)
 
     if not os.path.exists(PERSIST_DIR):
-        sys_logger.info("No existing index. Creating genesis node placeholder…")
-        placeholder = TextNode(
-            text="Добряк тут!",
-            metadata={"date": "2023-12-23"},
-            id_="genesis_node",
-        )
+        sys_logger.info("No existing index. Creating an empty genesis index…")
         build_embed_model = OllamaEmbedding(
             model_name="bge-m3",
             base_url="http://localhost:11434",
@@ -339,7 +370,7 @@ def load_or_build_index(id_map: dict):
             keep_alive="30s",
         )
         index = VectorStoreIndex(
-            [placeholder],
+            [],
             show_progress=True,
             embed_model=build_embed_model,
         )
@@ -347,7 +378,7 @@ def load_or_build_index(id_map: dict):
 
         from llama_index.core import Settings as _S
         index._embed_model = _S.embed_model
-        sys_logger.info("Genesis index created and persisted.")
+        sys_logger.info("Empty genesis index created and persisted.")
     else:
         sys_logger.info("Loading existing index from disk…")
         storage_context = StorageContext.from_defaults(persist_dir=PERSIST_DIR)
@@ -363,14 +394,14 @@ async def insert_new_nodes(index, id_map: dict) -> List[TextNode]:
     Called from run_llama_index.update_index().
     """
     sys_logger.info("Checking for new messages to index…")
-    new_nodes, updated_processed_ids = await get_unprocessed_nodes(id_map)
+    chunks, processed_msg_ids = await get_raw_chunks(id_map)
 
-    if not new_nodes:
+    if not chunks:
         sys_logger.info("No new messages to inject.")
         return []
 
-    print(f"🚀 Found {len(new_nodes)} summary nodes. Starting embedding…")
-    sys_logger.info(f"Embedding {len(new_nodes)} summary nodes…")
+    print(f"🚀 Found {len(chunks)} chunks to process. Starting summarisation and embedding…")
+    sys_logger.info(f"Processing and Embedding {len(chunks)} chunks in batches…")
 
     build_embed_model = OllamaEmbedding(
         model_name="bge-m3",
@@ -382,15 +413,41 @@ async def insert_new_nodes(index, id_map: dict) -> List[TextNode]:
     old_embed_model = index._embed_model
     index._embed_model = build_embed_model
 
+    all_new_nodes = []
+    BATCH_SIZE = 50
+
     try:
-        await asyncio.to_thread(index.insert_nodes, new_nodes)
-        index.storage_context.persist(persist_dir=PERSIST_DIR)
+        pbar = atqdm(total=len(chunks), desc="🤖 Summarising with Ollama")
+        for i in range(0, len(chunks), BATCH_SIZE):
+            batch_chunks = chunks[i:i+BATCH_SIZE]
+            
+            # Summarise this batch
+            batch_nodes = await _summarise_chunks(batch_chunks, pbar=pbar)
+            if not batch_nodes:
+                continue
 
-        with open(os.path.join("cache", "processed_messages.json"), "w") as f:
-            json.dump(list(updated_processed_ids), f)
+            # Embed and insert directly to index
+            await asyncio.to_thread(index.insert_nodes, batch_nodes)
+            
+            # Persist vector cache
+            index.storage_context.persist(persist_dir=PERSIST_DIR)
 
-        print(f"✅ Successfully indexed {len(new_nodes)} summary nodes.")
-        sys_logger.info(f"Successfully inserted {len(new_nodes)} nodes into vector DB.")
+            # Persist processed_messages JSON cache
+            batch_msg_ids = set()
+            for c in batch_chunks:
+                for m in c["messages"]:
+                    batch_msg_ids.add(m["id"])
+            
+            processed_msg_ids.update(batch_msg_ids)
+            with open(os.path.join("cache", "processed_messages.json"), "w") as f:
+                json.dump(list(processed_msg_ids), f)
+                
+            all_new_nodes.extend(batch_nodes)
+            sys_logger.info(f"💾 Checkpoint saved: {len(all_new_nodes)}/{len(chunks)} chunks processed and embedded.")
+
+        pbar.close()
+        print(f"✅ Successfully indexed {len(all_new_nodes)} total summary nodes.")
+        sys_logger.info(f"Successfully inserted {len(all_new_nodes)} nodes into vector DB.")
     except Exception as e:
         sys_logger.error(f"Error during node insertion: {e}")
         raise
