@@ -7,3 +7,4 @@ __pycache__/
 messages_txt/
 temp-cache/
 logs/
+discord_data.db

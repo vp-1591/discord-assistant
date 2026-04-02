@@ -455,4 +455,4 @@ async def insert_new_nodes(index, id_map: dict) -> List[TextNode]:
         index._embed_model = old_embed_model
         sys_logger.info("Embedder spinning down.")
 
-    return new_nodes
+    return all_new_nodes
