@@ -1,6 +1,7 @@
 import json
 import asyncio
 import re
+import sqlite3
 from typing import List, Optional, TYPE_CHECKING
 from datetime import datetime
 
@@ -10,7 +11,6 @@ from llama_index.retrievers.bm25 import BM25Retriever
 from llama_index.postprocessor.flag_embedding_reranker import FlagEmbeddingReranker
 from llama_index.core.query_engine import RetrieverQueryEngine
 from llama_index.core.tools import FunctionTool
-from llama_index.core.schema import QueryBundle
 import Stemmer
 
 if TYPE_CHECKING:
@@ -19,10 +19,11 @@ if TYPE_CHECKING:
 from src.utils.logger_setup import sys_logger, trace_logger
 from src.config.config import configure_settings, RAG_CACHE_PATH
 from src.config.prompts import (
-    get_qa_prompt_tmpl, SUMMARY_PROMPT_TEMPLATE, 
+    get_qa_prompt_tmpl, SUMMARY_PROMPT_TEMPLATE,
     get_persona_prompt, get_system_prompt,
     SEARCH_ARCHIVE_DESC, FETCH_USER_OPINION_DESC, UPDATE_USER_OPINION_DESC,
-    PEEK_RECENT_SEARCHES_DESC, PULL_CACHED_RESULT_DESC
+    PEEK_RECENT_SEARCHES_DESC, PULL_CACHED_RESULT_DESC,
+    AGENT1_HYBRID_SEARCH_DESC, AGENT1_FETCH_RAW_LOGS_DESC, AGENT1_SQL_QUERY_DESC
 )
 from src.data.ingestion import load_or_build_index, insert_new_nodes
 from src.core.agent_core import ReActAgentWorkflow
@@ -51,7 +52,15 @@ class RAGAssistant:
             
             if self._nodes:
                 sys_logger.info(f"Live reloading query engine with {len(self._nodes)} total nodes...")
-                self.fusion_retriever, self.reranker, self.query_engine = self._setup_query_engine()
+                
+                # Run the heavy initialization (BM25 indexing & Reranker load) in a background thread
+                new_fusion, new_rerank, new_engine = await asyncio.to_thread(self._setup_query_engine)
+                
+                # Switch to the new instances. 
+                # (Note: Old instances will be cleaned up by Python's GC naturally)
+                self.fusion_retriever = new_fusion
+                self.reranker = new_rerank
+                self.query_engine = new_engine
             
             return len(new_nodes) if new_nodes else 0
         return 0
@@ -80,44 +89,135 @@ class RAGAssistant:
         import os
         os.environ["CUDA_VISIBLE_DEVICES"] = "-1"
         reranker = FlagEmbeddingReranker(model="BAAI/bge-reranker-v2-m3", top_n=10, use_fp16=False)
-        
-        qa_prompt_tmpl = get_qa_prompt_tmpl(self.name)
 
+        # query_engine is kept for potential future use and index health checks
         query_engine = RetrieverQueryEngine.from_args(
             retriever=fusion_retriever,
             node_postprocessors=[reranker],
             response_mode="compact",
         )
-        query_engine.update_prompts({"response_synthesizer:text_qa_template": qa_prompt_tmpl})
         sys_logger.info("Query engine ready.")
         return fusion_retriever, reranker, query_engine
 
-    async def aquery(self, query_text: str):
-        if self.query_engine is None or self.fusion_retriever is None:
+    def _build_agent1_tools(self) -> list:
+        """Build the three tools available to Agent1's ReAct loop."""
+
+        # --- Tool 1: hybrid_search ---
+        async def hybrid_search(query: str) -> str:
+            if self.fusion_retriever is None:
+                return "Архив пуст или не инициализирован."
+            initial_nodes = await self.fusion_retriever.aretrieve(query)
+            reranked_nodes = await asyncio.to_thread(
+                self.reranker.postprocess_nodes, initial_nodes, query_str=query
+            )
+            if not reranked_nodes:
+                return "Ничего не найдено по запросу."
+            parts = []
+            for n in reranked_nodes:
+                node_type = n.node.metadata.get("node_type", "summary")
+                label = "[RAW LOG]" if node_type == "raw_log" else "[SUMMARY]"
+                parts.append(f"{label}\n{n.node.get_content(metadata_mode='llm')}")
+            return "\n\n---\n\n".join(parts)
+
+        # --- Tool 2: fetch_raw_logs ---
+        async def fetch_raw_logs(source_chunk_id: str) -> str:
+            def _query():
+                conn = sqlite3.connect(
+                    "file:discord_data.db?mode=ro", uri=True,
+                    check_same_thread=False
+                )
+                try:
+                    conn.row_factory = sqlite3.Row
+                    cur = conn.cursor()
+                    cur.execute(
+                        "SELECT author, content, timestamp, channel "
+                        "FROM messages WHERE chunk_id = ? ORDER BY timestamp ASC",
+                        (source_chunk_id,)
+                    )
+                    rows = cur.fetchmany(100)
+                    if not rows:
+                        return f"Нет сообщений для chunk_id='{source_chunk_id}'."
+                    lines = [f"[{r['timestamp']}] #{r['channel']} {r['author']}: {r['content']}" for r in rows]
+                    return "\n".join(lines)
+                finally:
+                    conn.close()
+            return await asyncio.to_thread(_query)
+
+        # --- Tool 3: execute_sql ---
+        _BLOCKED = re.compile(
+            r"\b(INSERT|UPDATE|DELETE|DROP|ALTER|CREATE|REPLACE|TRUNCATE|ATTACH|DETACH)\b",
+            re.IGNORECASE
+        )
+
+        async def execute_sql(query: str) -> str:
+            if _BLOCKED.search(query):
+                return "ОШИБКА: Разрешены только SELECT-запросы."
+
+            def _query():
+                conn = sqlite3.connect(
+                    "file:discord_data.db?mode=ro", uri=True,
+                    check_same_thread=False
+                )
+                try:
+                    conn.row_factory = sqlite3.Row
+                    cur = conn.cursor()
+                    # Validate syntax before execution
+                    try:
+                        cur.execute(f"EXPLAIN {query}")
+                    except sqlite3.OperationalError as e:
+                        return f"ОШИБКА СИНТАКСИСА SQL: {e}"
+                    cur.execute(query)
+                    rows = cur.fetchmany(100)
+                    if not rows:
+                        return "Запрос выполнен успешно. Результатов не найдено."
+                    headers = rows[0].keys()
+                    lines = [" | ".join(str(r[h]) for h in headers) for r in rows]
+                    header_line = " | ".join(headers)
+                    truncated = " [результаты обрезаны до 100 строк]" if len(rows) == 100 else ""
+                    return f"{header_line}\n" + "\n".join(lines) + truncated
+                finally:
+                    conn.close()
+            return await asyncio.to_thread(_query)
+
+        return [
+            FunctionTool.from_defaults(
+                async_fn=hybrid_search,
+                name="hybrid_search",
+                description=AGENT1_HYBRID_SEARCH_DESC
+            ),
+            FunctionTool.from_defaults(
+                async_fn=fetch_raw_logs,
+                name="fetch_raw_logs",
+                description=AGENT1_FETCH_RAW_LOGS_DESC
+            ),
+            FunctionTool.from_defaults(
+                async_fn=execute_sql,
+                name="execute_sql",
+                description=AGENT1_SQL_QUERY_DESC
+            ),
+        ]
+
+    async def aquery(self, query_text: str) -> str:
+        if self.fusion_retriever is None or self.reranker is None:
             sys_logger.warning("aquery called but query_engine is not initialized (index is empty).")
             return "Архив пуст или ещё инициализируется. Пожалуйста, подождите или добавьте данные."
 
-        sys_logger.info(f"Processing RAG Pipeline for: {query_text}")
-        initial_nodes = await self.fusion_retriever.aretrieve(query_text)
-        
-        reranked_nodes = await asyncio.to_thread(
-            self.reranker.postprocess_nodes, initial_nodes, query_str=query_text
-        )
-        
-        context_str = "\n\n".join([n.node.get_content(metadata_mode="llm") for n in reranked_nodes])
-        qa_prompt_tmpl = get_qa_prompt_tmpl(self.name)
-        agent1_prompt = qa_prompt_tmpl.format(
-            context_str=context_str,
-            query_str=query_text
+        sys_logger.info(f"[Agent1] Starting ReAct loop for: {query_text}")
+        agent1_system = get_qa_prompt_tmpl(self.name)
+        tools = self._build_agent1_tools()
+
+        agent1 = ReActAgentWorkflow(
+            llm=Settings.llm,
+            tools=tools,
+            system_prompt=agent1_system,
+            timeout=150
         )
 
-        response = await self.query_engine.asynthesize(
-            query_bundle=QueryBundle(query_text),
-            nodes=reranked_nodes
-        )
-        
-        trace_logger.info(f"--- AGENT 1 (RAG) PROMPT ---\n{agent1_prompt}\n")
-        return response
+        result = await agent1.run(input=query_text)
+        response_str = result.get("response", str(result)).strip() if isinstance(result, dict) else str(result).strip()
+
+        trace_logger.info(f"--- AGENT 1 (ReAct) FINAL RESPONSE ---\n{response_str}\n")
+        return response_str
 
     def _build_tools(self, author_id: str, author_name: str) -> list:
         om = self.opinion_manager

@@ -301,6 +301,7 @@ async def _summarise_chunks(chunks: List[dict], pbar=None) -> List[TextNode]:
             _save_messages_to_sqlite(chunk)
 
             # Build the vector-store node: embed the summary, link back via chunk_id
+            node_type = "raw_log" if chunk.get("bypass") else "summary"
             node = TextNode(
                 text=summary,
                 id_=chunk_id,
@@ -308,10 +309,12 @@ async def _summarise_chunks(chunks: List[dict], pbar=None) -> List[TextNode]:
                     "source_chunk_id": chunk_id,
                     "date": chunk["date"],
                     "channel": chunk["channel"],
+                    "node_type": node_type,
                 },
             )
             # Embedding only uses the summary text + date/channel metadata.
-            node.excluded_embed_metadata_keys = ["source_chunk_id"]
+            # node_type is excluded from embeddings — it's a retrieval-time label only.
+            node.excluded_embed_metadata_keys = ["source_chunk_id", "node_type"]
             node.excluded_llm_metadata_keys = []
             node.metadata_template = "{key}: {value}"
             node.text_template = "Metadata: {metadata_str}\nContent: {content}"

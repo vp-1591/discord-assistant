@@ -1,3 +1,3 @@
 Check if Minimum token bypass causes problems with raw logs mixing with LLM summaries
-Update Agent1 to ReeAct agent that can use tools to retrieve information from the database, write sql queries, fetch sources for relevant summaries and make an accurate report for Agent2.
+Update Agent1 to ReAct agent that can use tools to retrieve information from the database, write sql queries/use aggregation tools, fetch sources for relevant summaries and make an accurate report for Agent2.
 Implement Users Aliases system. (We need some kind of dictionary that will translate nicknames from the database(and other possible aliases) (llama_index_storage) to IDs and from IDs to the current nickname)

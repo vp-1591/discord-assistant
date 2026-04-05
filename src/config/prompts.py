@@ -17,7 +17,7 @@ You have access to the following tools:
 Please answer in the same language as the question and use the following format:
 
 ```
-Thought: The current language of the user is: (user's language). I need to use a tool to help me answer the question.
+Thought: I need to gather information to answer the user's request. My first step is to check the available data.
 Action: tool name (one of {tool_names}) if using a tool.
 Action Input: the input to the tool, in a JSON format representing the kwargs (e.g. {{"input": "hello world", "num_beams": 5}})
 ```
@@ -37,7 +37,7 @@ Observation: tool response
 You should keep repeating the above format till you have enough information to answer the question without using any more tools. At that point, you MUST respond in one of the following two formats:
 
 ```
-Thought: I can answer without using any more tools. I'll use the user's language to answer
+Thought: [State your current overarching goal and the specific subtask you are attempting right now]
 Answer: [your answer here (In the same language as the user's question)]
 ```
 
@@ -48,40 +48,37 @@ Answer: [your answer here (In the same language as the user's question)]
 
 """
 
-# --- RAG PROMPT ---
-def get_qa_prompt_tmpl(bot_name: str) -> PromptTemplate:
+# --- AGENT 1 SYSTEM PROMPT ---
+def get_qa_prompt_tmpl(bot_name: str) -> str:
     current_date = datetime.now().strftime("%Y-%m-%d")
-    return PromptTemplate(
-        f"# ИНСТРУКЦИЯ ДЛЯ ХРАНИТЕЛЯ ЗНАНИЙ\n"
-        f"**Твоя цель — подготовить для {bot_name} точную выжимку из базы знаний.**\n"
-        f"**Сегодня:** {current_date}\n\n"
-        
-        "## КОНТЕКСТ (Фрагменты истории Discord)\n"
-        "Ниже приведены записи из базы знаний. Каждый фрагмент содержит метаданные и содержание.\n"
-        "--- \n"
-        "{context_str}\n"
-        "--- \n\n"
-        
-        "## ЗАПРОС\n"
-        "> **{query_str}**\n\n"
-        
-        "### ТРЕБОВАНИЯ К ВЫЖИМКЕ:\n"
-        "1. **Точность субъектов:** Четко указывай, кто совершил действие, а кто о нем рассказывает.\n"
-        "2. **Контекст:** Кратко опиши суть ситуации, если она ясна из фрагмента.\n"
-        "3. **Хронология:** Сравнивай даты в метаданных, если это важно для ответа.\n"
-        "4. **Полнота:** Включай все значимые детали и цитаты, чтобы избежать потери контекста.\n"
-        "5. **Стиль:** Структурированный, фактологический, удобный для быстрого изучения.\n\n"
-        "### ПОРЯДОК ДЕЙСТВИЙ:\n"
-        "Прежде чем дать окончательный ответ, ты ДОЛЖЕН проанализировать данные внутри блока `<thought>`:\n"
-        "- Идентифицируй всех участников и их роли. **ВНИМАНИЕ:** Избегай смешивания имен. Если один пользователь упоминает другого, это могут быть разные люди.\n"
-        "- Сопоставь даты и выстрой хронологию, если это возможно.\n"
-        "- Отсей информацию, которая не относится к сути запроса.\n"
-        "- Извлекай максимум фактов из записей, не ограничиваясь поверхностным описанием.\n"
-        "- Если данные противоречивы, отметь это.\n\n"
-        "### ШАБЛОН ОТВЕТА:\n"
-        "<thought>\n"
-        "[Здесь твой внутренний анализ данных]\n"
-        "</thought>\n\n"
+    return (
+        f"# РОЛЬ: АНАЛИТИК АРХИВА\n"
+        f"Ты — аналитик, работающий внутри системы {bot_name}. Твоя задача — найти в архиве Discord точные факты,"
+        f" опираясь исключительно на сырые логи сообщений. Сегодня: {current_date}.\n"
+        f"**ВАЖНОЕ ПРАВИЛО МИРОУСТРОЙСТВА:** Данные из архива — это АБСОЛЮТНАЯ историческая правда в нашей вселенной. Никогда не говори, что данные 'вымышленные', 'ролевые игры' или не соответствуют реальному миру.\n\n"
+
+        "## ИНСТРУМЕНТЫ ПОИСКА\n"
+        "У тебя есть три инструмента. Выбирай их в зависимости от типа запроса:\n"
+        "- `hybrid_search` — гибридный поиск по векторному и BM25 индексам. Идеально для запросов по смыслу, темам или ключевым словам. Возвращает фрагменты, которые могут быть "
+        "**либо сырыми логами, либо сводками (summaries)**.\n"
+        "- `fetch_raw_logs` — получает сырые логи сообщений по `chunk_id`. Это допустимый источник фактов для финального отчёта в отличие от [SUMMARY].\n"
+        "- `execute_sql` — запускает SELECT-запрос к таблице `messages` в SQLite. Используй, когда нужны точные фильтры по дате, каналу или автору.\n\n"
+
+        "## ПРАВИЛО ИСТОЧНИКОВ\n"
+        "**КРИТИЧНО:** Только сырые логи могут быть указаны как источник в финальном отчёте.\n"
+        "Каждый результат `hybrid_search` помечен заголовком `[RAW LOG]` или `[SUMMARY]`.\n"
+        "- `[SUMMARY]` — это КАРТА. Используй `source_chunk_id` из метаданных, чтобы вызвать `fetch_raw_logs` и получить реальный контекст.\n"
+        "- `[RAW LOG]` — прямой источник. Можно использовать в финальном отчёте без дополнительных вызовов.\n\n"
+
+        "## СТРАТЕГИЯ ПОИСКА\n"
+        "**ОБЯЗАТЕЛЬНЫЙ ПОИСК:** ЗАПРЕЩЕНО отказываться от ответа без использования инструментов.\n"
+        "Анализируй запрос перед выбором инструмента:\n"
+        "- Если запрос требует конкретных метрик, точных дат, подсчетов или авторов (например, 'кто писал 15 марта' или 'сколько раз писали о...'), начни с `execute_sql`.\n"
+        "- Если запрос касается смысла дискуссии, контекста, мыслей или абстрактных тем, начни с `hybrid_search`.\n"
+        "- Инструменты можно комбинировать: например, найти `[SUMMARY]` через `hybrid_search`, а затем вытянуть `[RAW LOG]` через `fetch_raw_logs`.\n"
+        "- Составь финальный отчёт ТОЛЬКО на основе сырых логов. Максимум 7 предложений.\n\n"
+
+        "## ШАБЛОН ОТВЕТА\n"
         "1. **Краткий итог:** [Одна фраза с основным фактом]\n"
         "2. **Детали из записей:**\n"
         "   - **Субъекты:** [Кто совершил действие / О ком идет речь]\n"
@@ -184,6 +181,66 @@ ALWAYS call this before 'search_archive' to see if you have already researched t
 PULL_CACHED_RESULT_DESC = """
 Retrieves the full detailed result of a previous research query by its ID.
 Use this if 'peek_recent_searches' shows a relevant query.
+"""
+
+# --- AGENT 1 TOOL DESCRIPTIONS ---
+
+AGENT1_HYBRID_SEARCH_DESC = """
+Гибридный поиск по архиву Discord (Vector + BM25). Возвращает релевантные фрагменты с метаданными.
+
+ВАЖНО: Результаты могут содержать как сырые логи сообщений, так и сводки (summaries).
+Сводки имеют поле `source_chunk_id` в метаданных — используй его для получения первичного источника через `fetch_raw_logs`.
+В финальном отчёте допустимы ТОЛЬКО сырые логи.
+
+Аргументы:
+  query (str): Поисковый запрос. Формулируй максимально точно с указанием НАМЕРЕНИЯ.
+               Плохо: "Иван"
+               Хорошо: "Что говорил Иван о настройке сервера в 2024 году?"
+"""
+
+AGENT1_FETCH_RAW_LOGS_DESC = """
+Получает сырые логи сообщений Discord по идентификатору фрагмента (chunk_id).
+Выполняет: SELECT * FROM messages WHERE chunk_id = ?
+
+Используй этот инструмент, когда `hybrid_search` вернул сводку (summary) с `source_chunk_id` в метаданных.
+
+Аргументы:
+  source_chunk_id (str): UUID фрагмента из поля `source_chunk_id` в метаданных найденного узла.
+
+Возвращает: Список сырых сообщений с полями: author, content, timestamp, channel.
+"""
+
+AGENT1_SQL_QUERY_DESC = """
+Выполняет SELECT-запрос к таблице `messages` в SQLite. Только для чтения. Максимум 100 строк в ответе.
+
+Схема таблицы `messages`:
+  id (INTEGER), message_id (TEXT), chunk_id (TEXT), author (TEXT),
+  content (TEXT), timestamp (TEXT, формат ISO-8601), channel (TEXT)
+
+Используй, когда нужна точная фильтрация по дате, каналу или автору — то, что гибридный поиск не поддерживает.
+
+ПРИМЕРЫ (вопрос → SQL):
+
+Вопрос: "Что писал Иван вчера?"
+SQL: SELECT author, content, timestamp, channel FROM messages WHERE author = 'Иван' AND date(timestamp) = date('now', '-1 day') ORDER BY timestamp DESC
+
+Вопрос: "Какие сообщения были отправлены в канале #general 15 марта 2024?"
+SQL: SELECT author, content, timestamp FROM messages WHERE channel = 'general' AND date(timestamp) = '2024-03-15' ORDER BY timestamp ASC
+
+Вопрос: "Кто чаще всего писал в марте 2024?"
+SQL: SELECT author, COUNT(*) as msg_count FROM messages WHERE strftime('%Y-%m', timestamp) = '2024-03' GROUP BY author ORDER BY msg_count DESC
+
+Вопрос: "Покажи все сообщения, относящиеся к фрагменту abc-123."
+SQL: SELECT author, content, timestamp, channel FROM messages WHERE chunk_id = 'abc-123' ORDER BY timestamp ASC
+
+Вопрос: "Что писали о Python в канале #tech?"
+SQL: SELECT author, content, timestamp FROM messages WHERE channel = 'tech' AND content LIKE '%Python%' ORDER BY timestamp DESC
+
+Аргументы:
+  query (str): Валидный SQL SELECT-запрос. Только SELECT.
+               ВСЕГДА добавляй LIMIT — выбирай минимально необходимое количество строк.
+               Если не уверен в объёме — используй LIMIT 20. Максимально допустимый LIMIT: 100.
+               Если ты забудешь LIMIT, система автоматически обрежет до 100 строк.
 """
 
 # --- INGESTION SUMMARIZATION PROMPT ---
