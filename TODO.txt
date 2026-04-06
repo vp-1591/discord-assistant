@@ -1,3 +1,8 @@
 Check if Minimum token bypass causes problems with raw logs mixing with LLM summaries
 Update Agent1 to ReAct agent that can use tools to retrieve information from the database, write sql queries/use aggregation tools, fetch sources for relevant summaries and make an accurate report for Agent2.
 Implement Users Aliases system. (We need some kind of dictionary that will translate nicknames from the database(and other possible aliases) (llama_index_storage) to IDs and from IDs to the current nickname)
+Swap Agent1 and Agent2 at receiving user message to decrease response time by 0.98 ReAct steps. (Thus Agent2 doesn't have to waste one step to invoke agent1 for every time question requires data retrieval; since questions not requiring data retrieval are very rare)
+Organize logging system; I need to log qwen shadow thoughts; I need to log rag retirievals; I need to have simple log(readable) and detailed log with full prompts headers context etc. Maybe split detailed logs into sub logs and merge everything into one simplified readable log.
+Fix Agent1 not using sources tool; fix Agent1 not trusting info(summaries confuse it)
+Investigate rag quality drop
+Add cache double check for search_archive

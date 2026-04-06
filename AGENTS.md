@@ -86,3 +86,4 @@ We use minimum token bypass in summaries generation to decrease hallucinations a
 Whenever you add any data storage, add it to gitignore.
 When writing or modifying prompt templates in src/config/prompts.py, YOU MUST activate the prompt-engineering skill to write prompts with respect to qwen3:8b size.
 Every update to the Vector Index MUST include source_chunk_id in metadata to maintain the foreign-key link to SQLite
+Whenever you add any new functionality, make sure it is compliant with the SoC architecture.

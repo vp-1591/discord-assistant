@@ -12,11 +12,14 @@ from llama_index.postprocessor.flag_embedding_reranker import FlagEmbeddingReran
 from llama_index.core.query_engine import RetrieverQueryEngine
 from llama_index.core.tools import FunctionTool
 import Stemmer
+import sys
+import textwrap
 
 if TYPE_CHECKING:
     from src.data.opinion_manager import OpinionManager
 
-from src.utils.logger_setup import sys_logger, trace_logger
+from src.utils.logger_setup import sys_logger, trace_logger, log_trace
+from src.utils.context import transaction_id, new_tx_id, run_with_context, span_id, new_span_id
 from src.config.config import configure_settings, RAG_CACHE_PATH
 from src.config.prompts import (
     get_qa_prompt_tmpl, SUMMARY_PROMPT_TEMPLATE,
@@ -78,8 +81,12 @@ class RAGAssistant:
             stemmer=Stemmer.Stemmer("russian"),
             language="russian"
         )
+        from src.utils.llama_index_utils import LoggedRetriever
+        logged_vector = LoggedRetriever("VECTOR_SEARCH", vector_retriever)
+        logged_bm25 = LoggedRetriever("BM25_SEARCH", bm25_retriever)
+
         fusion_retriever = QueryFusionRetriever(
-            [vector_retriever, bm25_retriever],
+            [logged_vector, logged_bm25],
             similarity_top_k=50,
             num_queries=1,
             mode="reciprocal_rerank",
@@ -106,18 +113,51 @@ class RAGAssistant:
         async def hybrid_search(query: str) -> str:
             if self.fusion_retriever is None:
                 return "Архив пуст или не инициализирован."
-            initial_nodes = await self.fusion_retriever.aretrieve(query)
-            reranked_nodes = await asyncio.to_thread(
-                self.reranker.postprocess_nodes, initial_nodes, query_str=query
-            )
-            if not reranked_nodes:
-                return "Ничего не найдено по запросу."
-            parts = []
-            for n in reranked_nodes:
-                node_type = n.node.metadata.get("node_type", "summary")
-                label = "[RAW LOG]" if node_type == "raw_log" else "[SUMMARY]"
-                parts.append(f"{label}\n{n.node.get_content(metadata_mode='llm')}")
-            return "\n\n---\n\n".join(parts)
+            
+            # Pin new Span ID for this standalone RAG operation
+            span_token = span_id.set(new_span_id())
+            try:
+                initial_nodes = await self.fusion_retriever.aretrieve(query)
+                
+                #(DEBUG): human-readable pointer to full logs
+                if initial_nodes:
+                    trace_logger.debug(
+                        f"[hybrid_search] Retrieved {len(initial_nodes)} nodes pre-rerank for query: {query!r}"
+                    )
+
+                # LAYER 3 (TRACE): raw metadata dicts
+                log_trace(
+                    trace_logger,
+                    "[PRE-RERANK RAW]",
+                    nodes=[
+                        {"score": n.score, "metadata": n.node.metadata,
+                         "text_preview": n.node.get_content()[:300]}
+                        for n in initial_nodes
+                    ]
+                )
+
+                reranked_nodes = await asyncio.to_thread(
+                    run_with_context, self.reranker.postprocess_nodes,
+                    initial_nodes, query_str=query
+                )
+                if not reranked_nodes:
+                    return "Ничего не найдено по запросу."
+
+                parts = []
+                for n in reranked_nodes:
+                    node_type = n.node.metadata.get("node_type", "summary")
+                    label = "[RAW LOG]" if node_type == "raw_log" else "[SUMMARY]"
+                    parts.append(f"{label}\n{n.node.get_content(metadata_mode='llm')}")
+
+                # LAYER 1 (DEBUG): final reranked summary
+                full_response = "\n\n---\n\n".join(parts)
+                trace_logger.debug(
+                    f"[hybrid_search] Reranked to {len(reranked_nodes)} nodes."
+                )
+
+                return full_response
+            finally:
+                span_id.reset(span_token)
 
         # --- Tool 2: fetch_raw_logs ---
         async def fetch_raw_logs(source_chunk_id: str) -> str:
@@ -138,10 +178,13 @@ class RAGAssistant:
                     if not rows:
                         return f"Нет сообщений для chunk_id='{source_chunk_id}'."
                     lines = [f"[{r['timestamp']}] #{r['channel']} {r['author']}: {r['content']}" for r in rows]
-                    return "\n".join(lines)
+                    full_log = "\n".join(lines)
+                    trace_logger.debug(f"[fetch_raw_logs] Fetched {len(rows)} lines for {source_chunk_id}.")
+                    return full_log
                 finally:
                     conn.close()
-            return await asyncio.to_thread(_query)
+            # run_with_context ensures Transaction_ID survives the thread boundary
+            return await asyncio.to_thread(run_with_context, _query)
 
         # --- Tool 3: execute_sql ---
         _BLOCKED = re.compile(
@@ -177,7 +220,8 @@ class RAGAssistant:
                     return f"{header_line}\n" + "\n".join(lines) + truncated
                 finally:
                     conn.close()
-            return await asyncio.to_thread(_query)
+            # run_with_context ensures Transaction_ID survives the thread boundary
+            return await asyncio.to_thread(run_with_context, _query)
 
         return [
             FunctionTool.from_defaults(
@@ -202,22 +246,36 @@ class RAGAssistant:
             sys_logger.warning("aquery called but query_engine is not initialized (index is empty).")
             return "Архив пуст или ещё инициализируется. Пожалуйста, подождите или добавьте данные."
 
-        sys_logger.info(f"[Agent1] Starting ReAct loop for: {query_text}")
-        agent1_system = get_qa_prompt_tmpl(self.name)
-        tools = self._build_agent1_tools()
+        # Inherit Transaction_ID if already in a session, else create new
+        current_tx = transaction_id.get()
+        is_new_tx = False
+        if current_tx == "SYS":
+            tx = new_tx_id()
+            tx_token = transaction_id.set(tx)
+            is_new_tx = True
+        else:
+            tx = current_tx
 
-        agent1 = ReActAgentWorkflow(
-            llm=Settings.llm,
-            tools=tools,
-            system_prompt=agent1_system,
-            timeout=150
-        )
+        try:
+            sys_logger.info(f"[Agent1] Starting ReAct loop | TxID={tx} | query={query_text!r}")
+            agent1_system = get_qa_prompt_tmpl(self.name)
+            tools = self._build_agent1_tools()
 
-        result = await agent1.run(input=query_text)
-        response_str = result.get("response", str(result)).strip() if isinstance(result, dict) else str(result).strip()
+            agent1 = ReActAgentWorkflow(
+                llm=Settings.llm,
+                tools=tools,
+                system_prompt=agent1_system,
+                agent_name="Agent1",
+                timeout=150
+            )
 
-        trace_logger.info(f"--- AGENT 1 (ReAct) FINAL RESPONSE ---\n{response_str}\n")
-        return response_str
+            result = await agent1.run(input=query_text)
+            response_str = result.get("response", str(result)).strip() if isinstance(result, dict) else str(result).strip()
+
+            return response_str
+        finally:
+            if is_new_tx:
+                transaction_id.reset(tx_token)
 
     def _build_tools(self, author_id: str, author_name: str) -> list:
         om = self.opinion_manager
@@ -315,14 +373,30 @@ class RAGAssistant:
             replied_to_msg=replied_to_msg
         )
 
-        tools = self._build_tools(author_id=author_id, author_name=author_name)
-        agent = ReActAgentWorkflow(llm=Settings.llm, tools=tools, system_prompt=system_prompt, timeout=300)
+        # Inherit Transaction_ID if already in a session, else create new
+        current_tx = transaction_id.get()
+        is_new_tx = False
+        if current_tx == "SYS":
+            tx = new_tx_id()
+            tx_token = transaction_id.set(tx)
+            is_new_tx = True
+        else:
+            tx = current_tx
 
-        agent_response = await agent.run(input=query_text)
-        final_response = agent_response.get('response', str(agent_response)).strip() if isinstance(agent_response, dict) else str(agent_response).strip()
-        
-        trace_logger.info(f"--- AGENT TRANSACTION COMPLETE ---\n{'='*50}")
-        return final_response
+        try:
+            sys_logger.info(f"[Agent2] Starting persona loop | TxID={tx} | user={author_name!r}")
+
+            tools = self._build_tools(author_id=author_id, author_name=author_name)
+            agent = ReActAgentWorkflow(llm=Settings.llm, tools=tools, system_prompt=system_prompt, agent_name="Agent2", timeout=300)
+
+            agent_response = await agent.run(input=query_text)
+            final_response = agent_response.get('response', str(agent_response)).strip() if isinstance(agent_response, dict) else str(agent_response).strip()
+            
+            trace_logger.info(f"--- AGENT TRANSACTION COMPLETE ---\n{'='*50}")
+            return final_response
+        finally:
+            if is_new_tx:
+                transaction_id.reset(tx_token)
 
     async def generate_summary(self, prev_summary: str, messages: List[str]):
         prompt = SUMMARY_PROMPT_TEMPLATE.format(
