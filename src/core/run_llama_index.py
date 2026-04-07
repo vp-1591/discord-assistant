@@ -11,7 +11,7 @@ from llama_index.retrievers.bm25 import BM25Retriever
 from llama_index.postprocessor.flag_embedding_reranker import FlagEmbeddingReranker
 from llama_index.core.query_engine import RetrieverQueryEngine
 from llama_index.core.tools import FunctionTool
-import Stemmer
+import Stemmer  # type: ignore
 import sys
 import textwrap
 
@@ -25,7 +25,7 @@ from src.config.prompts import (
     get_qa_prompt_tmpl, SUMMARY_PROMPT_TEMPLATE,
     get_persona_prompt, get_system_prompt,
     SEARCH_ARCHIVE_DESC, FETCH_USER_OPINION_DESC, UPDATE_USER_OPINION_DESC,
-    PEEK_RECENT_SEARCHES_DESC, PULL_CACHED_RESULT_DESC,
+    PEEK_CACHED_SEARCHES_DESC, PULL_CACHED_RESULT_DESC,
     AGENT1_HYBRID_SEARCH_DESC, AGENT1_FETCH_RAW_LOGS_DESC, AGENT1_SQL_QUERY_DESC
 )
 from src.data.ingestion import load_or_build_index, insert_new_nodes
@@ -160,7 +160,7 @@ class RAGAssistant:
                 span_id.reset(span_token)
 
         # --- Tool 2: fetch_raw_logs ---
-        async def fetch_raw_logs(source_chunk_id: str) -> str:
+        async def fetch_raw_logs(source_chunk_ids: list) -> str:
             def _query():
                 conn = sqlite3.connect(
                     "file:discord_data.db?mode=ro", uri=True,
@@ -169,17 +169,22 @@ class RAGAssistant:
                 try:
                     conn.row_factory = sqlite3.Row
                     cur = conn.cursor()
+                    
+                    if not source_chunk_ids:
+                        return "Предоставлен пустой список chunk_id."
+                        
+                    placeholders = ",".join("?" for _ in source_chunk_ids)
                     cur.execute(
-                        "SELECT author, content, timestamp, channel "
-                        "FROM messages WHERE chunk_id = ? ORDER BY timestamp ASC",
-                        (source_chunk_id,)
+                        f"SELECT author, content, timestamp, channel "
+                        f"FROM messages WHERE chunk_id IN ({placeholders}) ORDER BY timestamp ASC",
+                        tuple(source_chunk_ids)
                     )
-                    rows = cur.fetchmany(100)
+                    rows = cur.fetchmany(100 * max(1, len(source_chunk_ids)))
                     if not rows:
-                        return f"Нет сообщений для chunk_id='{source_chunk_id}'."
+                        return f"Нет сообщений для данных chunk_ids."
                     lines = [f"[{r['timestamp']}] #{r['channel']} {r['author']}: {r['content']}" for r in rows]
                     full_log = "\n".join(lines)
-                    trace_logger.debug(f"[fetch_raw_logs] Fetched {len(rows)} lines for {source_chunk_id}.")
+                    trace_logger.debug(f"[fetch_raw_logs] Fetched {len(rows)} lines for {len(source_chunk_ids)} chunks.")
                     return full_log
                 finally:
                     conn.close()
@@ -296,8 +301,9 @@ class RAGAssistant:
             
             return clean_response
 
-        async def peek_recent_searches() -> list:
-            return self.rag_cache.get_recent_queries()
+        async def peek_cached_searches() -> str:
+            results = self.rag_cache.get_recent_queries()
+            return json.dumps(results, ensure_ascii=False)
 
         async def pull_cached_result(result_id: int) -> str:
             return self.rag_cache.get_result_by_id(result_id)
@@ -330,9 +336,9 @@ class RAGAssistant:
                 description=SEARCH_ARCHIVE_DESC
             ),
             FunctionTool.from_defaults(
-                async_fn=peek_recent_searches,
-                name="peek_recent_searches",
-                description=PEEK_RECENT_SEARCHES_DESC
+                async_fn=peek_cached_searches,
+                name="peek_cached_searches",
+                description=PEEK_CACHED_SEARCHES_DESC
             ),
             FunctionTool.from_defaults(
                 async_fn=pull_cached_result,

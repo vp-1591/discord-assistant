@@ -130,26 +130,37 @@ class ReActAgentWorkflow(Workflow):
                     for b in (blocks or [])
                     if (b.get("block_type") if isinstance(b, dict) else getattr(b, "block_type", "")) == "thinking"
                 ]
-                if thinking_parts:
-                    trace_logger.debug(
-                        "--- [QWEN SHADOW THOUGHTS] ---\n"
-                        + "\n---\n".join(thinking_parts)
-                    )
-                else:
-                    trace_logger.debug("[QWEN] No thinking block detected in this response.")
+
             except Exception as e:
                 trace_logger.debug(f"[QWEN] Thought extraction skipped: {e}")
 
-            # Robustness fix: LlamaIndex ReAct parser MUST have a "Thought:" line.
-            # If the LLM skips it and jumps straight to "Action:", we prepend a default thought.
-            if raw_content and raw_content.strip().startswith("Action:") and "Thought:" not in raw_content:
-                raw_content = f"Thought: I need to use a tool to fulfill the request.\n{raw_content}"
-                trace_logger.info(f"--- [{self.agent_name}] [ROBUSTNESS FIX] PREPENDED MISSING THOUGHT ---")
+            # Inject the natively extracted thinking parts into the raw content
+            # so LlamaIndex captures Qwen's <think> block as the official ReAct Thought.
+            thought_text = ""
+            try:
+                if 'thinking_parts' in locals() and thinking_parts:
+                    thought_text = "\n".join(thinking_parts)
+                    thought_text = f"<think>\n{thought_text}\n</think>\n"
+            except Exception:
+                pass
+
+            if "Thought:" not in raw_content:
+                raw_content = f"Thought:\n{thought_text}{raw_content}"
+            elif thought_text:
+                raw_content = raw_content.replace("Thought:", f"Thought:\n{thought_text}", 1)
 
             step_idx = len(current_reasoning) + 1
             # INFO: lean summary; DEBUG: full LLM text
             trace_logger.info(f"[{self.agent_name}] [STEP {step_idx}] LLM Responded")
             trace_logger.debug(f"--- [{self.agent_name}] [STEP {step_idx}] LLM OUTPUT ---\n{raw_content}\n")
+            
+            # --- ROBUSTNESS FIX FOR EMPTY/MALFORMED OUTPUTS ---
+            if "Action:" not in raw_content and "Answer:" not in raw_content:
+                msg = "Parse error: Missing 'Action:' or 'Answer:'. You MUST include one of these keywords using the STRICT format to continue."
+                trace_logger.warning(f"[{self.agent_name}] [STEP {step_idx}] {msg}")
+                current_reasoning.append(ObservationReasoningStep(observation=msg))
+                await ctx.store.set("current_reasoning", current_reasoning)
+                return _PrepEvent()
             
             try:
                 reasoning_step = self.output_parser.parse(raw_content)
@@ -208,7 +219,7 @@ class ReActAgentWorkflow(Workflow):
                     if tool_call.tool_name in ["hybrid_search", "fetch_raw_logs", "execute_sql"]:
                         extras["truncate_simple"] = 500
 
-                    trace_logger.info(f"--- [{self.agent_name}] [STEP {step_idx}] OBSERVATION ---\n{observation}\n", extra=extras)
+                    trace_logger.info(f"--- [{self.agent_name}] [STEP {step_idx}] OBSERVATION ---\n{observation}", extra=extras)
                     current_reasoning.append(
                         ObservationReasoningStep(observation=observation)
                     )
