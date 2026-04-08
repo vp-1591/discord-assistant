@@ -5,3 +5,4 @@
 - Implement Users Aliases system. (We need some kind of dictionary that will translate nicknames from the database(and other possible aliases) (llama_index_storage) to IDs and from IDs to the current nickname)
 - Agent 2 thinks that tool input is message to user and tool output is message from user
 - Create Test Factory and workflow to iterate on prompts automatically using agents
+- Agent2 doesn't use pull_cached_result tool

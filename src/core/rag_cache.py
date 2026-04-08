@@ -1,6 +1,7 @@
 import collections
 import json
 import os
+from typing import Optional
 
 class RAGCache:
     """
@@ -48,14 +49,20 @@ class RAGCache:
         queries = list(self.cache.keys())
         return [{"id": i + 1, "query": q} for i, q in enumerate(queries)]
 
+    def get(self, query: str) -> Optional[str]:
+        """Retrieves a result by exact query string. Returns None on miss."""
+        if query in self.cache:
+            self.cache.move_to_end(query)
+            self._save_cache()
+            return self.cache[query]
+        return None
+
     def get_result_by_id(self, result_id: int) -> str:
         """Retrieves a specific result by its ID."""
         queries = list(self.cache.keys())
         if 1 <= result_id <= len(queries):
-            query = queries[result_id - 1]
-            self.cache.move_to_end(query)
-            self._save_cache()
-            return self.cache[query]
+            result = self.get(queries[result_id - 1])
+            return result if result is not None else f"Error: No cached result found for ID {result_id}."
         return f"Error: No cached result found for ID {result_id}."
 
     def clear(self):

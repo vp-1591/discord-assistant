@@ -158,10 +158,15 @@ async def _run_agent1_rag(
     from llama_index.core import Settings as _Settings
 
     thoughts: list[str] = []
-    _original_achat = _Settings.llm.achat
+    _llm = _Settings.llm
+    # Save the BOUND method before class-level patching. Calling it later as
+    # _original_bound_achat(messages) makes the dispatcher receive (llm_instance, messages)
+    # internally, which correctly satisfies the original achat(self, messages, **kwargs) signature.
+    _original_bound_achat = _llm.achat
 
-    async def _capturing_achat(*args, **kwargs):
-        response = await _original_achat(*args, **kwargs)
+    async def _capturing_achat(self, messages, **kwargs):
+        # Delegate via the saved BOUND method — do NOT pass self explicitly.
+        response = await _original_bound_achat(messages, **kwargs)
         raw = response.message.content or ""
         try:
             blocks = (
@@ -182,7 +187,10 @@ async def _run_agent1_rag(
             thoughts.append(thought)
         return response
 
-    _Settings.llm.achat = _capturing_achat
+    # Patch at the class level to bypass Pydantic's __setattr__ on the instance.
+    # The explicit (self, messages, **kwargs) signature satisfies the dispatcher's inspect.signature check.
+    _achat_patch = patch.object(type(_llm), 'achat', _capturing_achat)
+    _achat_patch.start()
 
     tool_calls: list = []
 
@@ -289,7 +297,7 @@ async def _run_agent1_rag(
         query_text = scenario.input_variables.get("query_text", "Тестовый запрос")
         output = await assistant.aquery(query_text)
     finally:
-        _Settings.llm.achat = _original_achat
+        _achat_patch.stop()
         for p in patch_stack:
             p.stop()
 
@@ -308,10 +316,11 @@ async def _run_agent2_react(
     from llama_index.core import Settings as _Settings
 
     thoughts: list[str] = []
-    _original_achat = _Settings.llm.achat
+    _llm = _Settings.llm
+    _original_bound_achat = _llm.achat
 
-    async def _capturing_achat(*args, **kwargs):
-        response = await _original_achat(*args, **kwargs)
+    async def _capturing_achat(self, messages, **kwargs):
+        response = await _original_bound_achat(messages, **kwargs)
         raw = response.message.content or ""
         try:
             blocks = (
@@ -332,7 +341,8 @@ async def _run_agent2_react(
             thoughts.append(thought)
         return response
 
-    _Settings.llm.achat = _capturing_achat
+    _achat_patch = patch.object(type(_llm), 'achat', _capturing_achat)
+    _achat_patch.start()
 
     tool_calls: list = []
     patch_targets: dict = {}
@@ -384,7 +394,7 @@ async def _run_agent2_react(
             replied_to_msg=iv.get("replied_to_msg", None),
         )
     finally:
-        _Settings.llm.achat = _original_achat
+        _achat_patch.stop()
         for p in patch_stack:
             p.stop()
 
@@ -473,12 +483,24 @@ async def run(
     output_path: str | None = None,
 ) -> ExecutionTrace:
     _ensure_ollama_running()
+
+    # Pre-flight cleanup: starting a new evaluation cycle wipes stale iteration files
+    # so the evaluator agent never reads leftover data from a previous scenario.
+    if iteration == 1:
+        target_dir = Path(output_path).parent if output_path else Path(__file__).parent
+        for stale_file in target_dir.glob("trace_iter_*.json"):
+            try:
+                stale_file.unlink()
+                print(f"[harness] Purged old trace: {stale_file.name}")
+            except Exception as e:
+                print(f"[harness] Warning: Failed to clean {stale_file.name} -> {e}")
+
     scenario = _load_scenario(scenario_path)
     scenario_dir = Path(scenario_path).resolve().parent
     draft_prompt = _load_draft_prompt(prompt_path)
 
     if output_path is None:
-        output_path = str(Path(__file__).parent / "trace_output.json")
+        output_path = str(Path(__file__).parent / f"trace_iter_{iteration}.json")
 
     strategy = _REGISTRY.get(scenario.execution_target)
     if strategy is None:
@@ -514,7 +536,7 @@ async def run(
     )
     print(f"[harness] Trace written -> {output_path}")
     if error:
-        print(f"[harness] ⚠️  Execution error captured — see trace_output.json error field")
+        print(f"[harness] EXECUTION ERROR CAPTURED - see {Path(output_path).name} error field")
     return trace
 
 

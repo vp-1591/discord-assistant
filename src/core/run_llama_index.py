@@ -25,7 +25,7 @@ from src.config.prompts import (
     get_qa_prompt_tmpl, SUMMARY_PROMPT_TEMPLATE,
     get_persona_prompt, get_system_prompt,
     SEARCH_ARCHIVE_DESC, FETCH_USER_OPINION_DESC, UPDATE_USER_OPINION_DESC,
-    PEEK_CACHED_SEARCHES_DESC, PULL_CACHED_RESULT_DESC,
+    PEEK_CACHED_SEARCHES_DESC,
     AGENT1_HYBRID_SEARCH_DESC, AGENT1_FETCH_RAW_LOGS_DESC, AGENT1_SQL_QUERY_DESC
 )
 from src.data.ingestion import load_or_build_index, insert_new_nodes
@@ -287,6 +287,12 @@ class RAGAssistant:
         om = self.opinion_manager
 
         async def search_archive(search_query: str) -> str:
+            # Transparent cache hit: skip Agent1 entirely if query was already researched
+            cached = self.rag_cache.get(search_query)
+            if cached is not None:
+                trace_logger.info(f"[search_archive] Cache HIT for query: {search_query!r}")
+                return cached
+
             response_str = str(await self.aquery(search_query))
             
             # Extract and log internal reasoning before stripping
@@ -305,9 +311,6 @@ class RAGAssistant:
         async def peek_cached_searches() -> str:
             results = self.rag_cache.get_recent_queries()
             return json.dumps(results, ensure_ascii=False)
-
-        async def pull_cached_result(result_id: int) -> str:
-            return self.rag_cache.get_result_by_id(result_id)
 
         async def fetch_user_opinion(user_display_name: str) -> str:
             if om is None: return "Opinion system is not available."
@@ -340,11 +343,6 @@ class RAGAssistant:
                 async_fn=peek_cached_searches,
                 name="peek_cached_searches",
                 description=PEEK_CACHED_SEARCHES_DESC
-            ),
-            FunctionTool.from_defaults(
-                async_fn=pull_cached_result,
-                name="pull_cached_result",
-                description=PULL_CACHED_RESULT_DESC
             ),
             FunctionTool.from_defaults(
                 async_fn=fetch_user_opinion,

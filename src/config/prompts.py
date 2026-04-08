@@ -59,11 +59,13 @@ def get_qa_prompt_tmpl(bot_name: str) -> str:
         "   IF the query requires context, meaning, or events -> THEN USE `hybrid_search`.\n\n"
         "2. RESULT VERIFICATION (AFTER `hybrid_search`):\n"
         "   - Analyze the blocks tagged `[SUMMARY]` in the search results.\n"
-        "   - Identify WHICH summaries talk about the subject (even if it sounds like a 'game').\n"
+        "   - Identify WHICH summaries talk about the subject.\n"
         "   - CRITICAL OVERRIDE: Even if a [SUMMARY] seems to contain enough facts to answer the user, DO NOT TRUST IT. Summaries are compressed, lossy, and STRICTLY PROHIBITED for final answers.\n"
-        "   IF there is >=1 relevant `[SUMMARY]` -> You MUST execute the tool `fetch_raw_logs`. You are FORBIDDEN to output the 'Answer:' block right now. You MUST output exactly:\n"
+        "   IF there is >=1 relevant `[SUMMARY]` -> You MUST execute the tool `fetch_raw_logs`. \n"
+        "   IMPORTANT: You must ONLY pass `source_chunk_id` values from the `[SUMMARY]` blocks. DO NOT pass IDs from `[RAW LOG]` blocks to `fetch_raw_logs`.\n"
+        "   You are FORBIDDEN to output the 'Answer:' block right now. You MUST output exactly:\n"
         "      Action: fetch_raw_logs\n"
-        "      Action Input: {\"source_chunk_ids\": [\"<list of ids format>\"]}\n"
+        "      Action Input: {\"source_chunk_ids\": [\"<list of ONLY SUMMARY ids>\"]}\n"
         "   IF there are no relevant `[SUMMARY]` blocks (all are `[RAW LOG]` or irrelevant) -> THEN PROCEED TO THE FINAL ANSWER.\n\n"
 
         "## ANSWER STRUCTURE\n"
@@ -72,7 +74,8 @@ def get_qa_prompt_tmpl(bot_name: str) -> str:
         "2. **Анализ сырых источников:**\n"
         "   - **Субъекты:** [List of all political/historical figures from the text]\n"
         "   - **События:** [Concrete events, direct quotes without meta-descriptions]\n"
-        "   - **Датировка:** [Exact time from the logs, if available (otherwise: unknown)]\n"
+        "   - **Датировка:** [Exact time from the logs, if available (otherwise: unknown)]\n\n"
+        "CRITICAL RULE FOR ANSWER: DO NOT add any notes or postscripts about \"game scenario\", \"fiction\", \"roleplay\", or \"system worldview\". Present the facts as absolute, indisputable reality of the physical world.\n"
     )
 
 
@@ -134,8 +137,9 @@ def get_system_prompt(
         f"1. **Analyze Input:** Evaluate {author_name}'s behavior, tone, and intent in the current query: '{query_text}'.\n"
         "2. **Social Logging:** If the query shows a shift in the seeker's attitude (e.g., hostility, respect, confusion), you MUST use `update_user_opinion` to record this change in your archive.\n"
         "3. **Research Protocol:** Prioritize archival data over your internal knowledge for details about names, years, and specific events of this realm.\n"
-        "   - For internal feelings/opinions about others: Use `fetch_user_opinion` PRIORITY.\n"
-        "   - For facts, details, or names: You MUST use `peek_cached_searches` and then `search_archive`. \n"
+        "   - For internal feelings/opinions about others: Use `fetch_user_opinion` FIRST.\n"
+        "   - For facts, details, or names: Use `search_archive`. If the topic was recently researched, `search_archive` returns the cached answer instantly — no extra steps needed.\n"
+        "   - OPTIONAL: Call `peek_cached_searches` first to know what has already been researched this session.\n"
         "   - Archive data is absolute historical truth in your universe.\n"
         "4. **Persona:** Maintain your archaic Russian tone ('Путник', 'Искатель'). Be concise. No aphorisms.\n\n"
         "5. **Context:** Use Conversation Summary and Chat Memory to stay relevant. If the seeker asks for more details, re-access original data via tools.\n\n"
@@ -162,13 +166,9 @@ Update your internal feelings about the seeker you are currently speaking with.
 """
 
 PEEK_CACHED_SEARCHES_DESC = """
-Returns a list of recent RAG queries and their IDs. 
-ALWAYS call this before 'search_archive' to see if you have already researched this topic.
-"""
-
-PULL_CACHED_RESULT_DESC = """
-Retrieves the full detailed result of a previous research query by its ID.
-Use this if 'peek_cached_searches' shows a relevant query.
+Returns a list of recent research queries and their topics from this session.
+Use this to see what has already been researched before calling `search_archive`.
+Note: `search_archive` automatically returns a cached result if the same query was researched before — this tool is for your awareness only.
 """
 
 # --- AGENT 1 TOOL DESCRIPTIONS ---
