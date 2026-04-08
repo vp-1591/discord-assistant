@@ -95,6 +95,7 @@ class RAGAssistant:
         
         import os
         os.environ["CUDA_VISIBLE_DEVICES"] = "-1"
+        os.environ["HF_HUB_OFFLINE"] = "1"
         reranker = FlagEmbeddingReranker(model="BAAI/bge-reranker-v2-m3", top_n=10, use_fp16=False)
 
         # query_engine is kept for potential future use and index health checks

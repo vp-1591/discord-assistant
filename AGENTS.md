@@ -88,7 +88,7 @@ Every update to the Vector Index MUST include source_chunk_id in metadata to mai
 Whenever you add any new functionality, make sure it is compliant with the SoC architecture.
 Do not ask access to logs/ folder. If you need to check logs, ask me to do it.
 ## Dev Diary Protocol
-To ensure continuous contextual alignment and maintain a precise technical record, you must curate a `DEV_DIARY.md` after every significant task or session:
+To ensure continuous contextual alignment and maintain a precise technical record, you must curate a `DEV_DIARY.md` after every significant task or session(append to the end of the file):
 * **Content**: Each entry must contain datetime and exactly two sentences:
     - **Datetime**: (e.g. 07.04.2026 23:07)
     - **The What**: A technical summary of the changes.
