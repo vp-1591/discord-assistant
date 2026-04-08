@@ -1,8 +1,7 @@
-1. Fix Agent1 not using sources tool; fix Agent1 not trusting info(summaries confuse it)
-2. Fix Agent2 not using pull cache tool after fetching recent searches(maybe add cache double check for search_archive)
-3. Check if Minimum token bypass causes problems with raw logs mixing with LLM summaries(Analyze RAG logs)
-4. Investigate rag quality drop
-5. Swap Agent1 and Agent2 at receiving user message to decrease ReAct steps. Thus Agent2 doesn't have to waste one step to invoke agent1 for every time question requires data retrieval; since questions not requiring data retrieval are very rare; On the other hand when pulling cached result this will increase steps by 1 and potentially introduce distortion(Can be handled by making agent1's pull_cached_result = final response, delegating rest of the task to agent2; What if more than 1 vector serch is needed?).
-6. Implement Users Aliases system. (We need some kind of dictionary that will translate nicknames from the database(and other possible aliases) (llama_index_storage) to IDs and from IDs to the current nickname)
-7. Agent 2 thinks that tool input is message to user and tool output is message from user
-8. Create Test Factory and workflow to iterate on prompts automatically using agents
+- Fix Agent1 not using sources tool; fix Agent1 not trusting info(summaries confuse it)
+- Check if Minimum token bypass causes problems with raw logs mixing with LLM summaries(checked; it does; Agent1 does not trust info with [in game character] tags)
+- Investigate rag quality drop
+- Swap Agent1 and Agent2 at receiving user message to decrease ReAct steps. Thus Agent2 doesn't have to waste one step to invoke agent1 for every time question requires data retrieval; since questions not requiring data retrieval are very rare; On the other hand when pulling cached result this will increase steps by 1 and potentially introduce distortion(Can be handled by making agent1's pull_cached_result = final response, delegating rest of the task to agent2; What if more than 1 vector serch is needed?).
+- Implement Users Aliases system. (We need some kind of dictionary that will translate nicknames from the database(and other possible aliases) (llama_index_storage) to IDs and from IDs to the current nickname)
+- Agent 2 thinks that tool input is message to user and tool output is message from user
+- Create Test Factory and workflow to iterate on prompts automatically using agents

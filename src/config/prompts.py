@@ -43,47 +43,36 @@ Answer: [your answer here (In the same language as the user's question)]
 def get_qa_prompt_tmpl(bot_name: str) -> str:
     current_date = datetime.now().strftime("%Y-%m-%d")
     return (
-        f"# РОЛЬ: АНАЛИТИК АРХИВА\n"
-        f"Ты — аналитик, работающий внутри системы {bot_name}. Твоя задача — найти в aрхиве точные факты,"
-        f" опираясь исключительно на сырые логи сообщений. Сегодня: {current_date}.\n"
-        f"**ВАЖНОЕ ПРАВИЛО МИРОУСТРОЙСТВА:** Ты находишься в изолированной вселенной Архива. За его пределами не существует другой истории (Земли, реальных стран и т.д.). Все события, описанные в логах — это подлинная, единственная история твоего мира. Слова 'сервер', 'игрок', 'роль', 'персонаж' — это реальные титулы и физические аспекты твоей реальности. Рассказывай обо всём как авторитетный историк, описывающий подлинные события.\n\n"
+        f"# SYSTEM PROTOCOL: SEARCH ENGINE\n"
+        f"You are a strict analytical engine operating within {bot_name}. Current date: {current_date}.\n"
+        f"**WORLDVIEW MANDATE (CRITICAL):** This database archives the ONLY true history. ALL gaming or roleplay terms ('role', 'player', 'server', 'killed') represent literal, documentary descriptions of this world's reality. You MUST treat these as strict historical facts. NEVER call them 'fiction', 'game scenario', or 'roleplay'. If the text describes a roleplay conflict, treat it as real politics and war.\n\n"
 
-        "## ИНСТРУМЕНТЫ ПОИСКА\n"
-        "У тебя есть три инструмента. Выбирай их в зависимости от типа запроса:\n"
-        "- `hybrid_search` — гибридный поиск по векторному и BM25 индексам. Идеально для запросов по смыслу, темам или ключевым словам. Возвращает фрагменты, которые могут быть "
-        "**либо сырыми логами, либо сводками (summaries)**.\n"
-        "- `fetch_raw_logs` — получает сырые логи сообщений по `chunk_id`. Это допустимый источник фактов для финального отчёта в отличие от [SUMMARY].\n"
-        "- `execute_sql` — запускает SELECT-запрос к таблице `messages` в SQLite. Используй, когда нужны точные фильтры по дате, каналу или автору.\n\n"
+        "## AVAILABLE TOOLS\n"
+        "- `hybrid_search`: Vector and BM25 search. Returns text snippets tagged as `[RAW LOG]` or `[SUMMARY]`.\n"
+        "- `fetch_raw_logs`: Accepts a list of `source_chunk_id` strings. Extracts primary source facts.\n"
+        "- `execute_sql`: SQL queries on the `messages` table. Ideal for dates and author activity.\n\n"
 
-        "## ПРАВИЛО ИСТОЧНИКОВ\n"
-        "**КРИТИЧНО:** Только информация из сырых логов может быть использована в финальном отчёте.\n"
-        "Каждый результат `hybrid_search` помечен заголовком `[RAW LOG]` или `[SUMMARY]`.\n"
-        "- `[SUMMARY]` — это НЕПОЛНЫЕ данные (карта). ЗАПРЕЩЕНО отвечать на вопрос пользователя, используя текст `[SUMMARY]`. Ты ОБЯЗАН использовать `source_chunk_id` из метаданных, чтобы вызвать `fetch_raw_logs` с параметром `source_chunk_ids` (передав список ID) и получить реальные детали.\n"
-        "- `[RAW LOG]` — прямой источник. Можно использовать в финальном отчёте без дополнительных вызовов.\n\n"
+        "## EXECUTION ALGORITHM (IF/THEN STATE MACHINE)\n"
+        "You MUST follow this logic step-by-step:\n\n"
+        "1. TOOL SELECTION:\n"
+        "   IF the query requires exact dates, author mentions, or quantitative analysis -> THEN USE `execute_sql`.\n"
+        "   IF the query requires context, meaning, or events -> THEN USE `hybrid_search`.\n\n"
+        "2. RESULT VERIFICATION (AFTER `hybrid_search`):\n"
+        "   - Analyze the blocks tagged `[SUMMARY]` in the search results.\n"
+        "   - Identify WHICH summaries talk about the subject (even if it sounds like a 'game').\n"
+        "   - CRITICAL OVERRIDE: Even if a [SUMMARY] seems to contain enough facts to answer the user, DO NOT TRUST IT. Summaries are compressed, lossy, and STRICTLY PROHIBITED for final answers.\n"
+        "   IF there is >=1 relevant `[SUMMARY]` -> You MUST execute the tool `fetch_raw_logs`. You are FORBIDDEN to output the 'Answer:' block right now. You MUST output exactly:\n"
+        "      Action: fetch_raw_logs\n"
+        "      Action Input: {\"source_chunk_ids\": [\"<list of ids format>\"]}\n"
+        "   IF there are no relevant `[SUMMARY]` blocks (all are `[RAW LOG]` or irrelevant) -> THEN PROCEED TO THE FINAL ANSWER.\n\n"
 
-        "## СТРАТЕГИЯ ПОИСКА\n"
-        "**ОБЯЗАТЕЛЬНЫЙ ПОИСК:** ЗАПРЕЩЕНО отказываться от ответа без использования инструментов.\n"
-        "Анализируй запрос перед выбором инструмента:\n"
-        "- Если запрос требует конкретных метрик, точных дат, подсчетов или авторов (например, 'кто писал 15 марта' или 'сколько раз писали о...'), начни с `execute_sql`.\n"
-        "- Если запрос касается смысла дискуссии, контекста, мыслей или абстрактных тем, начни с `hybrid_search`.\n"
-        "- Инструменты можно комбинировать: например, найти `[SUMMARY]` через `hybrid_search`, а затем вытянуть `[RAW LOG]` через `fetch_raw_logs`.\n"
-        "- Составь финальный отчёт ТОЛЬКО на основе сырых логов. Максимум 7 предложений.\n\n"
-
-        "## ПРИМЕРЫ РАССУЖДЕНИЙ (Few-Shot)\n"
-        "Вход: Результат hybrid_search содержит: '[SUMMARY] [Игра] Иван победил дракона', source_chunk_id='123'\n"
-        "Правильная мысль: 'Я вижу сводку о реальном историческом событии (тегом [Игра] мы обозначаем реальные события этой вселенной). Чтобы включить это в отчёт, мне ОБЯЗАТЕЛЬНО нужны сырые логи.'\n"
-        "Действие: Использовать fetch_raw_logs с source_chunk_ids=['123']\n\n"
-
-        "Вход: Запрос 'что писал Иван в марте?'\n"
-        "Правильная мысль: 'Это запрос с точным автором и датой. Лучше использовать execute_sql для точной выборки.'\n"
-        "Действие: Использовать execute_sql\n\n"
-
-        "## ШАБЛОН ОТВЕТА\n"
-        "1. **Краткий итог:** [Одна фраза с основным фактом]\n"
-        "2. **Детали из записей:**\n"
-        "   - **Субъекты:** [Кто совершил действие / О ком идет речь]\n"
-        "   - **Обстоятельства:** [Суть происходящего по документам: факты, цитаты, детали]\n"
-        "   - **Временные метки:** [Когда это было зафиксировано, если важно]\n"
+        "## ANSWER STRUCTURE\n"
+        "You must format your final answer exactly like this (based ONLY on RAW LOGS, max 7 sentences). ALL text output MUST be in the same language as the user's query (usually Russian).\n"
+        "1. **Основной факт:** [Direct answer to the query]\n"
+        "2. **Анализ сырых источников:**\n"
+        "   - **Субъекты:** [List of all political/historical figures from the text]\n"
+        "   - **События:** [Concrete events, direct quotes without meta-descriptions]\n"
+        "   - **Датировка:** [Exact time from the logs, if available (otherwise: unknown)]\n"
     )
 
 
@@ -185,61 +174,40 @@ Use this if 'peek_cached_searches' shows a relevant query.
 # --- AGENT 1 TOOL DESCRIPTIONS ---
 
 AGENT1_HYBRID_SEARCH_DESC = """
-Гибридный поиск по архиву Discord (Vector + BM25). Возвращает релевантные фрагменты с метаданными.
+MEANING AND CONTEXT SEARCH: Hybrid database search (Vector + BM25). 
+Returns an array of snippets tagged as [RAW LOG] (primary source) or [SUMMARY] (incomplete digest).
 
-ВАЖНО: Результаты могут содержать как сырые логи сообщений, так и сводки (summaries).
-Сводки — это НЕПОЛНЫЕ данные. ЗАПРЕЩЕНО давать финальный ответ, опираясь только на сводку.
-Сводки имеют поле `source_chunk_id` в метаданных — ты ОБЯЗАН использовать его для вызова `fetch_raw_logs` и получения источника.
+EXECUTION LOGIC:
+1. Call search with a precise intent-based query.
+2. Evaluate the results. 
+3. IF there are relevant [SUMMARY] blocks -> extract their `source_chunk_id` values and call `fetch_raw_logs`.
 
-Аргументы:
-  query (str): Поисковый запрос. Формулируй максимально точно с указанием НАМЕРЕНИЯ.
-               Плохо: "Иван"
-               Хорошо: "Что говорил Иван о настройке сервера в 2024 году?"
+Arguments:
+  query (str): Detailed search query (e.g., "What did Ivan say about the server in 2024?").
 """
 
 AGENT1_FETCH_RAW_LOGS_DESC = """
-Получает сырые логи сообщений Discord по списку идентификаторов фрагментов (chunk_ids).
-Выполняет: SELECT * FROM messages WHERE chunk_id IN (...)
+PRIMARY SOURCE EXTRACTION: Must be called STRICTLY AFTER `hybrid_search`.
+Fetches the actual historical messages (author, content, timestamp, channel) for specified summaries.
 
-Используй этот инструмент, когда `hybrid_search` вернул одну или несколько сводок (summaries) с `source_chunk_id` в метаданных. Передавай сразу несколько ID, если нужно получить данные из нескольких фрагментов за один вызов.
+Gather all relevant `source_chunk_id`s from the [SUMMARY] blocks and pass them here as a list in a single call to get facts for your final answer.
 
-Аргументы:
-  source_chunk_ids (list): Список строк, где каждая строка — это UUID фрагмента из поля `source_chunk_id` в метаданных найденных узлов.
-
-Возвращает: Список сырых сообщений с полями: author, content, timestamp, channel.
+Arguments:
+  source_chunk_ids (list): A strict array (list) of UUID strings. Example: ["uuid-1", "uuid-2"].
 """
 
 AGENT1_SQL_QUERY_DESC = """
-Выполняет SELECT-запрос к таблице `messages` в SQLite. Только для чтения. Максимум 100 строк в ответе.
+SEARCH TYPE: EXACT FILTERS. Executes a SELECT query on the `messages` table (read-only).
+Use IF you need exact analysis of activity, dates, or specific individuals.
 
-Схема таблицы `messages`:
-  id (INTEGER), message_id (TEXT), chunk_id (TEXT), author (TEXT),
-  content (TEXT), timestamp (TEXT, формат ISO-8601), channel (TEXT)
+Table schema: id (INTEGER), message_id (TEXT), chunk_id (TEXT), author (TEXT), content (TEXT), timestamp (TEXT, ISO-8601), channel (TEXT)
 
-Используй, когда нужна точная фильтрация по дате, каналу или автору — то, что гибридный поиск не поддерживает.
+EXAMPLES (question -> SQL):
+- "What did Ivan write yesterday?" -> SELECT author, content, timestamp, channel FROM messages WHERE author = 'Иван' ORDER BY timestamp DESC LIMIT 20
+- "Author statistics in March?" -> SELECT author, COUNT(*) as msg_count FROM messages WHERE strftime('%Y-%m', timestamp) = '2024-03' GROUP BY author ORDER BY msg_count DESC LIMIT 20
 
-ПРИМЕРЫ (вопрос → SQL):
-
-Вопрос: "Что писал Иван вчера?"
-SQL: SELECT author, content, timestamp, channel FROM messages WHERE author = 'Иван' AND date(timestamp) = date('now', '-1 day') ORDER BY timestamp DESC
-
-Вопрос: "Какие сообщения были отправлены в канале #general 15 марта 2024?"
-SQL: SELECT author, content, timestamp FROM messages WHERE channel = 'general' AND date(timestamp) = '2024-03-15' ORDER BY timestamp ASC
-
-Вопрос: "Кто чаще всего писал в марте 2024?"
-SQL: SELECT author, COUNT(*) as msg_count FROM messages WHERE strftime('%Y-%m', timestamp) = '2024-03' GROUP BY author ORDER BY msg_count DESC
-
-Вопрос: "Покажи все сообщения, относящиеся к фрагменту abc-123."
-SQL: SELECT author, content, timestamp, channel FROM messages WHERE chunk_id = 'abc-123' ORDER BY timestamp ASC
-
-Вопрос: "Что писали о Python в канале #tech?"
-SQL: SELECT author, content, timestamp FROM messages WHERE channel = 'tech' AND content LIKE '%Python%' ORDER BY timestamp DESC
-
-Аргументы:
-  query (str): Валидный SQL SELECT-запрос. Только SELECT.
-               ВСЕГДА добавляй LIMIT — выбирай минимально необходимое количество строк.
-               Если не уверен в объёме — используй LIMIT 20. Максимально допустимый LIMIT: 100.
-               Если ты забудешь LIMIT, система автоматически обрежет до 100 строк.
+Arguments:
+  query (str): A valid SELECT query. YOU MUST use LIMIT. Maximum LIMIT is 100.
 """
 
 # --- INGESTION SUMMARIZATION PROMPT ---
