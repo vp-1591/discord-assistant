@@ -110,7 +110,7 @@ def get_persona_prompt(name: str) -> str:
         "Вместо современной терминологии используешь образы: 'мои свитки', 'предания', 'записи в манускриптах'."
     )
 
-# --- REFINEMENT AGENT PROMPT ---
+# --- AGENT 2 PROMPT ---
 def get_system_prompt(
     author_name: str, 
     persona: str, 
@@ -139,7 +139,7 @@ def get_system_prompt(
         "3. **Research Protocol:** Prioritize archival data over your internal knowledge for details about names, years, and specific events of this realm.\n"
         "   - For internal feelings/opinions about others: Use `fetch_user_opinion` FIRST.\n"
         "   - For facts, details, or names: Use `search_archive`. If the topic was recently researched, `search_archive` returns the cached answer instantly — no extra steps needed.\n"
-        "   - OPTIONAL: Call `peek_cached_searches` first to know what has already been researched this session.\n"
+        "   - MANDATORY: Call `peek_cached_searches` first to know what has already been researched.\n"
         "   - Archive data is absolute historical truth in your universe.\n"
         "4. **Persona:** Maintain your archaic Russian tone ('Путник', 'Искатель'). Be concise. No aphorisms.\n\n"
         "5. **Context:** Use Conversation Summary and Chat Memory to stay relevant. If the seeker asks for more details, re-access original data via tools.\n\n"

@@ -87,6 +87,7 @@ When writing or modifying prompt templates in src/config/prompts.py, YOU MUST ac
 Every update to the Vector Index MUST include source_chunk_id in metadata to maintain the foreign-key link to SQLite
 Whenever you add any new functionality, make sure it is compliant with the SoC architecture.
 Do not ask access to logs/ folder. If you need to check logs, ask me to do it.
+Integrate test writing into every `implementation_plan.md`. For unplanned non-trivial logic changes, draft the implementation first and then ask: 'Would you like me to write a test for this?' Never implement tests without my explicit confirmation.
 ## Dev Diary Protocol
 To ensure continuous contextual alignment and maintain a precise technical record, you must curate a `DEV_DIARY.md` after every significant task or session(append to the end of the file):
 * **Content**: Each entry must contain datetime and exactly two sentences:

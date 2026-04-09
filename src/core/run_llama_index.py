@@ -8,7 +8,7 @@ from datetime import datetime
 from llama_index.core import Settings
 from llama_index.core.retrievers import QueryFusionRetriever
 from llama_index.retrievers.bm25 import BM25Retriever
-from llama_index.postprocessor.flag_embedding_reranker import FlagEmbeddingReranker
+from src.utils.dynamic_reranker import DynamicGPUReranker
 from llama_index.core.query_engine import RetrieverQueryEngine
 from llama_index.core.tools import FunctionTool
 import Stemmer  # type: ignore
@@ -93,10 +93,7 @@ class RAGAssistant:
             use_async=False,
         )
         
-        import os
-        os.environ["CUDA_VISIBLE_DEVICES"] = "-1"
-        os.environ["HF_HUB_OFFLINE"] = "1"
-        reranker = FlagEmbeddingReranker(model="BAAI/bge-reranker-v2-m3", top_n=10, use_fp16=False)
+        reranker = DynamicGPUReranker(model_name="BAAI/bge-reranker-v2-m3", top_n=10, use_fp16=True)
 
         # query_engine is kept for potential future use and index health checks
         query_engine = RetrieverQueryEngine.from_args(
@@ -272,7 +269,7 @@ class RAGAssistant:
                 tools=tools,
                 system_prompt=agent1_system,
                 agent_name="Agent1",
-                timeout=150
+                timeout=300
             )
 
             result = await agent1.run(input=query_text)
@@ -392,7 +389,7 @@ class RAGAssistant:
             sys_logger.info(f"[Agent2] Starting persona loop | TxID={tx} | user={author_name!r}")
 
             tools = self._build_tools(author_id=author_id, author_name=author_name)
-            agent = ReActAgentWorkflow(llm=Settings.llm, tools=tools, system_prompt=system_prompt, agent_name="Agent2", timeout=300)
+            agent = ReActAgentWorkflow(llm=Settings.llm, tools=tools, system_prompt=system_prompt, agent_name="Agent2", timeout=600)
 
             agent_response = await agent.run(input=query_text)
             final_response = agent_response.get('response', str(agent_response)).strip() if isinstance(agent_response, dict) else str(agent_response).strip()

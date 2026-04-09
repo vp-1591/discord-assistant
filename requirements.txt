@@ -7,3 +7,5 @@ llama-index-retrievers-bm25
 llama-index-postprocessor-flag-embedding-reranker
 pystemmer
 ollama
+pytest
+pytest-asyncio
