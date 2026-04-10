@@ -4,3 +4,4 @@
 - Agent 2 thinks that tool input is message to user and tool output is message from user; Agent 2 thinks that user is referencing himself in third person
 - Regenerate and re-embed summaries. Analyze Rag quality.
 - Analyze qwen 3.5 models integration
+- Test summaries generation before launchig at full scale

@@ -1,2 +1,0 @@
-## WHYS
-We use minimum token bypass in summaries generation to decrease hallucinations and increase speed. Its drawbacks include: mixed raw logs with summaries in one chunk, which can lead to confusion for Agent1 and vector similarity(retrieval).

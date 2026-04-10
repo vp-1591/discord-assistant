@@ -8,7 +8,7 @@ messages_txt/
 temp-cache/
 logs/
 discord_data.db
-DEV_DIARY.md
+DEV_LOG.md
 
 # --- Test Factory (ephemeral agent workspace) ---
 tests/test_factory/.drafts/

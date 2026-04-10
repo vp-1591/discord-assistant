@@ -1,81 +1,78 @@
-# Discord RAG Assistant 🤖📜
+# Discord Assistant: Head of Archive 🤖🏛️
 
-A powerful Discord bot that uses **Retrieval-Augmented Generation (RAG)** to answer questions based on your server's chat history. It features a unique "Head of Archive" persona, hybrid search, rolling conversation summaries, and a dynamic **Social Memory System**.
+<p align="center">
+  <img src="assets/logo.png" width="200" alt="Head of Archive Logo">
+</p>
 
-## ✨ Features
 
--   **Hybrid Search**: Combines semantic vector search (`bge-m3`) with keyword-based retrieval (BM25). Merges 100 deep-candidates and narrows down to the top 50 via Reciprocal Rank Fusion.
--   **Reranking**: Uses `BAAI/bge-reranker-v2-m3` to semantically rank the top 50 results down to the most relevant 10.
--   **Conversational Memory**: Automatically maintains a rolling summary of recent channel interactions to stay within context.
--   **Identity Resolution**: Intelligently resolves Discord user and role mentions to their display names, even for users who have since left the server.
--   **Persona-Driven**: Responds as the "Head of Archive" (Глава Архива) with a wise, archaic tone in Russian (easily customizable in `src/config/prompts.py`).
--   **Social Memory (Opinion System)**: Analyzes interactions asynchronously to form and recall "opinions" and stances on users, tailoring future responses based on past interactions.
--   **RAG Cache**: Implements an LRU cache system to store and quickly recall recent search queries, minimizing repetitive database retrievals and improving conversational continuity.
--   **Live Data Ingestion & Progress Tracking**: Simple `!export` command to crawl channel history that automatically injects new messages into the vector index with progress bars in the console.
--   **Sequential Message Processing**: Implements an asynchronous worker queue to process requests one-by-one, ensuring LLM stability and preventing local VRAM spikes.
+[![Discord.py](https://img.shields.io/badge/Discord.py-2.3%2B-blue?logo=discord&logoColor=white)](https://discordpy.readthedocs.io/)
+[![Ollama](https://img.shields.io/badge/Ollama-Local_Inference-lightgrey)](https://ollama.ai/)
+[![Python](https://img.shields.io/badge/Python-3.10%2B-blue?logo=python&logoColor=white)](https://www.python.org/)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
-## 🛠️ Tech Stack
+The **Head of Archive** (Глава Архива) is a high-performance Discord bot that transforms your server's chaotic history into an indisputable repository of absolute truth. Built for entertainment and deep contextual recall, it responds with the wisdom of a cynical historian who treats every log entry as an objective reality.
 
--   **Discord.py**: Bot framework.
--   **LlamaIndex**: RAG orchestration and data indexing.
--   **Ollama**: Local hosting for LLM (`qwen3:8b`) and Embedding models (`bge-m3`).
--   **BM25 Retreiver**: For robust keyword matching.
+---
+
+## ✨ Key Features
+
+-   **Social Memory (Opinion System)**: The bot doesn't just read logs; it forms "opinions." It tracks user stances and past interactions to tailor its tone and recall your history with a personal touch.
+-   **The Archive of Absolute Truth**: If it's in the logs, it happened. If it's not, it doesn't exist. The bot is optimized to resolve identities (UIDs/Roles) and retrieve granular details across years of history.
+-   **Persona-Driven Interactions**: Deeply optimized for the **Russian language**, the bot maintains a consistent "Head of Archive" persona—wise, archaic, and unyielding in its facts.
+-   **Live Archiving**: Admins can instantly "teach" the bot new history with the `!export` command, which is processed and indexed in real-time.
+-   **Transparent Continuity**: Automatically expands retrieval to include neighboring messages, ensuring that context is never lost across chronological boundaries.
+
+---
+
+## 🛠️ How It Works (Under the Hood)
+
+While the persona is the heart of the experience, the bot is powered by a robust **Agentic SoCe (Separation of Concerns)** architecture to ensure high-fidelity responses and hardware stability on local systems.
+
+```mermaid
+flowchart TD
+    classDef orchestrator fill:#2B2D31,stroke:#00E5FF,stroke-width:2px,color:#fff;
+    classDef processing fill:#1E1F22,stroke:#43B581,stroke-width:2px,color:#fff;
+    classDef storage fill:#202225,stroke:#FAA61A,stroke-width:2px,color:#fff;
+
+    DiscordMention("Discord @Mention") --> OrchestratingThinking("Agent 2: The Voice"):::orchestrator
+    OrchestratingThinking --> QueryingUserStance("Social Memory Lookup"):::processing
+    OrchestratingThinking --> ExecutingToolSearch("Historical Retrieval Tool"):::processing
+    ExecutingToolSearch --> SynthesizingContext("Agent 1: Fact Synthesizer"):::processing
+    SynthesizingContext <--> VectorDB[("Vector Store")]:::storage
+    SynthesizingContext <--> SQLiteDB[("Raw Logs(SQL)")]:::storage
+```
+
+### 👥 The Digital Staff
+*   **The Voice (Agent 2)**: A ReAct persona that manages the conversation, handles tools, and maintains the archive's tone.
+*   **The Researcher (Agent 1)**: A dedicated retrieval expert that synthesizes raw logs and summaries into a factual report for the Voice.
+*   **Automated Ingestion**: A background pipeline that groups history by **ISO-Weeks** and slices them into **Token-Aware Blocks**, ensuring memory safety and chronological integrity.
+
+---
 
 ## 🚀 Getting Started
 
 ### 1. Prerequisites
-
--   **Python 3.10+**
--   **Ollama** installed and running.
--   Pull the required models:
-    ```bash
-    ollama pull qwen3:8b
-    ollama pull bge-m3
-    ```
--   A Discord Bot Token (with Message Content and Server Members intents enabled).
+- **Python 3.10+**
+- **Ollama** installed and running.
+- Pull the required models:
+  ```bash
+  ollama pull qwen3:8b
+  ollama pull qwen3.5:4b
+  ollama pull bge-m3
+  ```
 
 ### 2. Installation
-
-Clone the repository and install the dependencies:
-
 ```bash
 pip install -r requirements.txt
 ```
 
 ### 3. Configuration
-
 Create a `.env` file in the root directory:
-
 ```env
-TOKEN=your_discord_bot_token_here
+TOKEN=your_bot_token_here
 ```
 
-Adjust settings in `config.py` (e.g., LlamaIndex models, file paths, or Ollama URL).
-
 ### 4. Usage
-
-#### First Run & Data Export
-1.  Start the bot: `python main.py` or use `start.bat`
-2.  In Discord, use the command `!export` in the channel you want the bot to "learn" from. (Note: Only IDs listed in `ADMIN_IDS` within `src/config/config.py` can trigger this).
-3.  The bot will save the history to `messages_json/`.
-4.  The bot will automatically detect new messages and incrementally live-update the vector database (showing progress bars in the console).
-
-#### Interacting
-Simply mention the bot in any channel it has access to:
-`@BotName Что мы обсуждали на прошлой неделе?`
-
-## 📁 Project Structure
-
--   `main.py`: Entry point and Discord event handling.
--   `src/core/run_llama_index.py`: RAG Assistant orchestrator.
--   `src/config/config.py`: Centralized LlamaIndex and file configuration.
--   `src/config/prompts.py`: System prompts and persona templates.
--   `src/data/ingestion.py`: Data cleaning and LlamaIndex ingestion logic.
--   `src/core/agent_core.py`: Custom ReAct agent workflow.
--   `src/data/history_manager.py`: Manages rolling channel history and summaries.
--   `src/data/opinion_manager.py`: Fuzzy-matching logic for user stances.
--   `src/data/export_chat.py`: Utility for exporting Discord history.
--   `src/core/rag_cache.py`: Provides LRU cache for recent queries to reduce LLM overhead.
--   `messages_json/`: Exported chat JSON files.
--   `llama_index_storage/`: Vector database persistence.
--   `cache/`: Local summaries, history, user opinions, and RAG cache.
+1.  **Start the Bot**: Ensure `ollama serve` is running, then execute `start.bat` or `python main.py`.
+2.  **Archiving**: Admin users can use `/export` in any channel to crawl history.
+3.  **Interaction**: Simply mention the bot: `@HeadOfArchive Who was the first person to join the server?`
