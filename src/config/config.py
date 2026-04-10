@@ -36,3 +36,12 @@ def configure_settings():
         additional_kwargs={"stop": ["Observation:", "Observation\n"]},
     )
     Settings.embed_batch_size = 10
+
+def get_summarizer_llm():
+    """Returns a fast, lightweight LLM for background ingestion tasks."""
+    return Ollama(
+        model="qwen3.5:4b",
+        request_timeout=360.0,
+        keep_alive=0,
+        temperature=0.1,
+    )

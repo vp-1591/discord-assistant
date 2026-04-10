@@ -120,7 +120,7 @@ class RAGAssistant:
                 #(DEBUG): human-readable pointer to full logs
                 if initial_nodes:
                     trace_logger.debug(
-                        f"[hybrid_search] Retrieved {len(initial_nodes)} nodes pre-rerank for query: {query!r}"
+                        f"[hybrid_search] Retrieved {len(initial_nodes)} nodes pre-rerank."
                     )
 
                 # LAYER 3 (TRACE): raw metadata dicts
@@ -159,35 +159,98 @@ class RAGAssistant:
 
         # --- Tool 2: fetch_raw_logs ---
         async def fetch_raw_logs(source_chunk_ids: list) -> str:
-            def _query():
-                conn = sqlite3.connect(
-                    "file:discord_data.db?mode=ro", uri=True,
-                    check_same_thread=False
-                )
+            """
+            Fetches raw message logs for given chunk IDs, automatically expanding
+            to immediate neighboring chunks (+/- 1) to provide context.
+            """
+            if not source_chunk_ids:
+                return "Предоставлен пустой список chunk_id."
+
+            # Step 1: Expand neighbors via Docstore (in-memory, safe in async context)
+            to_fetch_ids = []
+            target_map = {}  # cid -> [cid, prev_id?, next_id?]
+
+            for cid in source_chunk_ids:
+                targets = [cid]
+                try:
+                    node = self.index.docstore.get_document(cid)
+                    if node and node.metadata:
+                        prev_id = node.metadata.get("prev_chunk_id")
+                        next_id = node.metadata.get("next_chunk_id")
+                        if prev_id: targets.append(prev_id)
+                        if next_id: targets.append(next_id)
+                except Exception as e:
+                    trace_logger.debug(f"[fetch_raw_logs] Could not expand neighbors for {cid}: {e}")
+
+                target_map[cid] = targets
+                to_fetch_ids.extend(targets)
+
+            # Step 2: Deduplicate, preserving insertion order
+            unique_ids = []
+            seen = set()
+            for fid in to_fetch_ids:
+                if fid not in seen:
+                    unique_ids.append(fid)
+                    seen.add(fid)
+
+            # Step 3 & 4: All SQLite I/O is blocking — offload to a thread to avoid
+            # stalling the event loop. run_with_context propagates transaction_id.
+            def _db_query():
+                conn = sqlite3.connect("file:discord_data.db?mode=ro", uri=True, check_same_thread=False)
                 try:
                     conn.row_factory = sqlite3.Row
                     cur = conn.cursor()
-                    
-                    if not source_chunk_ids:
-                        return "Предоставлен пустой список chunk_id."
-                        
-                    placeholders = ",".join("?" for _ in source_chunk_ids)
-                    cur.execute(
-                        f"SELECT author, content, timestamp, channel "
-                        f"FROM messages WHERE chunk_id IN ({placeholders}) ORDER BY timestamp ASC",
-                        tuple(source_chunk_ids)
-                    )
-                    rows = cur.fetchmany(100 * max(1, len(source_chunk_ids)))
-                    if not rows:
-                        return f"Нет сообщений для данных chunk_ids."
-                    lines = [f"[{r['timestamp']}] #{r['channel']} {r['author']}: {r['content']}" for r in rows]
-                    full_log = "\n".join(lines)
-                    trace_logger.debug(f"[fetch_raw_logs] Fetched {len(rows)} lines for {len(source_chunk_ids)} chunks.")
-                    return full_log
+
+                    def _get_logs(ids_to_query):
+                        if not ids_to_query: return []
+                        placeholders = ",".join("?" for _ in ids_to_query)
+                        cur.execute(
+                            f"SELECT author, content, timestamp, channel "
+                            f"FROM messages WHERE chunk_id IN ({placeholders}) "
+                            f"ORDER BY timestamp ASC",
+                            tuple(ids_to_query)
+                        )
+                        rows = cur.fetchall()
+                        unique_rows = []
+                        msg_seen = set()
+                        for r in rows:
+                            key = (r['timestamp'], r['author'], r['content'])
+                            if key not in msg_seen:
+                                unique_rows.append(r)
+                                msg_seen.add(key)
+                        return unique_rows
+
+                    rows = _get_logs(unique_ids)
+
+                    MAX_CHARS = 25000
+                    current_log = "\n".join([f"[{r['timestamp']}] #{r['channel']} {r['author']}: {r['content']}" for r in rows])
+
+                    if len(current_log) > MAX_CHARS:
+                        trace_logger.warning(f"[fetch_raw_logs] Ceiling breach ({len(current_log)} chars). Pruning neighbors...")
+                        # Dedicated inclusion set — never mutate the dedup 'seen'.
+                        # Mutating 'seen' would corrupt another chunk's neighbor if two
+                        # chunks share the same neighbor ID.
+                        included_ids = set(unique_ids)
+
+                        for cid in reversed(source_chunk_ids):
+                            if len(current_log) <= MAX_CHARS:
+                                break
+                            # Only drop pure neighbors — never drop direct source IDs
+                            neighbors = [n for n in target_map[cid] if n != cid and n not in source_chunk_ids]
+                            for nid in neighbors:
+                                included_ids.discard(nid)
+
+                            pruned_ids = [uid for uid in unique_ids if uid in included_ids]
+                            rows = _get_logs(pruned_ids)
+                            current_log = "\n".join([f"[{r['timestamp']}] #{r['channel']} {r['author']}: {r['content']}" for r in rows])
+
+                    trace_logger.debug(f"[fetch_raw_logs] Fetched {len(rows)} lines for {len(source_chunk_ids)} chunks (expanded to {len(unique_ids)} IDs).")
+                    return current_log if current_log else "Нет сообщений для данных chunk_ids."
                 finally:
                     conn.close()
-            # run_with_context ensures Transaction_ID survives the thread boundary
-            return await asyncio.to_thread(run_with_context, _query)
+
+            return await asyncio.to_thread(run_with_context, _db_query)
+
 
         # --- Tool 3: execute_sql ---
         _BLOCKED = re.compile(

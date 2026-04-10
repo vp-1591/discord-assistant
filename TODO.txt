@@ -1,18 +1,6 @@
-
 - Swap Agent1 and Agent2 at receiving user message to decrease ReAct steps. Thus Agent2 doesn't have to waste one step to invoke agent1 for every time question requires data retrieval; since questions not requiring data retrieval are very rare; On the other hand when pulling cached result this will increase steps by 1 and potentially introduce distortion(Can be handled by making agent1's pull_cached_result = final response, delegating rest of the task to agent2; What if more than 1 vector serch is needed?); What if query needs message history context?
 - Implement Users Aliases system. (We need some kind of dictionary that will translate nicknames(and other possible aliases) from the database (llama_index_storage) to IDs and from IDs to the current nickname)
-- Analyze qwen 3.5 models integration
 - Agent1(qwen3:8b) known issues: doesn't fetch summaries sources consistently
 - Agent 2 thinks that tool input is message to user and tool output is message from user; Agent 2 thinks that user is referencing himself in third person
-- Rag quality is poor: Barmacar лето (summer) 2025.
-The Problem: Five out of the ten retrieved results contain the text @August.
-The Cause: The vector search likely saw "summer" (which contains the month August) and "August" (the username) and gave these nodes a massive similarity score.
-The Result: The reranker failed to realize that messages sent in November 2025 are not relevant to "summer," despite containing the word "August."
-
-Despite the query explicitly asking for 2025, the RAG returned:
-Two results from 2024 (May and October).
-Six results from Late 2025 (October, November, December).
-Only one result actually from the summer of 2025 (August 17).
-One result from May 2025 (Spring).
-- RAG_ARCHITECTURE_IDEAS.md: Polish Iteration 3; create implementation plan and proceed
-- what to do with 1minute+ reranker
+- Regenerate and re-embed summaries. Analyze Rag quality.
+- Analyze qwen 3.5 models integration

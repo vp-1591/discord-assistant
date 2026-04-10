@@ -20,8 +20,10 @@ import json
 import re
 import uuid
 import asyncio
+import datetime
 from typing import List, Tuple
 from collections import defaultdict
+import datetime
 
 from tqdm import tqdm
 from tqdm.asyncio import tqdm as atqdm
@@ -32,13 +34,14 @@ from llama_index.core.node_parser import SentenceSplitter
 from llama_index.core import VectorStoreIndex, StorageContext, load_index_from_storage
 from llama_index.embeddings.ollama import OllamaEmbedding
 
-from src.config.config import PERSIST_DIR, MESSAGES_DIR, LLM_CONTEXT_WINDOW
+from src.config.config import PERSIST_DIR, MESSAGES_DIR, LLM_CONTEXT_WINDOW, get_summarizer_llm
 from src.utils.logger_setup import sys_logger, indexing_logger
 from src.data.models import SessionLocal, Message
 from src.config.prompts import INGESTION_SUMMARY_PROMPT
 
 MAX_TEST_CHUNK_SIZE = int(LLM_CONTEXT_WINDOW * 0.25)
 MIN_TOKEN_BYPASS = 100
+WORDS_PER_CHUNK = int(MAX_TEST_CHUNK_SIZE * 0.75)
 
 # ---------------------------------------------------------------------------
 # Mention resolution
@@ -91,7 +94,7 @@ def _read_and_group_messages(id_map: dict) -> Tuple[dict, set, set]:
         r'[a-fA-F0-9]{8}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{12}'
     )
 
-    groups: dict = defaultdict(list)
+    groups: dict = defaultdict(list) # now stores by (channel, week_str)
     newly_seen_ids: set = set()
 
     json_files = [f for f in os.listdir(MESSAGES_DIR) if f.endswith(".json")]
@@ -148,9 +151,18 @@ def _read_and_group_messages(id_map: dict) -> Tuple[dict, set, set]:
 
                 ts = msg.get("timestamp", "2000-01-01T00:00:00")
                 date_str = ts.split("T")[0]
+                
+                # ISO week logic for the Chronological Circuit Breaker
+                try:
+                    dt = datetime.datetime.fromisoformat(ts.replace("Z", "+00:00"))
+                    iso = dt.isocalendar()
+                    week_str = f"{iso.year}-W{iso.week:02d}"
+                except ValueError:
+                    week_str = date_str
+                
                 channel = msg.get("channel", "unknown")
 
-                groups[(channel, date_str)].append({
+                groups[(channel, week_str)].append({
                     "id": msg_id,
                     "user": author_name,
                     "text": text,
@@ -171,47 +183,93 @@ def _read_and_group_messages(id_map: dict) -> Tuple[dict, set, set]:
 
 def _build_raw_chunks(groups: dict) -> List[dict]:
     """
-    Returns a list of chunk dicts:
-        {
-            "chunk_id":  str,           # stable UUID for this chunk
-            "text":      str,           # concatenated raw text for Ollama
-            "date":      str,
-            "channel":   str,
-            "messages":  list[dict],    # original message dicts in this chunk
-        }
+    Groups are by (channel, week_str). This builds slices strictly bounded by ~1000 tokens
+    while respecting message boundaries.
     """
-    splitter = SentenceSplitter(
-        chunk_size=MAX_TEST_CHUNK_SIZE,
-        chunk_overlap=100,
-    )
+    final_chunks = []
+    
+    # Process sequentially by channel, then chronological weeks
+    channel_groups = defaultdict(list)
+    for (channel, week_str), msgs in groups.items():
+        channel_groups[channel].append((week_str, msgs))
+        
+    for channel, week_data in tqdm(channel_groups.items(), desc="✂️  Chunking by week"):
+        # Sort weeks chronologically
+        week_data.sort(key=lambda x: x[0])
+        
+        channel_chunks = []
+        for week_str, messages in week_data:
+            # Sort individual messages chronologically
+            messages.sort(key=lambda x: x["timestamp"])
+            
+            current_batch = []
+            current_words = 0
+            week_level_chunks = []
+            
+            for m in messages:
+                msg_words = len(m["text"].split())
+                # Split if target met, but only if we have at least SOME density
+                if (current_words + msg_words > WORDS_PER_CHUNK) and current_batch:
+                    week_level_chunks.append(current_batch)
+                    current_batch = []
+                    current_words = 0
+                
+                current_batch.append(m)
+                current_words += msg_words
+                
+            if current_batch:
+                # Merge small "runt" chunks (< MIN_TOKEN_BYPASS) with the previous chunk in same week
+                if current_words < MIN_TOKEN_BYPASS and week_level_chunks:
+                    week_level_chunks[-1].extend(current_batch)
+                else:
+                    week_level_chunks.append(current_batch)
 
-    chunks = []
+            total_week_words = sum(len(m["text"].split()) for m in messages)
+            is_quiet_week = total_week_words < MIN_TOKEN_BYPASS
+            
+            for wk_msgs in week_level_chunks:
+                # Build content string with day markers
+                text_lines = []
+                last_day = None
+                for m in wk_msgs:
+                    if m["date"] != last_day:
+                        text_lines.append(f"\n--- {m['date']} ---")
+                        last_day = m["date"]
+                    text_lines.append(f"{m['user']}: {m['text']}")
+                
+                chunk_text = "\n".join(text_lines).strip()
+                channel_chunks.append({
+                    "chunk_id": str(uuid.uuid4()),
+                    "text": chunk_text,
+                    "date": week_str,
+                    "channel": channel,
+                    "messages": wk_msgs,
+                    "bypass": is_quiet_week,
+                    "start_ts": wk_msgs[0]["timestamp"],
+                    "end_ts": wk_msgs[-1]["timestamp"]
+                })
+                
+        # Link prev/next with 7-Day Continuity Check
+        for i in range(len(channel_chunks)):
+            # Check Prev
+            if i > 0:
+                prev_chunk = channel_chunks[i-1]
+                t1 = datetime.datetime.fromisoformat(prev_chunk["end_ts"].replace("Z", "+00:00"))
+                t2 = datetime.datetime.fromisoformat(channel_chunks[i]["start_ts"].replace("Z", "+00:00"))
+                if (t2 - t1).days <= 7:
+                    channel_chunks[i]["prev_chunk_id"] = prev_chunk["chunk_id"]
+            
+            # Check Next
+            if i < len(channel_chunks) - 1:
+                next_chunk = channel_chunks[i+1]
+                t1 = datetime.datetime.fromisoformat(channel_chunks[i]["end_ts"].replace("Z", "+00:00"))
+                t2 = datetime.datetime.fromisoformat(next_chunk["start_ts"].replace("Z", "+00:00"))
+                if (t2 - t1).days <= 7:
+                    channel_chunks[i]["next_chunk_id"] = next_chunk["chunk_id"]
+            
+        final_chunks.extend(channel_chunks)
 
-    for (channel, date), messages in tqdm(groups.items(), desc="✂️  Chunking by date"):
-        # Build full concatenated text for this (channel, date) group
-        full_text = "\n".join(f"{m['user']}: {m['text']}" for m in messages)
-        is_small = len(full_text.split()) < MIN_TOKEN_BYPASS
-
-        # SentenceSplitter operates on Documents; use get_nodes_from_documents
-        # or the lower-level split_text method
-        text_chunks = splitter.split_text(full_text)
-
-        for chunk_text in text_chunks:
-            chunk_id = str(uuid.uuid4())
-
-            # Figure out which messages fall in this chunk (best-effort via text search)
-            # We store ALL messages of the group under every chunk so the
-            # SQLite lookup always returns relevant context.
-            chunks.append({
-                "chunk_id": chunk_id,
-                "text": chunk_text,
-                "date": date,
-                "channel": channel,
-                "messages": messages,
-                "bypass": is_small,
-            })
-
-    return chunks
+    return final_chunks
 
 
 # ---------------------------------------------------------------------------
@@ -262,9 +320,12 @@ async def _summarise_chunks(chunks: List[dict], pbar=None) -> List[TextNode]:
     """
     nodes: List[TextNode] = []
     
-    # Set low temperature for factual RAG summaries
-    original_temperature = getattr(Settings.llm, "temperature", None)
-    Settings.llm.temperature = 0.1
+    # Use dedicated fast model for background summarization.
+    # Override keep_alive here (not in the factory) so the model stays warm
+    # across the entire batch without unloading after every single chunk.
+    # keep_alive=0 remains the safe default for all other call sites.
+    _base_llm = get_summarizer_llm()
+    summarizer_llm = _base_llm.model_copy(update={"keep_alive": "120s"})
 
     try:
         for chunk in chunks:
@@ -287,10 +348,10 @@ async def _summarise_chunks(chunks: List[dict], pbar=None) -> List[TextNode]:
                 )
 
                 try:
-                    response = await Settings.llm.acomplete(prompt)
+                    response = await summarizer_llm.acomplete(prompt)
                     summary = str(response).strip()
                 except Exception as e:
-                    sys_logger.error(f"Ollama error on chunk {chunk_id}: {e}")
+                    sys_logger.error(f"Ollama summarizer error on chunk {chunk_id}: {e}")
                     # Fall back to storing the raw chunk so we don't lose data
                     summary = chunk["text"]
 
@@ -302,19 +363,26 @@ async def _summarise_chunks(chunks: List[dict], pbar=None) -> List[TextNode]:
 
             # Build the vector-store node: embed the summary, link back via chunk_id
             node_type = "raw_log" if chunk.get("bypass") else "summary"
+            meta = {
+                "source_chunk_id": chunk_id,
+                "date": chunk["date"],
+                "channel": chunk["channel"],
+                "node_type": node_type,
+            }
+            # Only store neighbor IDs when they exist — storing None serialises as the
+            # string "None" in some vector backends, poisoning downstream lookups.
+            if chunk.get("prev_chunk_id"):
+                meta["prev_chunk_id"] = chunk["prev_chunk_id"]
+            if chunk.get("next_chunk_id"):
+                meta["next_chunk_id"] = chunk["next_chunk_id"]
             node = TextNode(
                 text=summary,
                 id_=chunk_id,
-                metadata={
-                    "source_chunk_id": chunk_id,
-                    "date": chunk["date"],
-                    "channel": chunk["channel"],
-                    "node_type": node_type,
-                },
+                metadata=meta,
             )
             # Embedding only uses the summary text + date/channel metadata.
-            # node_type is excluded from embeddings — it's a retrieval-time label only.
-            node.excluded_embed_metadata_keys = ["source_chunk_id", "node_type"]
+            # Node metadata excluded from embeddings to prevent pollution.
+            node.excluded_embed_metadata_keys = ["source_chunk_id", "node_type", "prev_chunk_id", "next_chunk_id"]
             node.excluded_llm_metadata_keys = []
             node.metadata_template = "{key}: {value}"
             node.text_template = "Metadata: {metadata_str}\nContent: {content}"
@@ -325,11 +393,7 @@ async def _summarise_chunks(chunks: List[dict], pbar=None) -> List[TextNode]:
                 pbar.update(1)
 
     finally:
-        if original_temperature is not None:
-            Settings.llm.temperature = original_temperature
-        else:
-            # We don't restore what didn't exist, but typically there's a default. Let's ensure a fallback just in case or delete the attr
-            delattr(Settings.llm, "temperature")
+        pass
 
     return nodes
 

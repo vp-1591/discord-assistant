@@ -69,7 +69,8 @@ class aclient(discord.Client):
             try:
                 await self._handle_message_internal(message)
             except Exception as e:
-                sys_logger.error(f"Error processing message from queue: {e}")
+                # Keep the exc_info=True for better future debugging
+                sys_logger.error(f"Error processing message from queue: {e}", exc_info=True)
             finally:
                 self.message_queue.task_done()
 

@@ -4,7 +4,7 @@ from typing import List, Optional
 from llama_index.core.postprocessor.types import BaseNodePostprocessor
 from llama_index.core.schema import NodeWithScore, QueryBundle, MetadataMode
 
-from src.utils.logger_setup import trace_logger
+from src.utils.logger_setup import trace_logger, log_trace
 
 
 class DynamicGPUReranker(BaseNodePostprocessor):
@@ -35,7 +35,7 @@ class DynamicGPUReranker(BaseNodePostprocessor):
         if not nodes:
             return []
 
-        trace_logger.debug(f"[DynamicGPUReranker] Starting rerank of {len(nodes)} nodes.")
+        log_trace(trace_logger, f"[DynamicGPUReranker] Starting rerank of {len(nodes)} nodes.")
 
         # Import here to avoid module-level side effects
         from FlagEmbedding import FlagReranker
@@ -66,7 +66,8 @@ class DynamicGPUReranker(BaseNodePostprocessor):
 
         new_nodes = sorted(nodes, key=lambda x: x.score if x.score is not None else 0, reverse=True)[: self.top_n]
 
-        trace_logger.debug(
+        log_trace(
+            trace_logger,
             f"[DynamicGPUReranker] Reranked to {len(new_nodes)} nodes. "
             f"Top score: {new_nodes[0].score:.3f} | Bottom score: {new_nodes[-1].score:.3f}"
         )
@@ -78,6 +79,6 @@ class DynamicGPUReranker(BaseNodePostprocessor):
         del reranker
         torch.cuda.empty_cache()
 
-        trace_logger.debug("[DynamicGPUReranker] VRAM offload complete.")
+        log_trace(trace_logger, "[DynamicGPUReranker] VRAM offload complete.")
 
         return new_nodes
