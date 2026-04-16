@@ -40,8 +40,13 @@ def configure_settings():
 def get_summarizer_llm():
     """Returns a fast, lightweight LLM for background ingestion tasks."""
     return Ollama(
-        model="qwen3.5:4b",
-        request_timeout=360.0,
+        model="qwen3.5:4b-q8_0",
+        request_timeout=450.0,
         keep_alive=0,
-        temperature=0.1,
+        temperature=0.4,
+        context_window=4096,
+        thinking=False, 
+        additional_kwargs={
+            "repeat_penalty": 1.1,
+        }
     )

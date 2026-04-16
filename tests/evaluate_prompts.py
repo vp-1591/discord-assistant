@@ -1,7 +1,17 @@
 """
 evaluate_prompts.py
 ===================
-Standalone script to evaluate summarization strategies.
+Standalone script to evaluate the ingestion summarization pipeline
+against a random sample of real message chunks before a full run.
+
+Run:  python tests/evaluate_prompts.py
+
+Mirrors the production pipeline faithfully:
+  - ISO-week circuit breaker grouping
+  - Word-based sliding window chunking (WORDS_PER_CHUNK)
+  - Runt-chunk merging + bypass for quiet weeks
+  - 7-day continuity linking (prev/next chunk IDs)
+  - get_summarizer_llm() (qwen3.5:4b) with INGESTION_SUMMARY_PROMPT
 """
 
 import os
@@ -10,8 +20,12 @@ import json
 import re
 import random
 import asyncio
+import datetime
+import uuid
+import subprocess
 from collections import defaultdict
-from datetime import datetime
+from typing import List, Optional
+from llama_index.core.llms import ChatMessage
 
 # ---------------------------------------------------------------------------
 # Project Setup
@@ -20,94 +34,75 @@ ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sys.path.insert(0, ROOT)
 
 from tqdm import tqdm
-from llama_index.core.node_parser import SentenceSplitter
-from llama_index.core import Settings
-from src.config.config import configure_settings, MESSAGES_DIR, LLM_CONTEXT_WINDOW
 
-# ---------------------------------------------------------------------------
-# Constants
-# ---------------------------------------------------------------------------
-SAMPLE_COUNT      = 6
-RANDOM_SEED       = 40
-OUTPUT_PATH       = os.path.join(ROOT, "logs", "prompt_evaluation_results.md")
+from src.config.config import (
+    MESSAGES_DIR,
+    LLM_CONTEXT_WINDOW,
+    MAX_CHUNK_SIZE,
+    get_summarizer_llm,
+)
+# Copied from src/config/prompts.py with test-specific constraints
+INGESTION_SUMMARY_PROMPT = """SYSTEM: You are the Archivist of a Discord community. Your goal is to extract facts, decisions, and social dynamics for a RAG knowledge base.
 
-MAX_TEST_CHUNK_SIZE = int(LLM_CONTEXT_WINDOW * 0.25) # ~2048 tokens
-MIN_TOKEN_BYPASS    = 100                           # Raw text if < 100 tokens
+CRITICAL INSTRUCTIONS:
+1. CHRONOLOGICAL EXTRACTION: You must read the ENTIRE chunk day by day. Do NOT skip the beginning of the log. Extract key events chronologically to avoid information loss.
+2. NO HALLUCINATIONS: Do not invent missing context. Understand context accurately (e.g., interpret timezones and generic gamer slang literally without creating false stories).
+3. OUTPUT LANGUAGE: You MUST write the summary exactly in RUSSIAN, as the corpus is in Russian.
 
-# ---------------------------------------------------------------------------
-# Prompt variations
-# ---------------------------------------------------------------------------
+RULES:
+1. STRUCTURE: [Tag] NAME: FACT/EVENT. (Use tags: [Game], [Lore], [Social], [Meta])
+2. PRIORITY: Server lore (e.g., leadership titles, role shifts), key decisions, plans, game outcomes, and technical discussions.
+3. SOCIAL CONTEXT: Conflicts, roles, and inside jokes are valid social facts.
+4. FORMAT: Continuous text. No introductory fluff. No more than number of days*2 sentences. Keep it concise but do not omit days.
 
-# --- v3.2 Skilled Archivist (activity-aware upgrade of v3.1) ---
-_PROMPT_V32 = """СИСТЕМА: Ты — Архивариус Discord-сообщества. Твоя цель — извлечение фактов и социальной динамики для RAG-базы знаний.
-ДУМАЙ ПЕРЕД ОТВЕТОМ: Определи природу чанка. Какой тип активности здесь происходит? Это влияет на то, как читать сообщения:
-- Кто говорит от своего лица, а кто — от лица персонажа, нарратора, ведущего?
-- Какие события здесь являются фактами (пусть даже вымышленными в рамках игры), а что — мета-комментарии?
-- Есть ли смешение слоёв (игра + обсуждение вне игры, творчество + технический вопрос)?
-ПРАВИЛА:
-1. СТРУККТУРА: [ИМЯ (роль, если применимо): ФАКТ/СОБЫТИЕ].
-2. ПРИОРИТЕТ: Технические данные, ключевые решения, значимые события — включая события вымышленного мира, если это суть активности.
-3. АТРИБУЦИЯ: Пользователь и его персонаж/роль — разные сущности. Фиксируй оба уровня, если они различимы.
-4. СОЦИАЛЬНЫЙ КОНТЕКСТ: Конфликты, юмор, абсурд — это социальные факты, не шум.
-5. РАЗДЕЛЯЙ СЛОИ: Если в чанке смешаны типы активности, обозначь их раздельно в выводе.
-6. ФОРМАТ: Без вводных слов. 3–5 предложений. Язык оригинала.
-ОБРАЗЦЫ:
-<пример>
-Вход:
-  Mira: в статье написано 2019, а не 2021
-  Ozan: нет, я смотрю на таблицу 3 — там явно 2021, страница 14
-Вывод:
-  Ozan оспаривает Mira, указывая на таблицу 3 стр. 14:
-  год публикации данных — 2021, не 2019.
-</пример>
-
-<пример>
-Вход:
-  Zero: "...итак, модель показала p<0.001 на выборке n=340..."
-  Ozan: Zero, слайд не грузится у половины, переключи
-  Zero: ой, переключила, видно теперь?
-  Ozan: да, всё
-  Zero: "в заключение: эффект устойчив во всех трёх когортах"
-Вывод:
-  [Доклад] Zero (в роли докладчика) представила результаты:
-  p<0.001, n=340, нулевая гипотеза отвергнута; эффект устойчив
-  в трёх когортах.
-  [Орг] Слайд не отображался; Zero переключила по сигналу Ozan.
-</пример>
+Example:
+Input:
+--- 2023-07-24 ---
+Alice: Я проиграла спор, поэтому Bob теперь лидер
+--- 2023-07-25 ---
+Charlie: го в кооп вечером
+Output:
+[Lore] Alice: Заявила, что проиграла спор, и теперь Bob становится лидером. [Game] Charlie: Предложил поиграть в кооператив вечером.
 
 ДАННЫЕ:
 {chunk}
 """
 
-PROMPTS = {
-    "3 — Skilled Archivist (v3.2)":    _PROMPT_V32,
-}
+# ---------------------------------------------------------------------------
+# Constants
+# NOTE: WORDS_PER_CHUNK is intentionally smaller here than in ingestion.py
+#       to keep test chunks at ~1000 tokens (700 words @ ~1.3 tok/word for Russian).
+# ---------------------------------------------------------------------------
+SAMPLE_COUNT    = 5
+RANDOM_SEED     = 46
+OUTPUT_PATH     = os.path.join(ROOT, "logs", "prompt_evaluation_results.md")
+
+MIN_TOKEN_BYPASS = 50    # quiet-week threshold (words)
+WORDS_PER_CHUNK  = 700   # ~1000 tokens — TEST OVERRIDE (production uses 1536)
 
 # ---------------------------------------------------------------------------
-# Mention & Code Filtering (test-only formatting)
+# Mention & noise filtering  (mirrors ingestion._read_and_group_messages)
 # ---------------------------------------------------------------------------
-
-def _resolve_mentions_test(text: str, fallback_map: dict) -> str:
-    """Uses [mention: Name] format for testing."""
-    pattern = re.compile(r'<@(!|&)?(\d+)>')
-    def replace_match(match):
-        entity_id = match.group(2)
-        name = fallback_map.get(entity_id)
-        return f"@{name}" if name else match.group(0)
-    return pattern.sub(replace_match, text)
-
-_link_pattern        = re.compile(r'https?://\S+')
-_inline_code_pattern = re.compile(r'\b(?=.*\d)[A-Za-z0-9]{3,6}-[A-Za-z0-9]{3,6}\b')
-_noise_pattern = re.compile(
-    r'-*[a-fA-F0-9]{32,128}-*|'           # MD5, SHA, etc.
-    r'-*[a-fA-F0-9]{8,12}-*|'             # UUID fragments
-    r'-+[a-fA-F0-9]{4,12}-+|'             # Padded IDs like --9207-
-    r'[a-fA-F0-9]{8}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{12}' # Full UUIDs
+_mention_re      = re.compile(r'<@(!|&)?(\d+)>')
+_link_re         = re.compile(r'https?://\S+')
+_inline_code_re  = re.compile(r'\b(?=.*\d)[A-Za-z0-9]{3,6}-[A-Za-z0-9]{3,6}\b')
+_noise_re        = re.compile(
+    r'-*[a-fA-F0-9]{32,128}-*|'
+    r'-*[a-fA-F0-9]{8,12}-*|'
+    r'-+[a-fA-F0-9]{4,12}-+|'
+    r'[a-fA-F0-9]{8}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{12}'
 )
 
 
+def _resolve_mentions(text: str, fallback_map: dict) -> str:
+    def replace_match(m):
+        name = fallback_map.get(m.group(2))
+        return f"@{name}" if name else m.group(0)
+    return _mention_re.sub(replace_match, text)
+
+
 # ---------------------------------------------------------------------------
-# Step 1: Read & group messages (Strictly by Date)
+# Step 1 & 2: Read JSON files → group by (channel, ISO-week)
 # ---------------------------------------------------------------------------
 
 def load_and_group_messages(messages_dir: str) -> dict:
@@ -115,111 +110,245 @@ def load_and_group_messages(messages_dir: str) -> dict:
         raise FileNotFoundError(f"messages_json directory not found: {messages_dir}")
 
     json_files = [f for f in os.listdir(messages_dir) if f.endswith(".json")]
-    
+
+    # Pass 1 — build the global name fallback map
     fallback_map: dict = {}
     for filename in tqdm(json_files, desc="🔖 Building name map"):
         path = os.path.join(messages_dir, filename)
         try:
             with open(path, "r", encoding="utf-8") as f:
                 data = json.load(f)
-            for msg in data:
-                fallback_map.update(msg.get("last_known_names", {}))
-        except Exception: pass
+            if isinstance(data, list):
+                for msg in data:
+                    fallback_map.update(msg.get("last_known_names", {}))
+        except Exception:
+            pass
 
-    groups: dict = defaultdict(list)
-    for filename in tqdm(json_files, desc="📂 Reading JSON"):
+    # Pass 2 — read, filter, and group by (channel, ISO-week)
+    groups: dict = defaultdict(list)   # (channel, week_str) → list of message dicts
+
+    for filename in tqdm(json_files, desc="📂 Reading JSON history"):
         path = os.path.join(messages_dir, filename)
         try:
             with open(path, "r", encoding="utf-8") as f:
                 data = json.load(f)
-            
-            last_user, last_msg = None, None
+            if not isinstance(data, list):
+                continue
+
+            last_user, last_msg_text = None, None
             for msg in data:
                 raw_text = str(msg.get("message", "")).strip()
                 if not raw_text:
                     continue
-                
-                text = _resolve_mentions_test(raw_text, fallback_map)
-                text = _link_pattern.sub("", text)
-                text = _inline_code_pattern.sub("", text)
-                text = _noise_pattern.sub("", text)
-                
-                text = text.strip()
+
+                user_id     = str(msg.get("user_id", "Unknown"))
+                author_name = fallback_map.get(user_id, f"User_{user_id}")
+
+                text = _resolve_mentions(raw_text, fallback_map)
+                text = _link_re.sub("", text)
+                text = _inline_code_re.sub("", text)
+                text = _noise_re.sub("", text).strip()
                 if not text:
                     continue
-                
-                user_id = str(msg.get("user_id", "Unknown"))
-                author = fallback_map.get(user_id, msg.get("last_known_names", {}).get(user_id, f"User_{user_id}"))
 
-                if author == last_user and text == last_msg: continue
-                last_user, last_msg = author, text
+                # De-duplicate consecutive identical messages
+                if author_name == last_user and text == last_msg_text:
+                    continue
+                last_user, last_msg_text = author_name, text
 
-                date = msg.get("timestamp", "2000-01-01").split("T")[0]
+                ts       = msg.get("timestamp", "2000-01-01T00:00:00")
+                date_str = ts.split("T")[0]
+
+                # ISO-week circuit breaker (matches production logic)
+                try:
+                    dt  = datetime.datetime.fromisoformat(ts.replace("Z", "+00:00"))
+                    iso = dt.isocalendar()
+                    week_str = f"{iso.year}-W{iso.week:02d}"
+                except ValueError:
+                    week_str = date_str
+
                 channel = msg.get("channel", "unknown")
-                groups[(channel, date)].append(f"{author}: {text}")
-        except Exception: pass
+                groups[(channel, week_str)].append({
+                    "id":        str(msg.get("message_id", uuid.uuid4())),
+                    "user":      author_name,
+                    "text":      text,
+                    "date":      date_str,
+                    "channel":   channel,
+                    "timestamp": ts,
+                })
+
+        except Exception:
+            pass
 
     return groups
 
 
 # ---------------------------------------------------------------------------
-# Step 2: Build chunks with Token Bypass Check
+# Step 3 & 4: Build word-bounded chunks with continuity linking
+#             Mirrors ingestion._build_raw_chunks exactly
 # ---------------------------------------------------------------------------
 
-def build_chunks(groups: dict) -> list:
-    splitter = SentenceSplitter(
-        chunk_size=MAX_TEST_CHUNK_SIZE,
-        chunk_overlap=100,
-    )
+def build_chunks(groups: dict) -> List[dict]:
+    final_chunks = []
 
-    chunks = []
-    for (channel, date), lines in tqdm(groups.items(), desc="✂️  Chunking"):
-        full_text = "\n".join(lines)
-        is_small = len(full_text.split()) < MIN_TOKEN_BYPASS
-        
-        for chunk_text in splitter.split_text(full_text):
-            chunks.append({
-                "channel": channel,
-                "date": date,
-                "text": chunk_text,
-                "bypass": is_small
-            })
-    return chunks
+    # Re-group by channel → sorted list of (week_str, messages)
+    channel_groups: dict = defaultdict(list)
+    for (channel, week_str), msgs in groups.items():
+        channel_groups[channel].append((week_str, msgs))
+
+    for channel, week_data in tqdm(channel_groups.items(), desc="✂️  Chunking by week"):
+        week_data.sort(key=lambda x: x[0])   # chronological weeks
+
+        channel_chunks: List[dict] = []
+
+        for week_str, messages in week_data:
+            messages.sort(key=lambda x: x["timestamp"])
+
+            current_batch: list = []
+            current_words: int  = 0
+            week_level_chunks: list = []
+
+            for m in messages:
+                msg_words = len(m["text"].split())
+                if (current_words + msg_words > WORDS_PER_CHUNK) and current_batch:
+                    week_level_chunks.append(current_batch)
+                    current_batch = []
+                    current_words = 0
+                current_batch.append(m)
+                current_words += msg_words
+
+            if current_batch:
+                # Merge runt chunk with previous if it's too small
+                if current_words < MIN_TOKEN_BYPASS and week_level_chunks:
+                    week_level_chunks[-1].extend(current_batch)
+                else:
+                    week_level_chunks.append(current_batch)
+
+            total_week_words = sum(len(m["text"].split()) for m in messages)
+            is_quiet_week    = total_week_words < MIN_TOKEN_BYPASS
+
+            for wk_msgs in week_level_chunks:
+                # Build text with day-marker separators
+                text_lines = []
+                last_day   = None
+                for m in wk_msgs:
+                    if m["date"] != last_day:
+                        text_lines.append(f"\n--- {m['date']} ---")
+                        last_day = m["date"]
+                    text_lines.append(f"{m['user']}: {m['text']}")
+
+                chunk_text = "\n".join(text_lines).strip()
+                channel_chunks.append({
+                    "chunk_id": str(uuid.uuid4()),
+                    "text":     chunk_text,
+                    "date":     week_str,
+                    "channel":  channel,
+                    "messages": wk_msgs,
+                    "bypass":   is_quiet_week,
+                    "start_ts": wk_msgs[0]["timestamp"],
+                    "end_ts":   wk_msgs[-1]["timestamp"],
+                })
+
+        # 7-day continuity linking
+        for i, chunk in enumerate(channel_chunks):
+            if i > 0:
+                prev = channel_chunks[i - 1]
+                t1   = datetime.datetime.fromisoformat(prev["end_ts"].replace("Z", "+00:00"))
+                t2   = datetime.datetime.fromisoformat(chunk["start_ts"].replace("Z", "+00:00"))
+                if (t2 - t1).days <= 7:
+                    chunk["prev_chunk_id"] = prev["chunk_id"]
+
+            if i < len(channel_chunks) - 1:
+                nxt = channel_chunks[i + 1]
+                t1  = datetime.datetime.fromisoformat(chunk["end_ts"].replace("Z", "+00:00"))
+                t2  = datetime.datetime.fromisoformat(nxt["start_ts"].replace("Z", "+00:00"))
+                if (t2 - t1).days <= 7:
+                    chunk["next_chunk_id"] = nxt["chunk_id"]
+
+        final_chunks.extend(channel_chunks)
+
+    return final_chunks
 
 
 # ---------------------------------------------------------------------------
-# Step 4 & 5: Sequential Ollama evaluation
+# Step 5: Sequential Ollama summarization
+#         Uses get_summarizer_llm() + INGESTION_SUMMARY_PROMPT — same as production
 # ---------------------------------------------------------------------------
 
-async def evaluate(chunks: list, prompts: dict) -> list:
-    results = []
-    configure_settings()
-    # Explicitly set low temperature for factual RAG summaries
-    Settings.llm.temperature = 0.1
-    
-    pbar = tqdm(total=len(chunks), desc="🤖 Evaluating")
+async def evaluate(chunks: List[dict]) -> List[dict]:
+    results   = []
+    _base_llm = get_summarizer_llm()
+    llm       = _base_llm.model_copy(update={"keep_alive": "20s"})
+
+    pbar = tqdm(total=len(chunks), desc="🤖 Summarising with Ollama")
 
     for i, chunk in enumerate(chunks):
-        chunk_results = {
-            "index": i + 1, "channel": chunk["channel"], "date": chunk["date"], 
-            "text": chunk["text"], "bypass": chunk["bypass"], "summaries": {}
-        }
+        summary: str
+        thinking: str  = ""
+        raw_debug: str = ""
 
-        if chunk["bypass"]:
-            for p_name in prompts:
-                chunk_results["summaries"][p_name] = "⚡ [BYPASS] Using RAW text (Too small for summarization)"
+        if chunk.get("bypass"):
+            summary = "[BYPASS] Quiet week — stored as RAW text (no LLM call)."
         else:
-            for p_name, p_tmpl in prompts.items():
-                prompt = p_tmpl.format(chunk=chunk["text"])
-                try:
-                    res = await Settings.llm.acomplete(prompt)
-                    chunk_results["summaries"][p_name] = str(res).strip()
-                except Exception as e:
-                    chunk_results["summaries"][p_name] = f"ERR: {e}"
-        
-        results.append(chunk_results)
+            prompt = INGESTION_SUMMARY_PROMPT.format(chunk=chunk["text"])
+            messages = [ChatMessage(role="user", content=prompt)]
+
+            metrics_info = ""
+            try:
+                res = await llm.achat(messages)
+                summary = res.message.content.strip()
+
+                # Extract performance info
+                if hasattr(res, "raw") and isinstance(res.raw, dict):
+                    raw = res.raw
+                    eval_tokens = raw.get("eval_count", 0)
+                    prompt_tokens = raw.get("prompt_eval_count", 0)
+                    total_dur = raw.get("total_duration", 0) / 1e9  # nanoseconds to seconds
+                    load_dur = raw.get("load_duration", 0) / 1e9
+                    eval_dur = raw.get("eval_duration", 0) / 1e9
+                    metrics_info = f"**Tokens:** {prompt_tokens} prompt + {eval_tokens} completion. **Time:** {total_dur:.2f}s total (Load: {load_dur:.2f}s, Gen: {eval_dur:.2f}s @ {eval_tokens/max(1, eval_dur):.1f} tok/s)"
+
+                if not summary:
+                    raw_debug = (
+                        f"content='{res.message.content}'\n"
+                        f"thinking='{getattr(res.message, 'thinking', 'N/A')}'\n"
+                        f"additional_kwargs={res.message.additional_kwargs}\n"
+                        f"raw={getattr(res, 'raw', 'N/A')}"
+                    )
+
+                    print(f"\n[WARN] Chunk {i+1}: LLM returned empty content.")
+                    summary = "[EMPTY RESPONSE — see raw_debug field]"
+
+            except asyncio.CancelledError:
+                summary   = "[CANCELLED] Request was cancelled (timeout or interrupt)."
+                raw_debug = "asyncio.CancelledError"
+                print(f"[WARN] Chunk {i+1}: request cancelled.")
+            except Exception as e:
+                summary   = f"[ERR] {type(e).__name__}: {e}"
+                raw_debug = repr(e)
+                print(f"[WARN] Chunk {i+1}: exception — {e}")
+
+        results.append({
+            "index":         i + 1,
+            "chunk_id":      chunk["chunk_id"],
+            "channel":       chunk["channel"],
+            "date":          chunk["date"],
+            "start_ts":      chunk["start_ts"],
+            "end_ts":        chunk["end_ts"],
+            "bypass":        chunk.get("bypass", False),
+            "prev_chunk_id": chunk.get("prev_chunk_id"),
+            "next_chunk_id": chunk.get("next_chunk_id"),
+            "word_count":    len(chunk["text"].split()),
+            "msg_count":     len(chunk["messages"]),
+            "text":          chunk["text"],
+            "summary":       summary,
+            "thinking":      thinking,
+            "raw_debug":     raw_debug,
+            "metrics":       metrics_info,
+        })
+
         pbar.update(1)
-    
+
     pbar.close()
     return results
 
@@ -228,40 +357,103 @@ async def evaluate(chunks: list, prompts: dict) -> list:
 # Output
 # ---------------------------------------------------------------------------
 
-def write_markdown(results: list, prompts: dict, output_path: str) -> None:
-    now = datetime.now().strftime("%H:%M:%S")
+def write_markdown(results: List[dict], output_path: str) -> None:
+    os.makedirs(os.path.dirname(output_path), exist_ok=True)
+    now = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+
     lines = [
-        "# Prompt Evaluation Results (Bypass Mode)\n",
-        f"**Generated:** {now} | **Min Tokens for Bypass:** {MIN_TOKEN_BYPASS}\n",
-        f"**Chunk Size:** 0.4 context (~{MAX_TEST_CHUNK_SIZE} tokens)\n",
-        "---\n"
+        "# Ingestion Pipeline — Prompt Evaluation\n",
+        f"**Generated:** {now}",
+        f"**Chunks evaluated:** {len(results)}",
+        f"**WORDS_PER_CHUNK:** {WORDS_PER_CHUNK} | **MIN_TOKEN_BYPASS:** {MIN_TOKEN_BYPASS}",
+        f"**Summarizer model:** qwen3.5:4b (via `get_summarizer_llm()`)\n",
+        "---\n",
     ]
 
     for r in results:
-        lines.append(f"## Chunk {r['index']} — `{r['channel']}` / {r['date']}")
-        if r["bypass"]:
-            lines.append("> ⚡ **BYPASS ACTIVE**: This chunk was skipped by the LLM and stored as RAW text.\n")
-        
-        lines.append("### 📄 Source Text\n```\n" + r["text"] + "\n```\n")
-        
-        for p_name, summary in r["summaries"].items():
-            lines.append(f"### 🔹 {p_name}\n{summary}\n")
-        
+        bypass_flag = " ⚡ BYPASS" if r["bypass"] else ""
+        lines.append(f"## Chunk {r['index']}{bypass_flag} — `{r['channel']}` / {r['date']}")
+        lines.append(f"- **chunk_id:** `{r['chunk_id']}`")
+        lines.append(f"- **Period:** {r['start_ts']} → {r['end_ts']}")
+        lines.append(f"- **Messages:** {r['msg_count']} | **Words:** {r['word_count']}")
+
+        if r["prev_chunk_id"]:
+            lines.append(f"- **← prev_chunk_id:** `{r['prev_chunk_id']}`")
+        if r["next_chunk_id"]:
+            lines.append(f"- **→ next_chunk_id:** `{r['next_chunk_id']}`")
+
+        lines.append("")
+        lines.append("### 📄 Source Text\n```")
+        lines.append(r["text"])
+        lines.append("```\n")
+
+        if r.get("thinking"):
+            lines.append("### Thinking Process")
+            lines.append(f"> {r['thinking'].replace(chr(10), chr(10) + '> ')}\n")
+
+        if r.get("metrics"):
+            lines.append(f"### ⏱️ Performance Metrics\n{r['metrics']}\n")
+
+        lines.append("### INGESTION_SUMMARY_PROMPT output")
+        lines.append(r["summary"] if r["summary"] else "_(empty)_")
+
+        if r.get("raw_debug"):
+            lines.append("\n### Raw Debug Dump")
+            lines.append(f"```\n{r['raw_debug']}\n```")
+
         lines.append("\n---\n")
 
     with open(output_path, "w", encoding="utf-8") as f:
         f.write("\n".join(lines))
-    print(f"\n✅ Results: {output_path}")
+
+    print(f"\n✅ Results written to: {output_path}")
 
 
-async def main():
+# ---------------------------------------------------------------------------
+# Entry point
+# ---------------------------------------------------------------------------
+
+async def main() -> None:
+    # Ensure stdout is UTF-8 on Windows
+    if hasattr(sys.stdout, "reconfigure"):
+        sys.stdout.reconfigure(encoding="utf-8", errors="replace")
+
+    # Start ollama serve in background (no-op if already running)
+    try:
+        _ollama = subprocess.Popen(
+            ["ollama", "serve"],
+            stdout=subprocess.DEVNULL,
+            stderr=subprocess.DEVNULL,
+        )
+        print("Started: ollama serve (pid={_ollama.pid})")
+        await asyncio.sleep(2)  # give it a moment to bind
+    except FileNotFoundError:
+        print("[WARN] 'ollama' not found in PATH — assuming server is already running.")
+
+    print(f"Messages directory : {MESSAGES_DIR}")
+    print(f"WORDS_PER_CHUNK    : {WORDS_PER_CHUNK}  (~1000 tokens, test override)")
+    print(f"MIN_TOKEN_BYPASS   : {MIN_TOKEN_BYPASS}")
+    print()
+
     groups = load_and_group_messages(MESSAGES_DIR)
+    print(f"Total (channel, week) groups : {len(groups)}")
+
     chunks = build_chunks(groups)
+    bypass_count = sum(1 for c in chunks if c.get("bypass"))
+    linked_count = sum(1 for c in chunks if c.get("prev_chunk_id") or c.get("next_chunk_id"))
+    print(f"Total chunks produced        : {len(chunks)}")
+    print(f"  Bypass (quiet weeks)       : {bypass_count}")
+    print(f"  Continuity-linked          : {linked_count}")
+    print()
+
     random.seed(RANDOM_SEED)
-    sample  = random.sample(chunks, SAMPLE_COUNT) if len(chunks) > SAMPLE_COUNT else chunks
-    
-    results = await evaluate(sample, PROMPTS)
-    write_markdown(results, PROMPTS, OUTPUT_PATH)
+    sample = random.sample(chunks, SAMPLE_COUNT) if len(chunks) > SAMPLE_COUNT else chunks
+    print(f"Sampled {len(sample)} chunks (seed={RANDOM_SEED})")
+    print()
+
+    results = await evaluate(sample)
+    write_markdown(results, OUTPUT_PATH)
+
 
 if __name__ == "__main__":
     asyncio.run(main())
