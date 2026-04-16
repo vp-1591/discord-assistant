@@ -15,3 +15,4 @@ tests/test_factory/.drafts/
 tests/test_factory/trace_iter_*.json
 tests/test_factory/mock_data/
 tests/test_factory/scenarios/
+tests/data/
