@@ -9,3 +9,4 @@ pystemmer
 ollama
 pytest
 pytest-asyncio
+langfuse

@@ -25,7 +25,16 @@ import uuid
 import subprocess
 from collections import defaultdict
 from typing import List, Optional
+
+# Load environment variables before Langfuse initialization
+from dotenv import load_dotenv
+load_dotenv()
+
+from langfuse import get_client, observe
 from llama_index.core.llms import ChatMessage
+
+# Langfuse client (reads LANGFUSE_SECRET_KEY, LANGFUSE_PUBLIC_KEY, LANGFUSE_BASE_URL from env)
+langfuse = get_client()
 
 # ---------------------------------------------------------------------------
 # Project Setup
@@ -275,6 +284,7 @@ def build_chunks(groups: dict) -> List[dict]:
 #         Uses get_summarizer_llm() + INGESTION_SUMMARY_PROMPT — same as production
 # ---------------------------------------------------------------------------
 
+@observe(name="evaluate-summarization")
 async def evaluate(chunks: List[dict]) -> List[dict]:
     results   = []
     _base_llm = get_summarizer_llm()
@@ -293,40 +303,85 @@ async def evaluate(chunks: List[dict]) -> List[dict]:
             prompt = INGESTION_SUMMARY_PROMPT.format(chunk=chunk["text"])
             messages = [ChatMessage(role="user", content=prompt)]
 
-            metrics_info = ""
-            try:
-                res = await llm.achat(messages)
-                summary = res.message.content.strip()
+            with langfuse.start_as_current_observation(
+                as_type="generation",
+                name=f"summarize-chunk-{i+1}",
+                model="qwen3.5:4b",
+                input={
+                    "chunk_id": chunk["chunk_id"],
+                    "channel": chunk["channel"],
+                    "date": chunk["date"],
+                    "word_count": len(chunk["text"].split()),
+                    "prompt": prompt,
+                },
+            ) as gen_obs:
+                try:
+                    res = await llm.achat(messages)
+                    summary = res.message.content.strip()
 
-                # Extract performance info
-                if hasattr(res, "raw") and isinstance(res.raw, dict):
-                    raw = res.raw
-                    eval_tokens = raw.get("eval_count", 0)
-                    prompt_tokens = raw.get("prompt_eval_count", 0)
-                    total_dur = raw.get("total_duration", 0) / 1e9  # nanoseconds to seconds
-                    load_dur = raw.get("load_duration", 0) / 1e9
-                    eval_dur = raw.get("eval_duration", 0) / 1e9
-                    metrics_info = f"**Tokens:** {prompt_tokens} prompt + {eval_tokens} completion. **Time:** {total_dur:.2f}s total (Load: {load_dur:.2f}s, Gen: {eval_dur:.2f}s @ {eval_tokens/max(1, eval_dur):.1f} tok/s)"
+                    # Extract thinking from response blocks (same pattern as agent_core.py)
+                    try:
+                        blocks = getattr(res.message, "blocks", None)
+                        if blocks is None:
+                            blocks = res.message.additional_kwargs.get("blocks", [])
+                        thinking_parts = [
+                            b["content"] if isinstance(b, dict) else getattr(b, "content", "")
+                            for b in (blocks or [])
+                            if (b.get("block_type") if isinstance(b, dict) else getattr(b, "block_type", "")) == "thinking"
+                        ]
+                        thinking = "\n".join(thinking_parts)
+                    except Exception:
+                        pass
 
-                if not summary:
-                    raw_debug = (
-                        f"content='{res.message.content}'\n"
-                        f"thinking='{getattr(res.message, 'thinking', 'N/A')}'\n"
-                        f"additional_kwargs={res.message.additional_kwargs}\n"
-                        f"raw={getattr(res, 'raw', 'N/A')}"
+                    # Capture usage and timing from Ollama raw response
+                    usage_details = {}
+                    metadata = {"thinking": thinking} if thinking else {}
+
+                    if hasattr(res, "raw") and isinstance(res.raw, dict):
+                        raw = res.raw
+                        prompt_tokens = raw.get("prompt_eval_count", 0)
+                        completion_tokens = raw.get("eval_count", 0)
+                        usage_details = {
+                            "prompt_tokens": prompt_tokens,
+                            "completion_tokens": completion_tokens,
+                        }
+                        total_dur = raw.get("total_duration", 0) / 1e9
+                        load_dur = raw.get("load_duration", 0) / 1e9
+                        eval_dur = raw.get("eval_duration", 0) / 1e9
+                        metadata["timing"] = {
+                            "total_s": round(total_dur, 2),
+                            "load_s": round(load_dur, 2),
+                            "gen_s": round(eval_dur, 2),
+                            "tok_per_s": round(completion_tokens / max(1, eval_dur), 1),
+                        }
+
+                    gen_obs.update(
+                        output=summary,
+                        usage_details=usage_details or None,
+                        metadata=metadata or None,
                     )
 
-                    print(f"\n[WARN] Chunk {i+1}: LLM returned empty content.")
-                    summary = "[EMPTY RESPONSE — see raw_debug field]"
+                    if not summary:
+                        raw_debug = (
+                            f"content='{res.message.content}'\n"
+                            f"thinking='{thinking}'\n"
+                            f"additional_kwargs={res.message.additional_kwargs}\n"
+                            f"raw={getattr(res, 'raw', 'N/A')}"
+                        )
 
-            except asyncio.CancelledError:
-                summary   = "[CANCELLED] Request was cancelled (timeout or interrupt)."
-                raw_debug = "asyncio.CancelledError"
-                print(f"[WARN] Chunk {i+1}: request cancelled.")
-            except Exception as e:
-                summary   = f"[ERR] {type(e).__name__}: {e}"
-                raw_debug = repr(e)
-                print(f"[WARN] Chunk {i+1}: exception — {e}")
+                        print(f"\n[WARN] Chunk {i+1}: LLM returned empty content.")
+                        summary = "[EMPTY RESPONSE — see raw_debug field]"
+
+                except asyncio.CancelledError:
+                    summary   = "[CANCELLED] Request was cancelled (timeout or interrupt)."
+                    raw_debug = "asyncio.CancelledError"
+                    print(f"[WARN] Chunk {i+1}: request cancelled.")
+                    gen_obs.update(output=summary, metadata={"error": "cancelled"})
+                except Exception as e:
+                    summary   = f"[ERR] {type(e).__name__}: {e}"
+                    raw_debug = repr(e)
+                    print(f"[WARN] Chunk {i+1}: exception — {e}")
+                    gen_obs.update(output=summary, metadata={"error": str(e)})
 
         results.append({
             "index":         i + 1,
@@ -344,7 +399,6 @@ async def evaluate(chunks: List[dict]) -> List[dict]:
             "summary":       summary,
             "thinking":      thinking,
             "raw_debug":     raw_debug,
-            "metrics":       metrics_info,
         })
 
         pbar.update(1)
@@ -391,9 +445,6 @@ def write_markdown(results: List[dict], output_path: str) -> None:
             lines.append("### Thinking Process")
             lines.append(f"> {r['thinking'].replace(chr(10), chr(10) + '> ')}\n")
 
-        if r.get("metrics"):
-            lines.append(f"### ⏱️ Performance Metrics\n{r['metrics']}\n")
-
         lines.append("### INGESTION_SUMMARY_PROMPT output")
         lines.append(r["summary"] if r["summary"] else "_(empty)_")
 
@@ -413,6 +464,7 @@ def write_markdown(results: List[dict], output_path: str) -> None:
 # Entry point
 # ---------------------------------------------------------------------------
 
+@observe(name="evaluate-prompts-run")
 async def main() -> None:
     # Ensure stdout is UTF-8 on Windows
     if hasattr(sys.stdout, "reconfigure"):
@@ -453,6 +505,8 @@ async def main() -> None:
 
     results = await evaluate(sample)
     write_markdown(results, OUTPUT_PATH)
+
+    langfuse.flush()
 
 
 if __name__ == "__main__":

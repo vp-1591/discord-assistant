@@ -1,4 +1,6 @@
 .env
+.venv/
+venv/
 chroma_langchain_db/
 messages_json/
 cache/
@@ -9,6 +11,7 @@ temp-cache/
 logs/
 discord_data.db
 DEV_LOG.md
+.claude/
 
 # --- Test Factory (ephemeral agent workspace) ---
 tests/test_factory/.drafts/
